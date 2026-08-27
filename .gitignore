@@ -1,0 +1,64 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+# ...except the template. It holds no secrets and is the only record of which
+# variables exist — ignoring it would leave the composer gate undocumented.
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Agent skills — vendored third-party content (~7.5MB).
+# skills-lock.json IS tracked: it pins source + hash for every skill, so
+# `npx skills install` reproduces them exactly. Committing the bodies would
+# put megabytes of other people's code in an icon-set repo.
+.agents/
+.claude/skills/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Cloudflare Workers (OpenNext adapter)
+.open-next/
+.wrangler/
+cloudflare-env.d.ts
+# Local wrangler variables — same reasoning as .env.local: it can hold secrets.
+.dev.vars

@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pixle",
+  "main": ".open-next/worker.js",
+  // workerd 1.20260820 ships with this build, so the date is a real one rather
+  // than a guess at the future.
+  "compatibility_date": "2026-08-20",
+  // `nodejs_compat` is what lets the Next server run at all — the adapter uses
+  // Next's Node runtime, not its edge runtime.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
