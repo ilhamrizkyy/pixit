@@ -9,7 +9,7 @@ Load: @docs/DESIGN.md · @docs/INTERACTION.md · @docs/TECH-STACK.md · @docs/PL
 
 ## What this is
 
-**Pixle** — an open-source **pixel / 32-bit / arcade icon set**
+**Pixit** — an open-source **pixel / 32-bit / arcade icon set**
 plus an in-browser **composer** styled like an Etch A Sketch. Inspired by
 Phosphor / Lucide / Nucleo; the differentiators are the composer and the pixel
 niche. Licensed **MIT**.
@@ -33,7 +33,7 @@ niche. Licensed **MIT**.
      stored `cells` are never modified and the gallery color must never become
      a persisted property of an `IconDef`. **Exports follow the display**,
      though: Copy/Download are built from the displayed cells, so the gallery's
-     color, flip, rotation, and padding all travel with a copied icon.
+     color and cell shape travel with a copied icon.
    - **Authoring consequence:** seed icons are authored in a **single color**
      and drawn as **outlines**, never as filled masses whose meaning depends on
      internal color contrast. See @docs/DESIGN.md §3. The composer still supports
@@ -44,9 +44,9 @@ niche. Licensed **MIT**.
    rendered as normal anti-aliased vector. Intended sizes are multiples of 8,
    16px minimum.
    - **Amended 2026-08-21 — the gallery may DRAW a cell inset or round.** The
-     Cells control (Solid / Gap / Dots) is a display setting like colour and
-     padding: it applies to the whole set at once, `cells` are never modified,
-     and no `IconDef` carries a shape. Stored data stays square — rule 3 already
+     Shape control (Square / Inset / Round) is a display setting like colour:
+     it applies to the whole set at once, `cells` are never modified, and no
+     `IconDef` carries a shape. Stored data stays square — rule 3 already
      says an icon *is* its cell data and SVG is a render target, and this is
      that rule being used.
 5. **Decouple the icon engine from the presentation.** The data model + editing
@@ -83,7 +83,7 @@ therefore the same string you would paste into code, matching Lucide/Phosphor.
   - **Amended 2026-08-21 — icons persist in Postgres.** The composer publishes
     into a database so an icon drawn on the deployed site reaches the gallery
     without a commit. The **seeds stay in the repo**, deliberately and
-    permanently: Pixle is MIT, and a clone that shows nothing without access to
+    permanently: Pixit is MIT, and a clone that shows nothing without access to
     somebody else's database is not an open-source icon set. The gallery reads
     `registry + published rows`; with no database configured it shows the
     registry alone and everything still works.
@@ -103,7 +103,17 @@ See @docs/PLAN.md for the phased, sub-one-month timeline and exit criteria.
 - **Taxonomy:** 6 categories, closed TS union. **Naming:** kebab-case
   throughout, validated at module load.
 - **Gallery renders single-color**; duotone is parked.
-- **Exports follow the gallery's display settings.**
+- **Exports follow the gallery's display settings** — **colour, cell shape and
+  size**. Gallery-wide padding and transform were removed with the sidebar that
+  held them; the engine keeps both operations, and the composer still uses them.
+  - **Size joined on 2026-08-29, and it outruns the picture.** The size rail
+    runs 16–120 while the icon grid's fixed 64px seat caps what it can DRAW at
+    48 — so above the cap the scale sets the exported file's dimensions alone.
+    The `viewBox` is untouched either way: it is the canvas (rule 4), and only
+    the rendered width/height follow.
+- **The gallery IS the toy** (2026-08-28). The icon grid is the screen, the
+  sidebar is the body that operates it, and the icon detail is a second screen
+  built into the board rather than a panel that opens over the first.
 - **Owner CRUD:** full create/read/update/delete, but `id` is immutable once
   published and delete is soft, so an id is never recycled.
 

@@ -32,7 +32,8 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      testMatch: /(composer|a11y|reduced-motion|toast)\.spec\.ts/,
+      testMatch:
+        /(board|composer|a11y|contrast|reduced-motion|keys|reveal|toast)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 900 },

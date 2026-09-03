@@ -1,4 +1,4 @@
--- Pixle — published icons.
+-- Pixit — published icons.
 --
 -- Run this once in the Supabase SQL editor (Dashboard -> SQL Editor -> New
 -- query -> paste -> Run). It is idempotent, so re-running it is safe.

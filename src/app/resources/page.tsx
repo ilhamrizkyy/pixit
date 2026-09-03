@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ICON_SIZES } from "@/engine/constants";
+import { SIZE_STOPS } from "@/engine/constants";
 import { LICENSE_URL, REPO_URL } from "@/lib/site";
 import { icons } from "@/registry";
 
 export const metadata: Metadata = {
-  title: "Resources — Pixle",
-  description: "Ways to get the Pixle icon set and work with it.",
+  title: "Resources · Pixit",
+  description: "Ways to get the Pixit icon set and work with it.",
 };
 
 /**
@@ -32,14 +32,17 @@ const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
     items: [
       {
         label: "Copy SVG",
+        // "Select", not "open": nothing on the board opens. The icon loads into
+        // the mini screen and the detail bar appears along the bottom of the
+        // screen it is on.
         detail:
-          "Open any icon and copy its markup. Colors are baked in, and the gallery's color, padding, and rotation travel with it.",
+          "Select any icon and copy its markup. Colors are baked in, and the color, shape and size you are looking at travel with it.",
         href: "/",
         status: "available",
       },
       {
         label: "Download SVG or PNG",
-        detail: `Transparent background, sized on the ${ICON_SIZES.join("/")} scale.`,
+        detail: `Transparent background, at any size on the ${SIZE_STOPS[0]} to ${SIZE_STOPS[SIZE_STOPS.length - 1]}px scale. The PNG snaps its cell edges to whole pixels, so nothing softens.`,
         href: "/",
         status: "available",
       },
@@ -53,7 +56,7 @@ const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
   {
     title: "Packages",
     blurb:
-      "Pixle is a static set for now. Packaging follows once the set is bigger.",
+      "Pixit is a static set for now. Packaging follows once the set is bigger.",
     items: [
       {
         label: "npm package",
@@ -90,8 +93,15 @@ const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
       {
         label: "Guide",
         detail:
-          "The grid, the safe area, sizing, and the rules every icon follows.",
+          "The grid, the safe area, one color, shape, sizing, and the rules every icon follows.",
         href: "/guide",
+        status: "available",
+      },
+      {
+        label: "Contribute",
+        detail:
+          "How icons will be submitted and curated, and what the repository takes today.",
+        href: "/contribute",
         status: "available",
       },
     ],

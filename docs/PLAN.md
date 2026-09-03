@@ -37,7 +37,8 @@ Goal: the public product, read-only.
 the interface bar rose, which is a deliberate trade, not slippage to hide:
 - Whole-app **Light/Dark theme** (token redefinition, system default).
 - **Colour** control: one hex recolours the whole gallery, Lucide-style.
-- **Padding** (0–3 cells) and **Transform** (flip H/V, rotate).
+- **Padding** (0–3 cells) and **Transform** (flip H/V, rotate). *Both removed
+  again on 2026-08-28 with the board rebuild — see @docs/BACKLOG.md §D.*
 - **Exports follow display settings** — what you see is what you copy.
 - Mobile pass to a **Lucide-like layout**: square cards everywhere, 4-column
   grid, hamburger nav, and a **bottom-sheet** filter surface with Apply/Reset.

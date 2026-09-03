@@ -70,17 +70,22 @@ test("the caret stays VISIBLE rather than freezing on its dim frame", async ({ p
 test("an overlay closes immediately instead of waiting out an exit it will not play", async ({
   page,
 }) => {
+  // THE FILTER SHEET, not the detail bar. The bar unmounts the moment you
+  // clear it — it is a strip of the chassis, not an overlay, so it has no
+  // deferred unmount for this to measure and pointing the test at it would
+  // have made it pass for no reason. The sheet still defers, so it is the one
+  // thing left on this route that this rule can actually be checked against.
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByRole("button", { name: /arrow-right/ }).first().click();
-  const panel = page.getByRole("dialog");
-  await expect(panel).toBeVisible();
+  await page.getByRole("button", { name: "Display settings" }).click();
 
-  // Scoped to the panel: the set contains an icon named "close", so an
-  // unscoped lookup finds its card too.
-  await panel.getByRole("button", { name: "Close" }).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet).toBeVisible();
+
+  await sheet.getByRole("button", { name: "Close without applying" }).click();
   // No deferred unmount: someone who asked for less motion is not made to wait
   // 350ms for an exit animation that has been reduced to nothing.
-  await expect(panel).toBeHidden({ timeout: 120 });
+  await expect(sheet).toBeHidden({ timeout: 120 });
 });
 
 test("a toast still appears and still leaves", async ({ page }) => {
@@ -93,3 +98,132 @@ test("a toast still appears and still leaves", async ({ page }) => {
   // behaviour. A toast that never left would be a permanent obstruction.
   await expect(toast).toBeHidden({ timeout: 8_000 });
 });
+
+
+/**
+ * Wait out the mount animation before asking about the switch one.
+ *
+ * Without this the tests below pass for the wrong reason: the grid animates
+ * once on first paint too, so a click landing inside that first 250ms finds a
+ * running animation whether or not the swap replayed it. That made the
+ * assertion green even with the React `key` removed — which is the exact
+ * regression it exists to catch.
+ */
+async function settle(page: import("@playwright/test").Page) {
+  await page
+    .locator(".pixl-grid-swap")
+    .evaluate((el) =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .map((a) => a.finished.catch(() => {})),
+      ),
+    );
+}
+
+/**
+ * The grid's category swap, both ways round.
+ *
+ * Worth a test of its own because the animation is REPLAYED by a React `key`
+ * rather than declared once: if the key ever stopped changing with the
+ * category, the class would still be on the element and the computed style
+ * would still name the animation — nothing would look broken in CSS — but the
+ * swap would go back to the one-frame flicker it was added to fix.
+ */
+test("the grid's category swap is neutralised", async ({ page }) => {
+  await page.goto("/");
+  await settle(page);
+  await page.getByRole("tab", { name: "Arcade" }).click();
+
+  const durations = await page
+    .locator(".pixl-grid-swap li")
+    .first()
+    .evaluate((el) =>
+      el.getAnimations().map((a) => Number(a.effect?.getTiming().duration ?? 0)),
+    );
+
+  expect(durations.length).toBeGreaterThan(0);
+  for (const ms of durations) expect(ms).toBeLessThan(1);
+});
+
+test("the grid's category swap animates when motion is allowed", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await settle(page);
+  await page.getByRole("tab", { name: "Arcade" }).click();
+
+  const running = await page
+    .locator(".pixl-grid-swap li")
+    .first()
+    .evaluate((el) =>
+      el.getAnimations().map((a) => ({
+        name: (a as CSSAnimation).animationName,
+        ms: Number(a.effect?.getTiming().duration ?? 0),
+        state: a.playState,
+      })),
+    );
+
+  expect(running).toHaveLength(1);
+  expect(running[0].name).toBe("pixl-icon-in");
+  expect(running[0].state).toBe("running");
+  expect(running[0].ms).toBe(400);
+
+  // And it is a WAVE, not one animation on the block: each icon starts later
+  // than the one before it, and the whole wave stays inside DESIGN.md's cap.
+  const delays = await page
+    .locator(".pixl-grid-swap li")
+    .evaluateAll((els) =>
+      els.map(
+        (el) => Number(el.getAnimations()[0]?.effect?.getTiming().delay ?? -1),
+      ),
+    );
+  expect(delays.length).toBeGreaterThan(3);
+  expect(delays[0]).toBe(0);
+  for (let i = 1; i < delays.length; i++) {
+    expect(delays[i]).toBeGreaterThan(delays[i - 1]);
+  }
+  expect(delays[delays.length - 1]).toBeLessThanOrEqual(300);
+});
+
+/**
+ * THE MINI SCREEN'S REVEAL, AND WHY THE GLOBAL RULE IS NOT ENOUGH.
+ *
+ * The blanket `prefers-reduced-motion` block collapses every animation-DURATION
+ * to 0.01ms, and it leaves `animation-delay` untouched. Pixel Materialize
+ * spreads its cells across a 640ms window of delays, so under the global rule
+ * alone the reveal degrades into cells popping in one at a time with no fade at
+ * all: LOUDER than the animation it was supposed to suppress, and exactly the
+ * flicker someone asking for less motion is asking not to see.
+ */
+test("the mini screen's reveal arrives at once, with no static", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /floppy-disk/ }).first().click();
+
+  const state = await page.evaluate(() => {
+    const cells = [
+      ...document.querySelectorAll<SVGElement>(".pixl-reveal-cell"),
+    ];
+    return {
+      count: cells.length,
+      delays: [
+        ...new Set(cells.map((el) => getComputedStyle(el).animationDelay)),
+      ],
+      noiseShown: [
+        ...document.querySelectorAll<SVGElement>(".pixl-reveal-noise"),
+      ].filter((el) => getComputedStyle(el).display !== "none").length,
+      // The panel itself is not motion: the unlit grid stays.
+      dots: document.querySelectorAll(".pixl-reveal-dots circle").length,
+    };
+  });
+
+  expect(state.count, "nothing is being revealed").toBeGreaterThan(8);
+  // ONE delay, and it is zero: every cell arrives together.
+  expect(state.delays).toEqual(["0s"]);
+  expect(state.noiseShown, "the static burst still plays").toBe(0);
+  expect(state.dots).toBe(121);
+});
+

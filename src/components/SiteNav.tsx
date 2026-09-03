@@ -38,14 +38,24 @@ export function SiteNav() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav className="border-b border-border">
+    /* PLAIN SHELL, NOT THE BEZEL'S BROW. The nav wore the chassis for one
+       iteration — a moulded wall standing over the board. It made the page
+       read as one continuous device with no edge, and it dragged the toy's
+       ink and accent up into the site chrome, so a nav link on the Guide
+       page was a different blue from every link on it. The board is the
+       object; the page it sits on is a page. */
+    <nav className="relative z-20 border-b border-border bg-bg">
       <div className="flex items-center justify-between gap-3 px-6 py-4 lg:px-7 lg:py-5">
         <Link
           href="/"
           onClick={() => setMenuOpen(false)}
           className="font-pixel text-body tracking-wider text-text no-underline"
         >
-          Pix<span className="text-accent">le</span>
+          {/* ONE COLOUR. The `le` was in `--accent`, which put a second thing
+              claiming "this one" in a bar that already marks the active route
+              with the same colour — so the wordmark and the current page were
+              competing for the same signal three centimetres apart. */}
+          Pixit
         </Link>
 
         <div className="flex items-center gap-3 lg:gap-5">

@@ -182,7 +182,7 @@ function assertBlank(text: string, where: string): void {
  * Validate the root viewBox and return the padding it encodes, in cells.
  *
  * The padding is then DISCARDED — see the note on `svgToCells`. Validating it
- * anyway is what makes the viewBox the thing that identifies a Pixle canvas:
+ * anyway is what makes the viewBox the thing that identifies a Pixit canvas:
  * any other extent means the file came from somewhere else.
  */
 function readPaddingCells(viewBox: string | undefined): number {
@@ -198,7 +198,7 @@ function readPaddingCells(viewBox: string | undefined): number {
   const symmetric = minY === minX && pad >= 0 && pad % CELL_UNITS === 0;
   if (!symmetric || width !== CANVAS_UNITS + pad * 2 || height !== width) {
     fail(
-      `viewBox="${viewBox}" is not a Pixle canvas — expected "${VIEW_BOX}" or a symmetrically padded form of it`,
+      `viewBox="${viewBox}" is not a Pixit canvas — expected "${VIEW_BOX}" or a symmetrically padded form of it`,
     );
   }
 
@@ -389,7 +389,7 @@ export function svgToCells(svg: string): Cells {
     }
 
     fail(
-      `unsupported element <${name}> — a Pixle export holds only <title> and <rect>`,
+      `unsupported element <${name}> — a Pixit export holds only <title> and <rect>`,
     );
   }
 

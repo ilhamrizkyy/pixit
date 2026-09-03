@@ -288,10 +288,10 @@ describe("svgToCells rejection", () => {
 
   it("rejects a valid SVG from another icon set", () => {
     // A Lucide icon is a perfectly good SVG and must still be refused — the
-    // viewBox is what identifies a Pixle canvas.
+    // viewBox is what identifies a Pixit canvas.
     const lucide =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14"/></svg>';
-    expect(() => svgToCells(lucide)).toThrow(/not a Pixle canvas/);
+    expect(() => svgToCells(lucide)).toThrow(/not a Pixit canvas/);
   });
 
   it("rejects a missing or misshapen viewBox", () => {
@@ -299,11 +299,11 @@ describe("svgToCells rejection", () => {
       svgToCells('<svg xmlns="http://www.w3.org/2000/svg">' + rect() + "</svg>"),
     ).toThrow(/no viewBox/);
     expect(() => svgToCells(svgWith(rect(), "0 0 44 48"))).toThrow(
-      /not a Pixle canvas/,
+      /not a Pixit canvas/,
     );
     // Padded origin without the grown extent: the art would land off-canvas.
     expect(() => svgToCells(svgWith(rect(), "-4 -4 44 44"))).toThrow(
-      /not a Pixle canvas/,
+      /not a Pixit canvas/,
     );
     expect(() => svgToCells(svgWith(rect(), "0 0 44"))).toThrow(
       /four whole numbers/,

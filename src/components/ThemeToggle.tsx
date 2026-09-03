@@ -22,7 +22,7 @@ export function ThemeToggle() {
     <div
       role="group"
       aria-label="Color theme"
-      className="flex items-center gap-0.5 rounded-sm border border-border bg-surface p-0.5"
+      className="pixl-well flex items-center gap-0.5 p-0.5"
     >
       {OPTIONS.map((option) => (
         <button

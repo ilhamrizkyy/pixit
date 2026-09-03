@@ -3,17 +3,22 @@ import Link from "next/link";
 import { GridDiagram } from "@/components/GridDiagram";
 import { IconPreview } from "@/components/IconPreview";
 import { recolorCells } from "@/engine/color";
+import { SHAPE_LABELS } from "@/components/gallery/settings";
 import {
   CANVAS_UNITS,
   GRID_SIZE,
   ICON_SIZES,
+  MAX_RENDERED_SIZE,
   SAFE_AREA_SIZE,
+  SIZE_STOPS,
 } from "@/engine/constants";
+import { CELL_STYLES } from "@/engine/render";
 import { getIcon, icons } from "@/registry";
 
 export const metadata: Metadata = {
-  title: "Guide — Pixle",
-  description: "How Pixle icons are built, and the rules every one of them follows.",
+  title: "Guide · Pixit",
+  description:
+    "How Pixit icons are built, and the rules every one of them follows.",
 };
 
 /**
@@ -38,10 +43,10 @@ export default function GuidePage() {
       <header className="mb-14 max-w-2xl">
         <h1 className="mb-4 text-h2">Guide</h1>
         <p className="prose-body text-text-muted">
-          Every Pixle icon is the same shape underneath: {GRID_SIZE}×{GRID_SIZE}{" "}
+          Every Pixit icon is the same shape underneath: {GRID_SIZE}×{GRID_SIZE}{" "}
           cells, one color, drawn to survive being shrunk to {ICON_SIZES[0]}px.
-          This is what that means in practice — and it doubles as the style
-          guide once contribution opens.
+          This is what that means in practice, and it doubles as the style guide
+          once contribution opens.
         </p>
       </header>
 
@@ -50,7 +55,7 @@ export default function GuidePage() {
           title="The grid"
           body={
             <>
-              An icon <em>is</em> its cells — {GRID_SIZE}×{GRID_SIZE} of them on
+              An icon <em>is</em> its cells: {GRID_SIZE}×{GRID_SIZE} of them on
               a {CANVAS_UNITS}-unit viewBox, four units per cell. The grid is
               odd on purpose, so there is an exact centre column and row to be
               symmetrical about. SVG and PNG are generated from the cells; the
@@ -66,10 +71,10 @@ export default function GuidePage() {
             <>
               Art stays inside a {SAFE_AREA_SIZE}×{SAFE_AREA_SIZE} region, one
               cell in from every edge. {SAFE_AREA_SIZE} is the only inset that
-              centres on an odd grid — a {SAFE_AREA_SIZE + 1}-wide area would
-              leave a single cell of margin to split between two sides. The
-              margin is a guide, not a fence: the composer will let you draw to
-              the edge when a glyph needs it.
+              centres on an odd grid, since a {SAFE_AREA_SIZE + 1}-wide area
+              would leave a single cell of margin to split between two sides.
+              The margin is a guide, not a fence: the composer will let you draw
+              to the edge when a glyph needs it.
             </>
           }
         />
@@ -104,12 +109,52 @@ export default function GuidePage() {
         />
 
         <Rule
+          title="Shape"
+          body={
+            <>
+              Stored cells are always square. The gallery can draw them three
+              ways, for the whole set at once: Square fills each cell edge to
+              edge, Inset leaves a gap so the grid shows between neighbours, and
+              Round draws the same node as a circle. It is a display setting and
+              never part of an icon, so the data stays square whatever you are
+              looking at. What you see <em>is</em> what you copy: the color,
+              the shape and the size on screen all travel with a copied or
+              downloaded icon.
+            </>
+          }
+          aside={
+            <ul className="flex list-none flex-wrap items-end gap-6 p-0">
+              {CELL_STYLES.map((style) => (
+                <li key={style} className="flex flex-col items-center gap-2">
+                  <span className="flex size-16 items-center justify-center rounded-md bg-surface">
+                    <IconPreview
+                      cells={DEMO.cells}
+                      size={40}
+                      cellStyle={style}
+                      title={`${DEMO.name} drawn ${SHAPE_LABELS[style]}`}
+                    />
+                  </span>
+                  <span className="font-data text-caption text-text-muted">
+                    {SHAPE_LABELS[style]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          }
+        />
+
+        <Rule
           title="Sizing"
           body={
             <>
               Built for the 8-point scale, with {ICON_SIZES[0]}px as the floor.
-              Cells stay square and on-grid at every size — padding grows the
-              viewBox rather than scaling the art, so edges never soften.
+              Cells stay square and on-grid at every size, because the art is
+              drawn from the grid rather than scaled to it, so edges never
+              soften. The gallery&rsquo;s size scale runs from {SIZE_STOPS[0]}{" "}
+              to {SIZE_STOPS[SIZE_STOPS.length - 1]}; the grid draws up to{" "}
+              {MAX_RENDERED_SIZE}, and every stop above that sets the size of
+              the file you export rather than the size of the tile you are
+              looking at.
             </>
           }
           aside={
@@ -133,7 +178,7 @@ export default function GuidePage() {
           body={
             <>
               Ids, names, and tags are kebab-case, validated when the registry
-              loads — a bad name fails the build rather than reaching the
+              loads, so a bad name fails the build rather than reaching the
               gallery. The name you read is the string you would paste into
               code.
             </>

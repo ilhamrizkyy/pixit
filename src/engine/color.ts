@@ -25,21 +25,6 @@ export type Hsl = {
   l: number;
 };
 
-/** Presets row, including true black and true white (DESIGN.md §3). */
-export const PRESET_COLORS: readonly string[] = [
-  "#000000",
-  "#ffffff",
-  "#dc2626",
-  "#d97706",
-  "#eab308",
-  "#16a34a",
-  "#2b5bff",
-  "#7c3aed",
-  "#ec4899",
-  "#71717a",
-] as const;
-
-/** The color a fresh composer session starts on. */
 /**
  * What the composer opens on: fully saturated, lightness dead centre.
  *

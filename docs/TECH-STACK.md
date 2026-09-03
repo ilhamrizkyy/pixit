@@ -114,7 +114,7 @@ A rule that depends on remembering to set a variable is not a rule.
 persist in `public.icons`; the repo's seed icons stay in `src/registry/icons.ts`
 and the gallery merges the two, registry first.
 
-- **The seeds stay in the repo, permanently.** Pixle is MIT. A clone that
+- **The seeds stay in the repo, permanently.** Pixit is MIT. A clone that
   renders nothing without access to someone else's database is not an
   open-source icon set, so `fetchPublishedIcons` returning `[]` — no
   credentials, project paused, network down — degrades to the seeded gallery

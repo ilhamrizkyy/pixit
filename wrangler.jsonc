@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "pixle",
+  "name": "pixit",
   "main": ".open-next/worker.js",
   // workerd 1.20260820 ships with this build, so the date is a real one rather
   // than a guess at the future.

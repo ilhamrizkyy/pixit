@@ -1,4 +1,4 @@
-# Pixle
+# Pixit
 
 An open-source pixel / 32-bit / arcade **icon set**, plus an in-browser
 **composer** styled like an Etch A Sketch. MIT licensed.

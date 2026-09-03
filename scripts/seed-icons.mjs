@@ -34,7 +34,7 @@ if (!URL_ || !KEY) {
   process.exit(1);
 }
 
-const dir = await mkdtemp(join(tmpdir(), "pixle-seed-"));
+const dir = await mkdtemp(join(tmpdir(), "pixit-seed-"));
 const entry = join(dir, "entry.ts");
 const bundle = join(dir, "registry.mjs");
 

@@ -33,7 +33,7 @@ export const SAFE_AREA_MIN = (GRID_SIZE - SAFE_AREA_SIZE) / 2; // 1
 export const SAFE_AREA_MAX = SAFE_AREA_MIN + SAFE_AREA_SIZE - 1; // 9
 
 /**
- * Sizes the gallery offers. Multiples of 8, 16px floor (DESIGN.md §6,
+ * Sizes an icon is DRAWN at. Multiples of 8, 16px floor (DESIGN.md §6,
  * INTERACTION.md §6).
  */
 export const ICON_SIZES = [16, 24, 32, 40, 48] as const;
@@ -42,6 +42,33 @@ export type IconSize = (typeof ICON_SIZES)[number];
 
 /** The size the gallery opens at. */
 export const DEFAULT_ICON_SIZE: IconSize = 24;
+
+/**
+ * THE LARGEST SIZE THE GRID DRAWS, and it is a consequence of the seat rather
+ * than a preference. The icon grid's tile is a fixed 64px — fixed so the page
+ * does not reflow under the cursor while Size is being dragged — and 8px of
+ * padding leaves exactly 48 for the art.
+ */
+export const MAX_RENDERED_SIZE = ICON_SIZES[ICON_SIZES.length - 1]; // 48
+
+/**
+ * EVERY STOP ON THE GALLERY'S SIZE SCALE — 16 to 120 in 8s.
+ *
+ * It runs well past `MAX_RENDERED_SIZE`, and the two halves of the travel do
+ * different jobs: up to 48 the size is what the grid draws AND what an export
+ * carries; above it the grid has stopped changing and the stop sets the export
+ * size alone. That break is printed on the scale as a full-width graduation, so
+ * the control says where its own meaning changes instead of silently changing
+ * it. See INTERACTION.md §6.
+ */
+export const SIZE_STOPS = [
+  16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120,
+] as const;
+
+/** What the grid actually draws for a chosen size. */
+export function renderedIconSize(size: number): number {
+  return Math.min(size, MAX_RENDERED_SIZE);
+}
 
 /**
  * Padding is measured in CELLS and expands the viewBox outward, rather than

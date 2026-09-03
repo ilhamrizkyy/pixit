@@ -6,12 +6,18 @@
  * produces the SVG string; this turns it into a file.
  */
 
-import { CELL_UNITS, CANVAS_UNITS, GRID_SIZE } from "@/engine/constants";
+import { GRID_SIZE } from "@/engine/constants";
 import { toIndex } from "@/engine/grid";
 import type { Cells } from "@/engine/types";
 
-/** Pixels per SVG unit when rasterizing. 12 gives a 528px PNG from a 44 unit canvas. */
-export const PNG_SCALE = 12;
+/**
+ * The PNG's size in pixels when nothing asks for one.
+ *
+ * It was `PNG_SCALE = 12` — pixels per SVG unit, so 528px from a 44-unit
+ * canvas. The gallery's size scale now names the export size directly, so the
+ * multiplier became an indirection with one caller and no meaning of its own.
+ */
+export const DEFAULT_PNG_SIZE = 528;
 
 /** Trigger a browser download for a blob. */
 export function downloadBlob(filename: string, blob: Blob): void {
@@ -37,19 +43,43 @@ export function downloadSvg(filename: string, svg: string): void {
  * avoids the canvas tainting and async-decode problems that come with
  * data-URI SVG sources. Transparent where cells are empty.
  */
+/**
+ * The 12 cell boundaries of a `pixels`-wide raster, in whole pixels.
+ *
+ * CELL EDGES SNAP, and that is the difference between a pixel icon and a
+ * smudge. 11 divides almost nothing, so a 24px export puts every boundary on a
+ * 2.18px fraction — and a fractional `fillRect` is anti-aliased, which softens
+ * the exact edges this format exists to keep. Rounding each boundary instead
+ * makes some cells 2px and some 3px with no blur anywhere: nearest-neighbour,
+ * which is what a pixel scaler does.
+ *
+ * Exported because it is the only testable part of the rasterizer — jsdom has
+ * no canvas, so the drawing itself cannot be reached from a unit test.
+ */
+export function pngCellEdges(pixels: number): number[] {
+  return Array.from({ length: GRID_SIZE + 1 }, (_, i) =>
+    Math.round((i * pixels) / GRID_SIZE),
+  );
+}
+
 export function cellsToPngBlob(
   cells: Cells,
-  { scale = PNG_SCALE, padding = 0 }: { scale?: number; padding?: number } = {},
+  {
+    pixels = DEFAULT_PNG_SIZE,
+    padding = 0,
+  }: { pixels?: number; padding?: number } = {},
 ): Promise<Blob | null> {
-  const cellPx = CELL_UNITS * scale;
-  const padPx = padding * cellPx;
+  const cellPx = pixels / GRID_SIZE;
+  const padPx = Math.round(padding * cellPx);
 
   const canvas = document.createElement("canvas");
-  canvas.width = CANVAS_UNITS * scale + padPx * 2;
+  canvas.width = Math.round(pixels) + padPx * 2;
   canvas.height = canvas.width;
 
   const ctx = canvas.getContext("2d");
   if (ctx === null) return Promise.resolve(null);
+
+  const edges = pngCellEdges(pixels);
 
   // The canvas starts fully transparent and no background is ever painted,
   // so padding reads as empty space rather than a colored border.
@@ -58,7 +88,12 @@ export function cellsToPngBlob(
       const color = cells[toIndex(row, col)];
       if (color === null) continue;
       ctx.fillStyle = color;
-      ctx.fillRect(padPx + col * cellPx, padPx + row * cellPx, cellPx, cellPx);
+      ctx.fillRect(
+        padPx + edges[col],
+        padPx + edges[row],
+        edges[col + 1] - edges[col],
+        edges[row + 1] - edges[row],
+      );
     }
   }
 

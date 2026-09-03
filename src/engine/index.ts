@@ -1,5 +1,5 @@
 /**
- * Pixle icon engine — the public surface.
+ * Pixit icon engine — the public surface.
  *
  * THE ARCHITECTURAL RULE (TECH-STACK.md): nothing in this directory may import
  * React, next/*, the DOM, Canvas, or WebGL. The engine is plain TypeScript and

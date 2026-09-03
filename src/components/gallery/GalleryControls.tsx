@@ -1,356 +1,344 @@
 "use client";
 
-import { galleryColorFromInput } from "@/engine/color";
+import { useEffect, useRef } from "react";
+import { galleryColorFromInput, hexToHsl } from "@/engine/color";
+import { ColorKnobs } from "./ColorKnobs";
+import { SizeScale } from "./SizeScale";
+import { ShapeWheel } from "./ShapeWheel";
 import {
-  DEFAULT_ICON_SIZE,
-  ICON_SIZES,
-  PADDING_STEPS,
-} from "@/engine/constants";
-import { GRID_SIZE } from "@/engine/constants";
-import { CELL_STYLES, DEFAULT_CELL_STYLE } from "@/engine/render";
-import { IDENTITY_ORIENTATION } from "@/engine/transform";
-import { CATEGORIES } from "@/engine/types";
-import type { Category } from "@/engine/types";
-import { TransformControls } from "./TransformControls";
-import type { GallerySettings } from "./settings";
+  resolveGalleryColor,
+  resolveGalleryHsl,
+  type GallerySettings,
+} from "./settings";
 
 /**
- * The Display and Categories controls, shared by the desktop sidebar and the
- * mobile filter sheet.
+ * The body's Display controls — COLOUR and SHAPE on the board, plus SIZE in the
+ * sheet — shared by the desktop sidebar and the mobile filter sheet.
+ *
+ * SIZE IS A RAIL IN THE GUTTER on the board (SizeScale.tsx), because a scale
+ * wants length and this pad is 264px wide. The sheet has no gutter to stand one
+ * in, so it renders the horizontal build here instead; `showSize` is which.
  *
  * Deliberately stateless: it renders `settings` and reports every change up.
- * That is what lets the sheet hand it a DRAFT while the sidebar hands it the
- * live values — same controls, two commit models, one implementation.
+ * That is what lets the sheet hand it a DRAFT while the body hands it the live
+ * values — same controls, two commit models, one implementation. It is also
+ * what keeps the two surfaces from becoming two answers to the same question:
+ * only one of them is ever mounted.
  *
- * The color control is DISPLAY ONLY. One hex recolors every icon in the
- * gallery, the way Lucide's customizer works, and never touches stored icons.
+ * COLOUR IS THE TOY'S OWN CONTROL as of 2026-08-29 — three knobs, the same
+ * component the composer turns. See ColorKnobs.tsx. The hex field stayed, under
+ * them: knobs are how you FIND a colour and a field is how you enter one you
+ * already know, and an icon set whose users arrive with a brand hex needs both.
+ * That is also the composer's split, where the knobs are on the board and the
+ * hex is in the dock.
+ *
+ * NO HEADING AND NO RESET. Both went on 2026-08-29. The pad is the only thing
+ * on the body and every control on it is labelled, so "DISPLAY" was a heading
+ * over a panel with nothing to distinguish itself from; the section Reset
+ * duplicated a job the ✕ on the colour field and the tick labels already do
+ * one control at a time, and the sheet's footer does wholesale.
+ *
+ * COLOUR LIVES HERE, not on the screen's header. The board makes the argument
+ * the old layout could not: the body is what operates the screen, and the
+ * colour every icon renders in is the most screen-changing thing there is.
+ * Search stays on the screen because it changes WHICH icons are there, not how
+ * they are drawn.
+ *
+ * Padding and Transform were removed with the rebuild — see settings.ts.
  */
 
 type GalleryControlsProps = {
   settings: GallerySettings;
   onChange: (next: GallerySettings) => void;
-  /** Resolved color for the swatch — derived from whichever settings apply. */
-  color: string;
-  counts: Record<Category, number>;
-  total: number;
   /**
-   * Show the Display section's own Reset. The sheet hides it, since its footer
-   * already offers a Reset covering everything — two resets in one panel is
-   * one too many.
+   * The theme's own icon colour — #000 in light, #fff in dark. Passed in rather
+   * than read here so the SHEET resolves its DRAFT's colour, not the live one:
+   * the swatch has to show what Apply would do, not what is on screen.
    */
-  showSectionReset?: boolean;
+  themeColor: string;
+  /** Disambiguates input ids when both surfaces exist in one test render. */
+  idPrefix?: string;
+  /**
+   * Render the Size control here. FALSE on the board, where Size is the rail in
+   * the gutter; true in the sheet, which is the one surface with no gutter to
+   * stand a rail in.
+   */
+  showSize?: boolean;
 };
 
-const SIZE_MIN = ICON_SIZES[0];
-const SIZE_MAX = ICON_SIZES[ICON_SIZES.length - 1];
+/**
+ * The floor between one character's refreshes, in ms.
+ *
+ * LONGER THAN THE ANIMATION (180ms), and that is the whole trick. A knob turn
+ * is not one change, it is a stream of them for as long as the pointer moves —
+ * so a recipe that replays on every change replays sixty times a second and
+ * never finishes anything, which reads as flicker rather than as motion. With
+ * the floor above the duration, a character's animation always completes before
+ * it can start again, and a fast drag becomes a steady five-a-second shimmer
+ * instead of a strobe.
+ */
+const DIGIT_RETRIGGER_MS = 200;
+
+/**
+ * Replay the segment animation on the characters that CHANGED.
+ *
+ * Per character rather than per group: turning Lightness on a grey moves two
+ * digits, and the stock number pop-in would shake all six. The value itself is
+ * already on screen — this only decides which spans get the class back, so a
+ * skipped animation costs appearance and never correctness.
+ */
+function useDigitRefresh(value: string, active: boolean) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const previous = useRef(value);
+  const lastAt = useRef<number[]>([]);
+
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = value;
+    const root = ref.current;
+    if (root === null || before === value || !active) return;
+
+    const now = performance.now();
+    for (let i = 0; i < root.children.length; i++) {
+      if (before[i] === value[i]) continue;
+      if (now - (lastAt.current[i] ?? 0) < DIGIT_RETRIGGER_MS) continue;
+      lastAt.current[i] = now;
+
+      const span = root.children[i] as HTMLElement;
+      span.classList.remove("is-changed");
+      // The reflow is what makes the animation replay; without it the class is
+      // already there and the browser sees no change at all.
+      void span.offsetWidth;
+      span.classList.add("is-changed");
+    }
+  }, [value, active]);
+
+  return ref;
+}
 
 export function GalleryControls({
   settings,
   onChange,
-  color,
-  counts,
-  total,
-  showSectionReset = true,
+  themeColor,
+  idPrefix = "display",
+  showSize = false,
 }: GalleryControlsProps) {
   const set = (patch: Partial<GallerySettings>) =>
     onChange({ ...settings, ...patch });
 
-  const { colorText, size, padding, orientation, cellStyle, category } = settings;
+  const { colorText } = settings;
 
-  // Position of the fill along the track.
-  const progress = ((size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100;
-
-  // What the field shows: the typed text, or the theme default when untouched.
-  const fieldValue = (colorText ?? color).replace(/^#/, "");
-  // Parse rather than compare strings — "#FF0000" is valid but not equal to
-  // the normalized "#ff0000".
+  // The colour actually in effect — never null, since icons always render in
+  // exactly one colour. Parse rather than compare strings when judging the
+  // field: "#FF0000" is valid but not equal to the normalized "#ff0000".
+  const resolved = resolveGalleryColor(colorText, themeColor);
   const invalid =
     colorText !== null &&
     colorText.trim() !== "" &&
     galleryColorFromInput(colorText) === null;
+  /* The stored value keeps whatever was typed. The readout PRINTS it in
+     capitals, and that is `text-transform` on the layer that draws the glyphs
+     rather than a transform of the value — see `.pixl-lcd-digits`. */
+  const fieldValue = (colorText ?? resolved).replace(/^#/, "");
+
+  // Where the knobs point. Held in settings once a colour is chosen, read off
+  // the theme until then — see `resolveGalleryHsl`.
+  const hsl = resolveGalleryHsl(settings, themeColor);
+
+  /**
+   * A typed hex snaps the knobs to the nearest match while the exact hex
+   * becomes the colour, which is the composer's rule (INTERACTION.md §4). An
+   * unparseable string leaves the knobs where they were rather than throwing
+   * them to black on the way through "#f".
+   */
+  const setColorText = (text: string) => {
+    const parsed = galleryColorFromInput(text);
+    set(
+      parsed === null
+        ? { colorText: text }
+        : { colorText: text, hsl: hexToHsl(parsed) },
+    );
+  };
+
+  /* The readout animates when the KNOBS move it and not when you type into it:
+     while the field has focus the characters are arriving one at a time under a
+     caret, and animating them fights the thing the caret is doing. */
+  const inputId = `${idPrefix}-color`;
+  const digitsRef = useDigitRefresh(
+    fieldValue,
+    typeof document === "undefined" || document.activeElement?.id !== inputId,
+  );
 
   return (
+    /* ONE PAD ON THE BOARD, AND IT IS COLOUR'S (2026-08-30). A pad says "these
+       belong together" (§5c), and that was first used to split one pad into two
+       — COLOUR is one instrument, a readout and the three knobs that drive it,
+       while Size and Shape are settings that merely sit next to each other.
+
+       Followed through, the same rule takes the second pad away entirely: with
+       Size gone to the rail in the gutter, that panel was drawn around a SINGLE
+       control, grouping it with nothing. Shape stands on the case now, at the
+       column's own width. The sheet is the one surface where Size is really
+       mounted, so it is the one surface that still has two pads.
+
+       The mini screen above them is a third section, and it always was: it is a
+       separate part of the moulding, not a region of one. */
     <>
-      <section>
-        <SectionHead title="Display">
-          {showSectionReset && (
-            <ResetButton
-              onClick={() =>
-                set({
-                  colorText: null,
-                  size: DEFAULT_ICON_SIZE,
-                  padding: 0,
-                  orientation: IDENTITY_ORIENTATION,
-                  cellStyle: DEFAULT_CELL_STYLE,
-                })
-              }
-            />
-          )}
-        </SectionHead>
+      <section className="pixl-pad px-4 pt-4 pb-4">
+        {/* ---- Colour ----------------------------------------------------
+          THE READOUT IS ABOVE THE KNOBS, as it is on the device this copies:
+          the display is what the case shows you, and the controls sit under it.
+          It was below them, which put the answer beneath the question.
 
-        {/* ---- Color ------------------------------------------------------ */}
-        <label
-          htmlFor="icon-color"
-          className="mb-2 block text-caption text-text-muted"
-        >
-          Color
-        </label>
-
-        <div
-          className={`flex items-center gap-2 rounded-sm border bg-surface px-2 py-1.5 focus-within:border-accent ${
-            invalid ? "border-danger" : "border-border"
-          }`}
-        >
-          {/* The swatch is a native color input, so clicking it opens the OS
-              picker while the text field stays the primary way in. */}
-          <label
-            className="size-5 shrink-0 cursor-pointer rounded-xs border border-border"
-            style={{ backgroundColor: color }}
-            title="Pick a color"
-          >
-            <input
-              type="color"
-              value={color}
-              onChange={(event) => set({ colorText: event.target.value })}
-              className="sr-only"
-              aria-label="Pick a color"
-            />
-          </label>
-
-          {/* The # and the digits form one string, so they sit flush with no
-              gap between them — "#000000", not "# 000000". */}
-          <div className="flex min-w-0 flex-1 items-center font-data text-ui text-text">
-            <span aria-hidden="true">#</span>
-            <input
-              id="icon-color"
-              type="text"
-              inputMode="text"
-              spellCheck={false}
-              autoComplete="off"
-              value={fieldValue}
-              onChange={(event) => set({ colorText: event.target.value })}
-              aria-invalid={invalid}
-              className="w-full min-w-0 bg-transparent uppercase focus:outline-none"
-            />
-          </div>
-          {colorText !== null && (
-            <button
-              type="button"
-              onClick={() => set({ colorText: null })}
-              aria-label="Reset to theme default"
-              className="shrink-0 px-1 text-caption text-text-muted hover:text-text"
+          There is no "Colour" heading. The panel reads the colour out and the
+          three knobs are legended H / S / L on the plastic — a label over that
+          is a caption for something already saying its own name. */}
+        <div>
+          {/* TWO PANELS CUT INTO THE SAME FACE: the colour on one, the number
+              on the other. They were one — a swatch chip sitting on the readout
+              — which is a single display showing two unrelated things, and a
+              readout is for the number. */}
+          <div className="flex gap-2">
+            {/* The colour's own screen, and the OS picker behind it. */}
+            <label
+              className="pixl-swatch"
+              style={{ backgroundColor: resolved }}
+              title="Pick a colour"
             >
-              ✕
-            </button>
-          )}
-        </div>
+              <input
+                type="color"
+                value={resolved}
+                onChange={(event) => setColorText(event.target.value)}
+                className="sr-only"
+                aria-label="Pick a colour"
+              />
+            </label>
 
-        {invalid && (
-          <p className="mt-1.5 text-caption text-danger">
-            Needs 3 or 6 hex digits.
-          </p>
-        )}
+            {/* A SEGMENT PANEL, not a well. It was a hole with text lying in
+                it; the reference device puts a DISPLAY in the case instead —
+                the same part the mini screen already is, at readout scale. */}
+            <div
+              className={`pixl-lcd flex-1 ${invalid ? "outline outline-danger" : ""}`}
+            >
+              {/* The # and the digits are one string, so they sit flush —
+                  "#000000", not "# 000000". No unit label beside them: "#"
+                  already says hex, and a panel with one value on it does not
+                  need to be told what kind of value it is. */}
+              <div className="pixl-lcd-value">
+                <span aria-hidden="true">#</span>
+                <span className="pixl-lcd-slot">
+                  {/* The glyphs. The input under this paints nothing — it has
+                      no per-character boxes to animate, and this does. */}
+                  <span
+                    aria-hidden="true"
+                    ref={digitsRef}
+                    className="pixl-lcd-digits"
+                  >
+                    {fieldValue.split("").map((character, index) => (
+                      <span key={index} className="pixl-lcd-digit">
+                        {character}
+                      </span>
+                    ))}
+                  </span>
+                  <input
+                    id={inputId}
+                    type="text"
+                    inputMode="text"
+                    spellCheck={false}
+                    autoComplete="off"
+                    value={fieldValue}
+                    onChange={(event) => setColorText(event.target.value)}
+                    aria-invalid={invalid}
+                    aria-label="Icon colour, as a hex value"
+                    className="pixl-lcd-input"
+                  />
+                </span>
+              </div>
 
-        {/* ---- Size ------------------------------------------------------- */}
-        <div className="mt-6">
-          <label
-            htmlFor="icon-size"
-            className="mb-1 block text-caption text-text-muted"
-          >
-            Size
-          </label>
-
-          {/* No value bubble: the tick labels below already show the current
-              size, and the active one is highlighted. */}
-          <div>
-            <input
-              id="icon-size"
-              type="range"
-              min={SIZE_MIN}
-              max={SIZE_MAX}
-              step={8}
-              value={size}
-              onChange={(event) => set({ size: Number(event.target.value) })}
-              className="pixl-range"
-              style={{ "--fill": `${progress}%` } as React.CSSProperties}
-            />
-
-            <div className="mt-1 flex justify-between px-0.5">
-              {ICON_SIZES.map((step) => (
+              {colorText !== null && (
                 <button
-                  key={step}
                   type="button"
-                  onClick={() => set({ size: step })}
-                  className={`font-data text-caption transition-colors ${
-                    size === step
-                      ? "font-bold text-accent"
-                      : "text-text-muted hover:text-text"
-                  }`}
+                  onClick={() => set({ colorText: null })}
+                  aria-label="Reset to theme default"
+                  className="pixl-lcd-clear"
                 >
-                  {step}
+                  ✕
                 </button>
-              ))}
+              )}
             </div>
           </div>
-        </div>
 
-        {/* ---- Padding ---------------------------------------------------- */}
-        <div className="mt-5">
-          <div className="mb-1 flex items-baseline justify-between">
-            <span className="text-caption text-text-muted">Padding</span>
-            {/* Reads out the resulting CANVAS, not the input number. "1" tells
-                you nothing; "13×13" tells you the art keeps its size and the
-                canvas grows around it. */}
-            <span className="font-data text-caption text-text-muted">
-              {GRID_SIZE + padding * 2}×{GRID_SIZE + padding * 2}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {PADDING_STEPS.map((step) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => set({ padding: step })}
-                aria-pressed={padding === step}
-                className={`flex-1 rounded-sm border py-1.5 font-data text-caption transition-colors ${
-                  padding === step
-                    ? "border-accent bg-accent-subtle font-bold text-accent-ink"
-                    : "border-border bg-surface text-text-muted hover:text-text"
-                }`}
-              >
-                {step}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ---- Cells ------------------------------------------------------ */}
-        <div className="mt-5">
-          <span className="mb-1 block text-caption text-text-muted">Cells</span>
-          {/* Three treatments of ONE drawing, not three drawings: Gap and Dots
-              inset a cell by the same amount and differ only in shape, so
-              switching between them never looks like a change of zoom. */}
-          <div className="flex gap-1.5">
-            {CELL_STYLES.map((style) => (
-              <button
-                key={style}
-                type="button"
-                onClick={() => set({ cellStyle: style })}
-                aria-pressed={cellStyle === style}
-                className={`flex-1 rounded-sm border py-1.5 font-data text-caption capitalize transition-colors ${
-                  cellStyle === style
-                    ? "border-accent bg-accent-subtle font-bold text-accent-ink"
-                    : "border-border bg-surface text-text-muted hover:text-text"
-                }`}
-              >
-                {style}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ---- Transform -------------------------------------------------- */}
-        <TransformControls
-          orientation={orientation}
-          onOrientation={(next) => set({ orientation: next })}
-        />
-      </section>
-
-      <section>
-        <SectionHead title="Categories" />
-        <ul className="flex list-none flex-col gap-0.5 p-0">
-          <li>
-            <CategoryButton
-              label="All"
-              count={total}
-              active={category === "all"}
-              onClick={() => set({ category: "all" })}
+          <div className="mt-4">
+            <ColorKnobs
+              hsl={hsl}
+              onChange={(next, hex) => set({ hsl: next, colorText: hex })}
+              idPrefix={idPrefix}
             />
-          </li>
-          {CATEGORIES.map((entry) => (
-            <li key={entry.id}>
-              <CategoryButton
-                label={entry.label}
-                count={counts[entry.id]}
-                active={category === entry.id}
-                onClick={() => set({ category: entry.id })}
-              />
-            </li>
-          ))}
-        </ul>
+          </div>
+        </div>
       </section>
+
+      {/* ---- Size (sheet only) ------------------------------------------- */}
+      {showSize ? (
+        <section className="pixl-pad px-4 pt-4 pb-4">
+          {/* SIZE IS HERE ONLY IN THE SHEET. On the board it is a full-height
+            rail standing in the gutter beside the screen — see SizeScale.tsx —
+            and a phone has no gutter to stand it in, so the sheet keeps the
+            horizontal build. One of the two is ever mounted, which is the same
+            arrangement the whole of this component already lives under. */}
+          <div>
+            {/* THE VALUE IS READ OUT HERE, and only here. The bar prints every
+                other stop so its numbers do not collide on a phone, which
+                leaves seven values with no printed number of their own — so the
+                label carries the exact one. The rail needs no readout: it
+                prints all fourteen. */}
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <label
+                htmlFor={`${idPrefix}-size`}
+                className="text-caption text-text-muted"
+              >
+                Size
+              </label>
+              <span className="font-data text-caption tabular-nums text-text">
+                {settings.size}
+              </span>
+            </div>
+            <SizeScale
+              size={settings.size}
+              onSize={(next) => set({ size: next })}
+              orientation="horizontal"
+              id={`${idPrefix}-size`}
+            />
+          </div>
+
+          <div className="mt-4">
+            <ShapeWheel settings={settings} onSettings={onChange} />
+          </div>
+        </section>
+      ) : null}
+
+      {/* ---- Shape --------------------------------------------------------
+          NO PAD ON THE BOARD, AND FULL WIDTH (2026-08-30). It shared one with
+          Size, and with Size gone to the rail in the gutter that pad was a
+          panel drawn around a SINGLE control: a pad says "these belong
+          together" (§5c) and there was nothing to group. Its own 16px of
+          padding also held the switch inset from the screen and the colour pad
+          both, which reads as a control that did not quite fit rather than one
+          mounted through the case.
+
+          THE SHEET KEEPS IT, and for a different reason than the one that took
+          it off the board. The drum's window and grip are HOLES CUT IN A PANEL
+          — walls in the chassis's own tones, per §6 — and the sheet is a white
+          surface, not a case. On the board the pad was redundant because the
+          case is already there; in the sheet it IS the case. Size is in it too,
+          which is the 2026-08-29 grouping still standing on the one surface
+          where Size is really mounted.
+
+          One of the two is ever rendered, which is the arrangement the whole of
+          this component already lives under. */}
+      {showSize ? null : (
+        <ShapeWheel settings={settings} onSettings={onChange} />
+      )}
     </>
-  );
-}
-
-export function SectionHead({
-  title,
-  children,
-}: {
-  title: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-3 flex items-center justify-between">
-      {/* Pixel face on the gallery's section eyebrows (DESIGN.md §4). NOT
-          bolded: Press Start 2P ships a single weight, so `font-bold` would
-          synthesise one and smear a face whose whole point is crisp edges.
-          Tracking is modest for the same reason the wordmark's is — the face
-          already carries a full-em advance, so `widest` reads as gappy. */}
-      <h3 className="font-pixel text-caption tracking-wide uppercase">
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
-export function ResetButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-caption text-accent"
-    >
-      Reset
-    </button>
-  );
-}
-
-function CategoryButton({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex w-full items-center justify-between rounded-sm px-2.5 py-2 text-ui ${
-        active
-          ? "bg-accent-subtle font-bold text-accent-ink"
-          : "text-text hover:bg-surface"
-      }`}
-    >
-      <span>{label}</span>
-      <span
-        className={`font-data text-caption ${
-          /* accent-INK, like its parent: this span sits on the same tint, and
-             inheriting the rule only for the label while the count kept the
-             base accent is exactly how one half of a control fails contrast
-             while the other half passes. */
-          active ? "text-accent-ink" : "text-text-muted"
-        }`}
-      >
-        {count}
-      </span>
-    </button>
   );
 }

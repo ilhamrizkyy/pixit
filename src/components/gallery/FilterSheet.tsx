@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Category } from "@/engine/types";
 import { useDialog } from "@/lib/useDialog";
 import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
 import { GalleryControls } from "./GalleryControls";
-import {
-  DEFAULT_SETTINGS,
-  resolveGalleryColor,
-  type GallerySettings,
-} from "./settings";
+import { DEFAULT_SETTINGS, type GallerySettings } from "./settings";
 
 /**
  * Mobile filter surface: a bottom sheet with Reset and Apply.
@@ -27,28 +22,22 @@ import {
 
 type FilterSheetProps = {
   settings: GallerySettings;
+  /** Resolves the DRAFT's swatch, so it shows what Apply would do. */
+  themeColor: string;
   onApply: (next: GallerySettings) => void;
   onClose: () => void;
-  /** Icon color for the current theme, for resolving the draft's swatch. */
-  themeColor: string;
-  counts: Record<Category, number>;
-  total: number;
 };
 
 export function FilterSheet({
   settings,
+  themeColor,
   onApply,
   onClose,
-  themeColor,
-  counts,
-  total,
 }: FilterSheetProps) {
   const [draft, setDraft] = useState<GallerySettings>(settings);
   const { closing, requestClose } = useDismissible(onClose, CLOSE_MS.sheet);
   const { ref, onKeyDown } = useDialog<HTMLDivElement>(requestClose);
 
-  // The swatch has to track the DRAFT, not the committed settings.
-  const draftColor = resolveGalleryColor(draft.colorText, themeColor);
 
   return (
     <div
@@ -71,7 +60,7 @@ export function FilterSheet({
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 id="filter-sheet-title" className="text-h3">
-            Filters
+            Display
           </h2>
           <button
             type="button"
@@ -87,10 +76,9 @@ export function FilterSheet({
           <GalleryControls
             settings={draft}
             onChange={setDraft}
-            color={draftColor}
-            counts={counts}
-            total={total}
-            showSectionReset={false}
+            themeColor={themeColor}
+            idPrefix="sheet"
+            showSize
           />
         </div>
 

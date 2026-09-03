@@ -1,5 +1,5 @@
 /**
- * Fixed facts about where Pixle lives.
+ * Fixed facts about where Pixit lives.
  *
  * Plain constants, not environment variables: these are the same in every
  * environment — dev, preview, and production all point at the same public
@@ -7,6 +7,6 @@
  * missing, in exchange for configurability nobody needs.
  */
 
-export const REPO_URL = "https://github.com/ilhamrizkyy/pixle";
+export const REPO_URL = "https://github.com/ilhamrizkyy/pixit";
 
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;

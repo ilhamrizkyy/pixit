@@ -70,10 +70,10 @@ function ComposerBody() {
             <div className="toy-bezel w-full">
               {/* Moulded into the brow, the way the toy this is modelled on
                   carries its own name. Decorative: the page's real wordmark is
-                  in the nav, and a screen reader meeting "Pixle" twice on one
+                  in the nav, and a screen reader meeting "Pixit" twice on one
                   page learns nothing the second time. */}
               <span className="toy-legend" aria-hidden="true">
-                Pixle
+                Pixit
               </span>
               {/* The SCREEN is the square, not the bezel — so the bezel can
                   carry a deeper brow without the board going oblong. */}

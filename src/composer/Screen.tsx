@@ -28,14 +28,17 @@ export function Screen() {
   const ref = useRef<HTMLDivElement>(null);
   const [screenColor, setScreenColor] = useState("");
 
-  /* Read the token rather than restating it: --screen is composer-scoped, so it
-     has to be read from an element INSIDE the scope, not off the document. One
-     source of truth for the screen's colour, as DESIGN.md §7 requires — a hex
-     copied into the mesh would drift the first time the token moved, and it
-     just did. */
+  /* Read the token rather than restating it. One source of truth for the
+     screen's colour, as DESIGN.md §7 requires — a hex copied into the mesh
+     would drift the first time the token moved, and it has.
+
+     `--lcd`, not `--screen`: this board's screen is the same segment panel as
+     the gallery's mini screen, not the icon grid's lit display. Read off an
+     element inside the toy rather than off the document, since the scope may
+     redefine it. */
   useEffect(() => {
     if (ref.current === null) return;
-    setScreenColor(getComputedStyle(ref.current).getPropertyValue("--screen").trim());
+    setScreenColor(getComputedStyle(ref.current).getPropertyValue("--lcd").trim());
   }, []);
 
   return (
