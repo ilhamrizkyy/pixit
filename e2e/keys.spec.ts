@@ -620,6 +620,15 @@ test("the grip and the window turn together, and the ribs track the pointer", as
   const samples: number[][] = [];
   for (let i = 1; i <= 10; i++) {
     await page.mouse.move(cx, cy - i * 5);
+    /* LET THE 45ms FOLLOW BRIDGE LAND. The drum gained the bridge on
+       2026-09-04 — it had `transition: none` while citing, in its own comment,
+       the size rail's measurement that 17 frames in 121 receive no pointer
+       event and a stationary frame under a moving finger is the stutter. With a
+       bridge the transform is mid-flight for 45ms after each move, so sampling
+       immediately reads a value that has not caught up yet and two consecutive
+       samples can be equal. This waits for the same reason the rail's own tests
+       do: the assertion is about where the drum GOES, not how fast. */
+    await page.waitForTimeout(60);
     samples.push(await angles());
   }
   for (let i = 1; i < samples.length; i++) {
@@ -725,53 +734,133 @@ test("the icon name is shown whole, not clipped to its tile", async ({
    The chips — flat, because they are on the glass.
    ------------------------------------------------------------------------ */
 
-test("a chip carries selection in fill, and its tint in both states", async ({
+/**
+ * THE FILL TRAVELS (2026-09-04). It used to be a `background` on the selected
+ * chip; it is now ONE capsule behind the row that slides between them, because
+ * the board's other tablist already slides and one device should not speak two
+ * selection languages.
+ *
+ * The chip therefore paints no background of its own. That is not an accident
+ * to be relaxed: two fills would mean the capsule slides between chips that are
+ * already filled, and the travel would be invisible.
+ *
+ * What the original test protected still holds and is still checked here:
+ * exactly one thing is filled, it wears the CATEGORY's own tint rather than a
+ * shared accent, the ink never moves between states, and nothing on the glass
+ * is moulded.
+ */
+test("selection is one travelling fill, in the category's own tint", async ({
   page,
 }) => {
   await page.goto("/");
 
   const read = () =>
-    page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>(".pixl-chip")].map((el) => {
-        const cs = getComputedStyle(el);
-        return {
-          // Chips keep a WORD: they are on the glass, and a category has no
-          // shape to draw. Only the keys took glyphs.
-          label: el.textContent ?? "",
-          selected: el.getAttribute("aria-selected") === "true",
-          fill: cs.backgroundColor,
-          ink: cs.color,
-          // Flat by construction — depth belongs to the plastic.
-          shadow: cs.boxShadow,
-          transform: cs.transform,
-        };
-      }),
-    );
-
-  const before = await read();
-  expect(before.length).toBeGreaterThan(3);
+    page.evaluate(() => {
+      const fill = document.querySelector<HTMLElement>(".pixl-chip-fill")!;
+      const fillStyle = getComputedStyle(fill);
+      return {
+        fill: {
+          background: fillStyle.backgroundColor,
+          box: fill.getBoundingClientRect(),
+          // Composited, so a held arrow key retargets instead of restarting.
+          transition: fillStyle.transitionProperty,
+        },
+        chips: [...document.querySelectorAll<HTMLElement>(".pixl-chip")].map(
+          (el) => {
+            const cs = getComputedStyle(el);
+            return {
+              // Chips keep a WORD: they are on the glass, and a category has no
+              // shape to draw. Only the keys took glyphs.
+              label: el.textContent ?? "",
+              selected: el.getAttribute("aria-selected") === "true",
+              fill: cs.backgroundColor,
+              ink: cs.color,
+              // Flat by construction — depth belongs to the plastic.
+              shadow: cs.boxShadow,
+              box: el.getBoundingClientRect(),
+            };
+          },
+        ),
+      };
+    });
 
   const transparent = (c: string) =>
     c === "rgba(0, 0, 0, 0)" || c === "transparent";
 
-  for (const chip of before) {
-    expect(chip.shadow).toBe("none");
-    expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(chip.transform);
-    // Exactly one is filled.
-    expect(transparent(chip.fill)).toBe(!chip.selected);
+  const before = await read();
+  expect(before.chips.length).toBeGreaterThan(3);
+
+  // NOTHING ON THE GLASS IS MOULDED, and no chip paints its own fill.
+  for (const chip of before.chips) {
+    expect(chip.shadow, `${chip.label} has a moulded face`).toBe("none");
+    expect(
+      transparent(chip.fill),
+      `${chip.label} paints its own fill, so the travel is invisible`,
+    ).toBe(true);
   }
 
-  const arcade = before.find((c) => c.label === "Arcade")!;
+  /* IT IS A CAPSULE, NOT A LOZENGE — and that is what forced the build off
+     `scaleX`. Scaling a 1px-wide base is the compositor-friendly way to move
+     this, and it cannot draw the shape: `border-radius` resolves against the
+     UNSCALED box, so the horizontal radius clamps to 0.5px and the scale
+     stretches it into an ellipse with pointed ends.
+
+     THE SHAPE CANNOT BE READ BACK FROM CSS, which is why this asserts the
+     SCALE instead. Measured against a probe built the old way: a 1px element at
+     `scaleX(132)` still reports `border-top-left-radius: 999px`, because the
+     computed value is the specified one and not the clamped one. So a radius
+     assertion here passes against the exact bug it names — the same class of
+     inert check this stylesheet has shipped before. The scale factor is the one
+     readable thing that separates the two builds. */
+  expect(before.fill.transition).toContain("transform");
+  const scaled = await page.evaluate(() => {
+    const t = getComputedStyle(
+      document.querySelector<HTMLElement>(".pixl-chip-fill")!,
+    ).transform;
+    return t.includes("matrix") ? Number(t.split(/[(,]/)[1].trim()) : 1;
+  });
+  expect(
+    scaled,
+    "the fill is scaled, which clamps its radius and draws a lozenge",
+  ).toBe(1);
+
+  // AND IT IS PARKED ON THE LIVE CHIP.
+  const selBefore = before.chips.find((c) => c.selected)!;
+  expect(Math.abs(before.fill.box.x - selBefore.box.x)).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(before.fill.box.width - selBefore.box.width),
+  ).toBeLessThanOrEqual(1);
+
+  const arcadeInk = before.chips.find((c) => c.label === "Arcade")!.ink;
   await page.getByRole("tab", { name: "Arcade" }).click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(400);
 
   const after = await read();
-  const arcadeNow = after.find((c) => c.label === "Arcade")!;
+  const arcadeNow = after.chips.find((c) => c.label === "Arcade")!;
 
-  // Filled now, and in ITS OWN tint rather than a shared accent.
-  expect(transparent(arcadeNow.fill)).toBe(false);
+  // IT TRAVELLED, and landed on the chip that is now live.
+  expect(arcadeNow.selected).toBe(true);
+  expect(Math.abs(after.fill.box.x - arcadeNow.box.x)).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(after.fill.box.width - arcadeNow.box.width),
+  ).toBeLessThanOrEqual(1);
+  expect(after.fill.box.x).not.toBe(before.fill.box.x);
+
+  // IN ARCADE'S OWN TINT, not a shared accent: the capsule's colour is the live
+  // category's, so the fill identifies WHICH rather than meaning "this one".
+  const tint = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.className = "pixl-chip-fill";
+    probe.setAttribute("data-category", "arcade");
+    document.body.append(probe);
+    const out = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return out;
+  });
+  expect(after.fill.background).toBe(tint);
+  expect(after.fill.background).not.toBe(before.fill.background);
+
   // The ink never moved: the tint identifies the category in both states, so
   // nothing about the colour is allowed to mean "this one".
-  expect(arcadeNow.ink).toBe(arcade.ink);
-  expect(after.filter((c) => !transparent(c.fill))).toHaveLength(1);
+  expect(arcadeNow.ink).toBe(arcadeInk);
 });

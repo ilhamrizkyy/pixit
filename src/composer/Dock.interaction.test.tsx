@@ -36,7 +36,7 @@ describe("the dock below `lg`", () => {
     // Everything set once, or read exactly, is behind the door.
     expect(screen.queryByLabelText("Category")).toBeNull();
     expect(screen.queryByLabelText("Tags")).toBeNull();
-    expect(screen.queryByLabelText("Paint colour")).toBeNull();
+    expect(screen.queryByLabelText("Paint color")).toBeNull();
     expect(screen.queryByRole("button", { name: "Import icon" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export SVG" })).toBeNull();
   });
@@ -54,7 +54,7 @@ describe("the dock below `lg`", () => {
     expect(screen.getByRole("dialog", { name: "Details" })).toBeTruthy();
     expect(screen.getByLabelText("Category")).toBeTruthy();
     expect(screen.getByLabelText("Tags")).toBeTruthy();
-    expect(screen.getByLabelText("Paint colour")).toBeTruthy();
+    expect(screen.getByLabelText("Paint color")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Import icon" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Export SVG" })).toBeTruthy();
   });
@@ -77,7 +77,7 @@ describe("the dock below `lg`", () => {
     const ids = [...document.querySelectorAll("[id]")].map((el) => el.id);
     expect([...new Set(ids)]).toHaveLength(ids.length);
 
-    for (const label of ["Name", "Category", "Tags", "Paint colour"]) {
+    for (const label of ["Name", "Category", "Tags", "Paint color"]) {
       expect(screen.getAllByLabelText(label)).toHaveLength(1);
     }
     expect(screen.getAllByRole("button", { name: "Save draft" })).toHaveLength(1);
@@ -166,7 +166,7 @@ describe("the dock at `lg` and up", () => {
     expect(screen.getByLabelText("Name")).toBeTruthy();
     expect(screen.getByLabelText("Category")).toBeTruthy();
     expect(screen.getByLabelText("Tags")).toBeTruthy();
-    expect(screen.getByLabelText("Paint colour, hex")).toBeTruthy();
+    expect(screen.getByLabelText("Paint color, hex")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Import icon" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save draft" })).toBeTruthy();
 

@@ -94,7 +94,7 @@ export function cellsToArt(cells: Cells): { art: string[]; palette: Palette } {
     const char = ART_CHARS[chars.size];
     if (char === undefined) {
       throw new Error(
-        `An art map can carry ${ART_CHARS.length} colours; this drawing uses more`,
+        `An art map can carry ${ART_CHARS.length} colors; this drawing uses more`,
       );
     }
     chars.set(cell, char);

@@ -180,7 +180,9 @@ test("deselecting scatters the cells out, it does not fade the picture", async (
   await select(page, /floppy-disk/);
   await page.waitForTimeout(700);
 
-  await page.getByRole("button", { name: /Clear selection/ }).click();
+  // The shelf's close carries a WORD now, not a bare glyph — a lone ✕ beside
+  // a split button read as part of it.
+  await page.locator(".pixl-detailbar").getByRole("button", { name: "Close" }).click();
   await page.waitForFunction(
     () =>
       document.querySelectorAll('[data-reveal="out"] .pixl-reveal-cell').length >

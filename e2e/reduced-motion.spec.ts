@@ -153,6 +153,11 @@ test("the grid's category swap animates when motion is allowed", async ({
   await page.goto("/");
   await settle(page);
   await page.getByRole("tab", { name: "Arcade" }).click();
+  /* THE WAVE IS DEBOUNCED BY 80ms (2026-09-04). The chips are an
+     automatic-activation tablist, so holding an arrow key used to restart a
+     676ms wave every 30-90ms and finish none of them. The filter is still
+     instant; only the animation waits for the category to settle. */
+  await page.waitForTimeout(120);
 
   const running = await page
     .locator(".pixl-grid-swap li")
@@ -168,7 +173,11 @@ test("the grid's category swap animates when motion is allowed", async ({
   expect(running).toHaveLength(1);
   expect(running[0].name).toBe("pixl-icon-in");
   expect(running[0].state).toBe("running");
-  expect(running[0].ms).toBe(400);
+  /* `--duration-wave`, not `--duration-slow`. The wave was slowed on
+     2026-09-04 and moved onto its own token: §5b's clocks govern surfaces
+     opening and closing, and this is the screen redrawing its picture — the
+     same exemption Pixel Materialize already holds. */
+  expect(running[0].ms).toBe(560);
 
   // And it is a WAVE, not one animation on the block: each icon starts later
   // than the one before it, and the whole wave stays inside DESIGN.md's cap.
@@ -184,7 +193,9 @@ test("the grid's category swap animates when motion is allowed", async ({
   for (let i = 1; i < delays.length; i++) {
     expect(delays[i]).toBeGreaterThan(delays[i - 1]);
   }
-  expect(delays[delays.length - 1]).toBeLessThanOrEqual(300);
+  // 20ms an item, capped at 20 items: the cap is what holds the total as the
+  // set grows, and it moved with the duration rather than being abandoned.
+  expect(delays[delays.length - 1]).toBeLessThanOrEqual(400);
 });
 
 /**
@@ -208,10 +219,12 @@ test("the mini screen's reveal arrives at once, with no static", async ({
       ...document.querySelectorAll<SVGElement>(".pixl-reveal-cell"),
     ];
     return {
-      count: cells.length,
+      scatter: cells.length,
       delays: [
         ...new Set(cells.map((el) => getComputedStyle(el).animationDelay)),
       ],
+      // The MERGED picture, which is what the icon is supposed to look like.
+      settled: document.querySelectorAll(".pixl-reveal-settled *").length,
       noiseShown: [
         ...document.querySelectorAll<SVGElement>(".pixl-reveal-noise"),
       ].filter((el) => getComputedStyle(el).display !== "none").length,
@@ -220,9 +233,17 @@ test("the mini screen's reveal arrives at once, with no static", async ({
     };
   });
 
-  expect(state.count, "nothing is being revealed").toBeGreaterThan(8);
-  // ONE delay, and it is zero: every cell arrives together.
-  expect(state.delays).toEqual(["0s"]);
+  /* IT HANDS STRAIGHT TO THE MERGED PICTURE (2026-09-04). This asserted that
+     the scatter still rendered with every delay collapsed to 0s, which is the
+     right SHAPE of the rule and one step short of it: the CSS zeroed the delays
+     but a JS timer still held the unmerged per-cell render for the full 530ms,
+     and `layoutCells` merges horizontal runs precisely to remove the
+     anti-aliasing seam between abutting rects. So the picture arrived with
+     visible seams and re-knitted half a second later — a motion event, for
+     somebody who asked for none. The settle timer now fires at 0. */
+  expect(state.settled, "the merged picture never arrived").toBeGreaterThan(0);
+  expect(state.scatter, "the scatter still renders and then re-knits").toBe(0);
+  expect(state.delays).toEqual([]);
   expect(state.noiseShown, "the static burst still plays").toBe(0);
   expect(state.dots).toBe(121);
 });

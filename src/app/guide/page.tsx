@@ -57,7 +57,7 @@ export default function GuidePage() {
             <>
               An icon <em>is</em> its cells: {GRID_SIZE}×{GRID_SIZE} of them on
               a {CANVAS_UNITS}-unit viewBox, four units per cell. The grid is
-              odd on purpose, so there is an exact centre column and row to be
+              odd on purpose, so there is an exact center column and row to be
               symmetrical about. SVG and PNG are generated from the cells; the
               cells are never generated from the SVG.
             </>
@@ -71,7 +71,7 @@ export default function GuidePage() {
             <>
               Art stays inside a {SAFE_AREA_SIZE}×{SAFE_AREA_SIZE} region, one
               cell in from every edge. {SAFE_AREA_SIZE} is the only inset that
-              centres on an odd grid, since a {SAFE_AREA_SIZE + 1}-wide area
+              centers on an odd grid, since a {SAFE_AREA_SIZE + 1}-wide area
               would leave a single cell of margin to split between two sides.
               The margin is a guide, not a fence: the composer will let you draw
               to the edge when a glyph needs it.
@@ -114,7 +114,7 @@ export default function GuidePage() {
             <>
               Stored cells are always square. The gallery can draw them three
               ways, for the whole set at once: Square fills each cell edge to
-              edge, Inset leaves a gap so the grid shows between neighbours, and
+              edge, Inset leaves a gap so the grid shows between neighbors, and
               Round draws the same node as a circle. It is a display setting and
               never part of an icon, so the data stays square whatever you are
               looking at. What you see <em>is</em> what you copy: the color,

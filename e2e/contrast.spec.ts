@@ -146,13 +146,15 @@ const SURFACES = [
     ink: '[role="radiogroup"] .pixl-drum-face',
     ground: ".pixl-thumb-paper",
   },
-  // The category tints followed the taxonomy to the chips. A SELECTED chip is
-  // filled with its tint, so ink and ground are both on it; an unselected one
-  // is transparent, so its ground is the screen it is drawn on.
+  // The category tints followed the taxonomy to the chips. A SELECTED chip's
+  // ground is the TRAVELLING FILL parked behind it (2026-09-04) rather than a
+  // background of its own — the chip paints none, or the tint would be drawn
+  // twice and the capsule would slide between two already-filled chips. An
+  // unselected chip is transparent, so its ground is the screen.
   {
     name: "selected category chip",
     ink: '.pixl-chip[aria-selected="true"]',
-    ground: '.pixl-chip[aria-selected="true"]',
+    ground: ".pixl-chip-fill",
   },
   {
     name: "unselected category chip",
@@ -167,14 +169,49 @@ const SURFACES = [
   // animate), so its own `color` is `transparent` and reading it would measure
   // a colour nobody sees.
   { name: "hex readout", ink: ".pixl-lcd-digits", ground: ".pixl-lcd" },
-  // The detail bar is a raised boss in the toy's own gradient, so every label
-  // on it is in axe's blind spot the same way the sidebar's are.
+  // The detail shelf sits on `--color-surface` inside the glass, and every
+  // label on it is in axe's blind spot the same way the sidebar's are.
+  //
+  // FOUR ENTRIES, because the shelf's ink runs the whole ramp: the tabs and the
+  // tags are muted, the name is full ink at readout scale, and the close is a
+  // muted glyph on the same ground. `--text-muted` was darkened specifically so
+  // it clears on this token (DESIGN.md §2), which is exactly the pairing worth
+  // holding — it is one `color-mix` away from being softened back.
   {
-    name: "detail bar readout",
-    ink: ".pixl-detailbar .text-text-muted",
+    name: "detail shelf format tab",
+    ink: ".pixl-format",
     ground: ".pixl-detailbar",
   },
   { name: "detail bar name", ink: ".pixl-detailbar h2", ground: ".pixl-detailbar" },
+  {
+    name: "detail shelf tags",
+    ink: ".pixl-detail-tags",
+    ground: ".pixl-detailbar",
+  },
+  {
+    name: "detail shelf close",
+    ink: ".pixl-panel-close",
+    ground: ".pixl-detailbar",
+  },
+  // The PRIMARY is an inverse block — the ink filled, the label knocked out.
+  // Both halves come from the same two tokens, so this is really checking that
+  // nobody softens the fill into a tint.
+  {
+    name: "detail shelf primary",
+    ink: ".pixl-panel-primary",
+    ground: ".pixl-panel-primary",
+  },
+  // The category wears its own tint here, filled — so its ground is itself,
+  // the way a selected chip's is. Same six pairs the chip row uses, on a
+  // different surface, which is exactly the kind of reuse that goes unmeasured.
+  { name: "detail bar category", ink: ".pixl-cat", ground: ".pixl-cat" },
+  // The source itself, which is the most text on this board and sits on its
+  // own ground rather than the shelf's.
+  { name: "detail shelf source", ink: ".pixl-code-text", ground: ".pixl-code" },
+  // The block's own Copy, which lies OVER the source on its own opaque
+  // ground — a translucent chip with markup running under it is
+  // unreadable in both directions, so its ground is itself.
+  { name: "detail shelf code copy", ink: ".pixl-code-copy", ground: ".pixl-code-copy" },
 ] as const;
 
 async function readSurface(page: Page, inkSel: string, groundSel: string) {

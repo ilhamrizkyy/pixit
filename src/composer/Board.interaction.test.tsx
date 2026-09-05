@@ -65,7 +65,15 @@ describe("the compact tool strip", () => {
     // matchMedia is absent here, so the wide layout renders — the point of the
     // assertion is that the two layouts are mutually exclusive, not which one
     // won. Two copies of eight buttons would be two "Undo"s in the a11y tree.
-    for (const name of ["Mirror", "Grid guide", "Eyedropper", "Undo", "Redo"]) {
+    for (const name of [
+      "Mirror",
+      "Grid guide",
+      // Renamed 2026-09-04: the caption is `Pick`, and an accessible name of
+      // `Eyedropper` shared no word with it (WCAG 2.5.3 Label in Name).
+      "Pick color (eyedropper)",
+      "Undo",
+      "Redo",
+    ]) {
       expect(screen.getAllByRole("button", { name })).toHaveLength(1);
     }
   });
@@ -74,7 +82,7 @@ describe("the compact tool strip", () => {
     render(<Composer />);
     // ToolColumn and ToolStrip both consume useTools(), so a tool added in one
     // place cannot go missing from the other.
-    const labels = ["Mirror", "Grid guide", "Eyedropper", "Undo",
+    const labels = ["Mirror", "Grid guide", "Pick color (eyedropper)", "Undo",
                     "Flip horizontally", "Flip vertically", "Rotate 90° clockwise", "Redo"];
     for (const name of labels) {
       expect(screen.getByRole("button", { name })).toBeTruthy();

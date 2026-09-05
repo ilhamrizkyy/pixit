@@ -44,7 +44,7 @@
      they never touch icon art, and no two of them ever mean "emphasis". Every
      pair was measured rather than eyeballed — the worst is 6.14:1, so a 14px
      label clears AA on its own card in both themes. */
-  --cat-all: #ececee;
+  --cat-all: #dfe0e4;
   --cat-all-ink: #3f3f46;
   --cat-interface: #d8e4fb;
   --cat-interface-ink: #1b3a8c;
@@ -153,15 +153,31 @@
   --duration-fast: 250ms;
   --duration-medium: 350ms;
   --duration-slow: 400ms;
+  /* THE GRID'S WAVE, and it is deliberately OUTSIDE the scale above. §5b's
+     clocks govern surfaces opening and closing; this is the screen redrawing
+     its whole picture, which is the same exemption Pixel Materialize and the
+     hex readout's segment refresh already hold. At 400ms on the shared token it
+     read as a blink rather than as a wave. */
+  --duration-wave: 560ms;
 
   /* Exponential ease-out: fast departure, long settle. The house curve. */
   --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+  /* For a swap rather than a travel: text leaving and arriving in one place
+     wants symmetry at both ends, which `--ease-smooth-out` deliberately does
+     not have — it spends 80% of its distance in the first third. */
+  --ease-in-out: ease-in-out;
 
-  --distance-base: 8px;
+  /* A label swapping in place barely moves — it is the same word in the same
+     seat, so anything further reads as the button jumping. */
+  --distance-micro: 4px;
   --distance-toast: 12px; /* enough travel to read as arriving, not as flying in */
 
   --scale-modal: 0.96;
+  /* A menu starts nearer its rest size than a modal: it grows from a trigger a
+     few pixels away, not from the middle of the screen. */
+  --scale-menu: 0.97;
+  --scale-tiny: 0.99;
   --blur-small: 2px;
 
   /* --- Depth ---------------------------------------------------------------
@@ -190,7 +206,7 @@
   --color-surface: #1a1a1e;
   --color-surface-2: #141417;
   --color-border: #2a2a30;
-  --cat-all: #2b2b30;
+  --cat-all: #35353c;
   --cat-all-ink: #d4d4d8;
   --cat-interface: #1c2947;
   --cat-interface-ink: #afc5f7;
@@ -236,7 +252,7 @@
     --color-surface: #1a1a1e;
     --color-surface-2: #141417;
     --color-border: #2a2a30;
-    --cat-all: #2b2b30;
+    --cat-all: #35353c;
     --cat-all-ink: #d4d4d8;
     --cat-interface: #1c2947;
     --cat-interface-ink: #afc5f7;
@@ -544,17 +560,34 @@
    sibling in the grid paints over the overhang. `:has()` lifts the grid ITEM,
    because the li is what the grid positions — raising the button alone would
    leave it trapped inside a stacking context the li may own. */
-li:has(.pixl-card:hover),
+/* THE `:focus-visible` HALVES STAY OUT OF THE HOVER QUERY; only the `:hover`
+   halves go in. Touch fires a STICKY hover on tap, and this overlay is
+   `width: max-content` at `z-index: 3` and deliberately allowed to overhang its
+   card — so on a 4-column 375px grid, tapping an icon painted a 14rem label
+   across its neighbours until you tapped something else. DESIGN.md §6 says the
+   name on touch is reached from the detail bar instead. The card's own lift was
+   gated for this reason and these two rules were missed. */
 li:has(.pixl-card:focus-visible) {
   position: relative;
   z-index: 3;
 }
 
-.group:hover .pixl-card-name,
 .group:focus-visible .pixl-card-name {
   opacity: 1;
   /* Reveal-IN: quick and direct. */
   transition-duration: var(--duration-quick);
+}
+
+@media (hover: hover) {
+  li:has(.pixl-card:hover) {
+    position: relative;
+    z-index: 3;
+  }
+
+  .group:hover .pixl-card-name {
+    opacity: 1;
+    transition-duration: var(--duration-quick);
+  }
 }
 
 /* ============================================================================
@@ -618,6 +651,13 @@ li:has(.pixl-card:focus-visible) {
      plastic; these are shallow dishes in a pale surface, so they need their
      own pair rather than the toy's. */
   --screen-recess: rgb(0 0 0 / 0.08);
+  /* A FIELD DRAWN ON THE GLASS, not a well drilled through plastic. The
+     board's rule is that depth belongs to the body, so the boundary carries
+     this and the fill barely moves: the line is solved for 3:1 against the
+     screen (WCAG 1.4.11), where the old `--color-surface` box measured
+     1.27:1 and the fill inside it 1.10:1. */
+  --screen-field: #eceee7;
+  --screen-field-line: #8a8f88;
   --screen-lip: rgb(255 255 255 / 0.8);
   /* THE MINI SCREEN'S BEZEL. Near-black rather than `--bezel`, in BOTH themes:
      `--bezel` is the chassis's own tone, so a bezel in it reads as more
@@ -798,6 +838,8 @@ li:has(.pixl-card:focus-visible) {
   --toy-accent-subtle: rgb(255 255 255 / 0.14);
   --toy-accent-ink: #ffffff;
   --screen-recess: rgb(0 0 0 / 0.5);
+  --screen-field: #101116;
+  --screen-field-line: #6a6d74;
   --screen-lip: rgb(255 255 255 / 0.07);
   --mini-bezel: #131316;
   --mini-bezel-2: #08080a;
@@ -853,6 +895,8 @@ li:has(.pixl-card:focus-visible) {
     --toy-accent-subtle: rgb(255 255 255 / 0.14);
     --toy-accent-ink: #ffffff;
     --screen-recess: rgb(0 0 0 / 0.5);
+  --screen-field: #101116;
+  --screen-field-line: #6a6d74;
     --screen-lip: rgb(255 255 255 / 0.07);
     --mini-bezel: #131316;
     --mini-bezel-2: #08080a;
@@ -924,21 +968,63 @@ li:has(.pixl-card:focus-visible) {
 /* The icon grid sits on the SCREEN — recessed, near-white, shaded under the
    brow. THIS IS WHAT PROTECTS THE ICONS: they land on the same surface the
    drawing lands on, never on blue. */
-/* A field in the CONTENT area, which is plain shell — not the toy. The toy is
-   the nav and the sidebar; everything the icons sit among stays calm so the
-   icons keep the page. */
+/* A FIELD DRAWN ON THE SCREEN (rebuilt 2026-09-04).
+
+   The comment that stood here described the field as sitting "in the CONTENT
+   area, which is plain shell — not the toy. The toy is the nav and the
+   sidebar." That is the architecture DESIGN.md §1 retired on 2026-08-29, and
+   the field had never been revisited since: it was the last piece of the
+   pre-board design still in place, which is most of why the screen's header
+   read as generic next to a board full of knobs, drums and milled channels.
+
+   THE BOUNDARY CARRIES IT, NOT THE FILL. Anything on a display is drawn (§1),
+   so this is not a well drilled through plastic and it does not get a well's
+   deep gradient. It gets a real line. The old build spent its whole budget on
+   an inset shadow pretending to be a recess and left the line at
+   `--color-border`, which measured 1.27:1 against the screen where WCAG 1.4.11
+   asks 3:1 for a control boundary; the fill inside it measured 1.10:1 light and
+   1.06:1 dark, so the largest element on the board was locatable only by the
+   placeholder text inside it. */
 .pixl-field {
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: var(--screen-field);
   box-shadow:
-    inset 0 1px 2px var(--screen-recess),
-    inset 0 0 0 1px var(--color-border);
+    inset 0 0 0 1px var(--screen-field-line),
+    inset 0 1px 2px var(--screen-recess);
+  /* The one recess on this board that had no transition at all. */
+  transition: box-shadow var(--duration-quick) var(--ease-smooth-out);
 }
 
+/* FOCUS ADDS ITS RING TO THE STACK. It replaced the whole stack, which dropped
+   the boundary line the moment you clicked in — the exact bug DESIGN.md §5c
+   records fixing on `.pixl-well`, in the one field that never got the fix. */
 .pixl-field:focus-within {
   box-shadow:
+    inset 0 0 0 1px var(--screen-field-line),
     inset 0 1px 2px var(--screen-recess),
     0 0 0 2px var(--color-accent);
+}
+
+/* THE FILTER KEY IS DRAWN, NOT MOULDED (2026-09-04). It carried `.pixl-key`,
+   whose cap casts an OUTER drop shadow — a raised part throwing shade onto what
+   it sits on. It sits on the display. `.pixl-chips` says in as many words that
+   a raised face here would claim to be hardware sitting on top of the screen,
+   so the chips were paying for a rule the control beside them ignored. */
+.pixl-screen-key {
+  border-radius: var(--radius-sm);
+  background: var(--screen-field);
+  box-shadow:
+    inset 0 0 0 1px var(--screen-field-line),
+    inset 0 1px 2px var(--screen-recess);
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-screen-key:hover {
+    color: var(--color-text);
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -971,7 +1057,11 @@ li:has(.pixl-card:focus-visible) {
    for a control mounted THROUGH a panel, and a cap in a pad latches by resting
    in the shallow click a press makes.
 
-   `--engrave` survives — the category chips and the composer still use it. */
+   `--engrave` survives, but NOT on the chips: they are printed on the glass and
+   an engraving is a thing done to plastic. Its readers are the size rail's
+   printed numbers and the Shape drum's faces, both of which are on the case.
+   (This claimed the chips used it until 2026-09-04, which a grep disproves in
+   one line — the kind of note that outlives the thing it describes.) */
 
 /* The grid, when the category changes under it.
    Swapping the contents outright reads as a flicker; one flat fade over the
@@ -990,13 +1080,31 @@ li:has(.pixl-card:focus-visible) {
 }
 
 .pixl-grid-swap li {
-  animation: pixl-icon-in var(--duration-slow) var(--ease-smooth-out) both;
-  /* 12ms per item, capped at 40 items. DESIGN.md §5b caps a stagger's TOTAL at
-     about 300ms, and 24 icons at the house's 40ms offset would run 960ms — so
-     the offset shrinks rather than the cap bending. At 24 icons the wave takes
-     276ms and the last one lands at 676ms. The cap matters because the set is
-     meant to grow: at 200 icons an uncapped stagger would take 2.4 seconds. */
-  animation-delay: calc(min(var(--i, 0), 40) * 12ms);
+  animation: pixl-icon-in var(--duration-wave) var(--ease-smooth-out) both;
+  /* SLOWED ON 2026-09-04, by request: at 12ms and 400ms the switch read as a
+     blink rather than as a wave. 20ms an item over 560ms now, so at 24 icons
+     the wave itself runs 460ms and the last icon settles at ~1020ms, against
+     676ms before.
+
+     THE CAP IS STILL SOLVED, not picked: it holds the stagger's TOTAL, and the
+     budget moved with the exemption above. 400ms / 20ms is 20. It changes
+     nothing at 24 icons and it is what stops the set's growth turning this into
+     a four-second sweep — at 200 icons an uncapped stagger would take 4s. */
+  animation-delay: calc(min(var(--i, 0), 20) * 20ms);
+}
+
+/* AND THE DELAYS HAVE TO BE CLEARED SEPARATELY, which is the whole defect.
+
+   The global reduced-motion block collapses `animation-duration` to 0.01ms and
+   leaves `animation-delay` untouched. With `both` fill every item then HOLDS at
+   `opacity: 0` until its own delay elapses and snaps on in 0.01ms — so someone
+   who asked for less motion got 24 icons popping in one at a time across 276ms
+   with no fade at all. Louder than the animation it was meant to suppress, and
+   the exact failure the mini screen's reveal already has a rule for. */
+@media (prefers-reduced-motion: reduce) {
+  .pixl-grid-swap li {
+    animation-delay: 0s !important;
+  }
 }
 
 /* One tint per category, bound by data attribute rather than by inline style:
@@ -1005,37 +1113,51 @@ li:has(.pixl-card:focus-visible) {
    over Shape — the tints are an INDEX of the taxonomy, so they follow the
    taxonomy. */
 
-.pixl-chip[data-category="all"] {
+.pixl-chip[data-category="all"],
+.pixl-chip-fill[data-category="all"],
+.pixl-cat[data-category="all"] {
   --cat: var(--cat-all);
   --cat-ink: var(--cat-all-ink);
 }
 
-.pixl-chip[data-category="interface"] {
+.pixl-chip[data-category="interface"],
+.pixl-chip-fill[data-category="interface"],
+.pixl-cat[data-category="interface"] {
   --cat: var(--cat-interface);
   --cat-ink: var(--cat-interface-ink);
 }
 
-.pixl-chip[data-category="media"] {
+.pixl-chip[data-category="media"],
+.pixl-chip-fill[data-category="media"],
+.pixl-cat[data-category="media"] {
   --cat: var(--cat-media);
   --cat-ink: var(--cat-media-ink);
 }
 
-.pixl-chip[data-category="arcade"] {
+.pixl-chip[data-category="arcade"],
+.pixl-chip-fill[data-category="arcade"],
+.pixl-cat[data-category="arcade"] {
   --cat: var(--cat-arcade);
   --cat-ink: var(--cat-arcade-ink);
 }
 
-.pixl-chip[data-category="system"] {
+.pixl-chip[data-category="system"],
+.pixl-chip-fill[data-category="system"],
+.pixl-cat[data-category="system"] {
   --cat: var(--cat-system);
   --cat-ink: var(--cat-system-ink);
 }
 
-.pixl-chip[data-category="communication"] {
+.pixl-chip[data-category="communication"],
+.pixl-chip-fill[data-category="communication"],
+.pixl-cat[data-category="communication"] {
   --cat: var(--cat-communication);
   --cat-ink: var(--cat-communication-ink);
 }
 
-.pixl-chip[data-category="nature"] {
+.pixl-chip[data-category="nature"],
+.pixl-chip-fill[data-category="nature"],
+.pixl-cat[data-category="nature"] {
   --cat: var(--cat-nature);
   --cat-ink: var(--cat-nature-ink);
 }
@@ -2743,6 +2865,12 @@ li:has(.pixl-card:focus-visible) {
 /* The groove, and the handle that rides in it. */
 .toy-groove {
   position: relative;
+  /* THE TRACK IS A CONTAINER, so the handle can be positioned by a transform.
+     A `translateX` percentage resolves against the ELEMENT's own width (34px),
+     not its track, which is the one thing `left: %` gave for free — so moving
+     off `left` needs a length that still refers to the groove. `cqw` is that
+     length. */
+  container-type: inline-size;
   /* A drag across the groove must wipe, never select. Without this the label
      and everything past it highlights as the pointer travels. */
   user-select: none;
@@ -2757,13 +2885,22 @@ li:has(.pixl-card:focus-visible) {
   position: absolute;
   top: 3px;
   bottom: 3px;
+  left: 0;
   width: 34px;
   border-radius: 999px;
   background: radial-gradient(circle at 40% 25%, #fdfdff, #dfe3f0 60%, #bcc2d8);
   box-shadow:
     inset 0 1px 1px rgb(255 255 255 / 0.9),
     0 2px 3px rgb(0 0 0 / 0.45);
-  transition: left var(--duration-quick) var(--ease-smooth-out);
+  /* A TRANSFORM, NOT `left` (2026-09-04). `left` is a layout property, and this
+     is the most drag-heavy gesture in the product — the handle is dragged the
+     full width of the board while the drawing erases column by column under it.
+     The gallery's size rail derived this rule and wrote it down ("the
+     alternative is `bottom: X%`, which relayouts the element on every frame of
+     every drag"); it was never back-ported here. Same shape as the format
+     rule's width tween: a lesson learned on one consumer and not applied to the
+     second. */
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
 }
 
 /* Knobs (DESIGN.md §6). The real toy's are cream plastic cylinders with a
@@ -3033,6 +3170,9 @@ li:has(.pixl-card:focus-visible) {
    selected is filled with it. Same hue, different weight.
    ========================================================================= */
 .pixl-chips {
+  /* The travelling fill is absolute inside this box, so it scrolls with the
+     chips rather than standing still while they move under it. */
+  position: relative;
   display: flex;
   flex-wrap: nowrap;
   gap: 0.375rem;
@@ -3040,43 +3180,231 @@ li:has(.pixl-card:focus-visible) {
   scrollbar-width: none;
   /* Room for the focus ring, which a scroll container would otherwise clip. */
   padding: 2px;
+  /* Arrow travel calls `.focus()`, which jerked the strip in discrete jumps on
+     a narrow screen. Browsers coalesce successive smooth-scroll requests to one
+     container, so this retargets like a transition rather than queueing. It
+     also gives the reduced-motion block's `scroll-behavior: auto !important`
+     something to actually guard. */
+  scroll-behavior: smooth;
 }
 
 .pixl-chips::-webkit-scrollbar {
   display: none;
 }
 
+/* THE ROW SAYS IT CONTINUES. At 390px it holds 625px of chips in a 318px box
+   with scrollbars suppressed, and the cut landed 0.8px past a chip's edge — so
+   three of seven categories were off-screen behind what looked like a complete
+   four-chip row. The mask fades the last few pixels, which is the display's own
+   way of saying there is more: nothing is drawn, something is unlit. */
+@media (width < 64rem) {
+  .pixl-chips {
+    mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - 2rem),
+      transparent 100%
+    );
+  }
+}
+
+/* THE TRAVELLING FILL — the selected chip's own tint, as one element that
+   SLIDES between chips instead of repainting in place (2026-09-04).
+
+   The other tablist on this board already slides (`.pixl-format-rule`), so the
+   device was speaking two selection languages. It cannot borrow that build
+   as-is: a travelling accent bar would be a second accent, which §7 forbids.
+   A travelling FILL breaks neither rule — colour still indexes, selection is
+   still carried by mass, and nothing new is accented.
+
+   TRANSFORM ONLY, never `width`, so a held arrow key produces one continuous
+   slide that retargets rather than seven overlapping repaints. `scaleX` off a
+   1px base, which is why `transform-origin` matters. */
+.pixl-chip-fill {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 0;
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  background: var(--cat);
+  transform: translateX(0);
+  /* WIDTH, NOT `scaleX`, AND THAT IS A CORRECTION (2026-09-04).
+
+     `scaleX` off a 1px base is the compositor-friendly build and it cannot draw
+     this shape: `border-radius: 999px` resolves against the UNSCALED box, so a
+     1px-wide element clamps its horizontal radius to 0.5px and the scale then
+     stretches that into an ELLIPSE — a lozenge with pointed ends instead of a
+     capsule. Every other radius on this board is a real capsule or a real
+     corner, so a squashed one is the most visible thing on the row.
+
+     The cost is bounded: this element is absolutely positioned and out of flow,
+     so a width tween relayouts itself and nothing else. No sibling moves, the
+     row does not reflow, and the radius is correct at every frame of the
+     travel. */
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    width var(--duration-fast) var(--ease-smooth-out);
+  will-change: transform, width;
+  pointer-events: none;
+}
+
+/* THE TINT IS SET INSTANTLY, THE TRANSFORM IS WHAT ANIMATES. Tweening
+   `background-color` between two tints would paint unmeasured intermediate
+   colours under a label, and DESIGN.md §6 measured these tints for AA filled
+   and unfilled. Every frame now shows one of the seven measured tints. */
+
 .pixl-chip {
+  position: relative;
+  /* Over the fill, or the travelling capsule paints across the labels. */
+  z-index: 1;
   flex: none;
   white-space: nowrap;
   padding: 0.3125rem 0.75rem;
   border-radius: 999px;
+  /* PRINTED ON THE GLASS, not set like a nav link. The drum's faces are
+     uppercase, the rail's numbers take the data face; the chips were the site's
+     generic 14px UI type. Smaller, uppercase and tracked reads as a legend
+     screen-printed on the panel — which is what a row of category names on a
+     display is. */
+  font-size: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--cat-ink);
   background: transparent;
-  /* The tint itself is too pale to draw a 1px line with on a near-white
-     screen, so the ring is the INK held back — same hue, enough weight to
-     see. */
-  border: 1px solid color-mix(in srgb, var(--cat-ink) 30%, transparent);
+  /* NO BORDER AT ALL (2026-09-04). Seven outlined capsules read as seven
+     BUTTONS sitting on the display, which is the shape of hardware and the one
+     thing a control drawn on glass must not claim. With the outlines gone the
+     travelling fill is the only box in the row, so the thing that means
+     "chosen" is also the only thing enclosed — selection got stronger by
+     subtraction rather than by adding weight to it.
+
+     The tint moved to the PIXEL below instead, where it can run at full
+     strength: a 1px keyline had to be the ink held back to be drawable at all,
+     and 21 of 28 border states still measured under 3:1. */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
   transition:
+    color var(--duration-quick) var(--ease-smooth-out),
     background-color var(--duration-quick) var(--ease-smooth-out),
     border-color var(--duration-quick) var(--ease-smooth-out);
 }
 
-@media (hover: hover) {
-  .pixl-chip:not([aria-selected="true"]):hover {
-    background: color-mix(in srgb, var(--cat) 55%, transparent);
-    border-color: color-mix(in srgb, var(--cat-ink) 45%, transparent);
+/* THE INDEX IS THE SET'S OWN `play` ICON, in the category's colour at full
+   strength — see GalleryToolbar.tsx, which renders it the way the search glyph
+   is rendered: every filled cell remapped to `currentColor`, so the mark
+   inherits `--cat-ink` from the chip and no hex reaches a component.
+
+   AN ICON SET THAT DRAWS ITS OWN CHROME. The search field already did this; a
+   set reaching for somebody else's glyphs does not believe its own set. It was
+   a plain 8px square for one pass — a literal cell, which was the right
+   argument and the duller mark: a square is what every icon is MADE of, and a
+   glyph is what the set actually IS.
+
+   `--cat-ink`, NOT `--cat`. The tint is a ground colour, pale by construction so
+   a label can sit on it and clear AA; at this size it is nearly invisible on a
+   near-white screen. The ink is the same category colour with nothing held
+   back, which is what 1.4.11 asks of a graphic that carries meaning. */
+
+/* THE MARK POINTS AT THE LIVE CHIP, AND ONLY AT IT (2026-09-04). On every chip
+   it was a bullet; on one it is a POINTER, which is what a right-facing
+   triangle beside a word has always been.
+
+   IT IS RENDERED ON ALL SEVEN AND REVEALED ON ONE. Mounting it only on the live
+   chip would change that chip's WIDTH the moment it became live — so every chip
+   to its right would shift, and the travelling fill would be measuring a box
+   that moves while it moves toward it. Reserving the space costs 16px per chip
+   and buys a row that never reflows; the labels then sit on a marker column,
+   which is what an index looks like anyway.
+
+   It fades on the capsule's own clock, so the mark and the fill arrive
+   together rather than as two events. */
+.pixl-chip-mark {
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-smooth-out);
+}
+
+.pixl-chip[aria-selected="true"] .pixl-chip-mark {
+  opacity: 1;
+}
+
+/* A REAL TARGET ON TOUCH. 33px clears WCAG 2.5.8 AA (24px) and is short of the
+   comfort target on the one device where the row also scrolls. */
+@media (pointer: coarse) {
+  .pixl-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
   }
 }
 
+/* HOVER DRAWS NO BOX AT ALL, AND SHOWS THE MARK INSTEAD (2026-09-04).
+
+   Two problems, one fix. The first: a hover wash was 87% of the way to
+   selected — measured at 1.14:1 against the selected fill, where the selected
+   fill was only 1.18:1 to 1.31:1 against the screen — so the delta carrying
+   HOVER was nearly the one carrying SELECTION. A hover is a pointer resting
+   somewhere, not a choice.
+
+   The second is what the wash EXPOSED. The mark's space is reserved on every
+   chip so the row never reflows, and while nothing is painted that reserve is
+   invisible: the labels simply sit on a marker column. Paint a background
+   behind one and the reserve becomes a hole — a box with its label pushed off
+   to the right.
+
+   So hovering PREVIEWS the mark in the space the mark is for. The pointer
+   appears held back where it would land, the ink comes up to full, and no box
+   is drawn on a row whose whole idea is that it is printing rather than
+   buttons. The one thing the reserve was costing is now the thing it shows. */
+@media (hover: hover) {
+  .pixl-chip:not([aria-selected="true"]):hover .pixl-chip-mark {
+    opacity: 0.4;
+  }
+}
+
+/* SELECTION IS THE FILL PLUS FULL-WEIGHT INK. The fill itself is the travelling
+   capsule behind the row, so this element paints no background of its own —
+   otherwise the tint would be drawn twice and the capsule would be sliding
+   between two chips that are both already filled. Border and ink still carry
+   the state on their own, which is what keeps the row legible for the frame
+   before the capsule is measured. */
 .pixl-chip[aria-selected="true"] {
-  background: var(--cat);
-  border-color: color-mix(in srgb, var(--cat-ink) 55%, transparent);
+  font-weight: 700;
 }
 
 .pixl-chip:focus-visible {
   outline: 2px solid var(--cat-ink);
   outline-offset: -2px;
+}
+
+/* THE CATEGORY, WEARING ITS OWN TINT — the same index the chip row is, so the
+   bar says which shelf the icon came off in the colour that already means it.
+   Filled rather than outlined, because this states a fact; an outline is what
+   the chips use for "not chosen", and there is nothing to choose here.
+
+   IT REPLACED THE TAGS. BACKLOG §D called them the weakest thing on the bar:
+   search already matches on them, so they are shown to someone who has by
+   definition already found the icon, and they were the variable-width element
+   forcing the whole bar to scroll. §D's rule for this bar is that anything
+   added REPLACES rather than appends, and this is that rule being used. */
+.pixl-cat {
+  display: inline-block;
+  flex: none;
+  max-width: 100%;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  /* ITS OWN TYPE, since it is a direct child of the identity column rather
+     than a span inside a sized paragraph. A label that took the column's
+     inherited size would be set in the NAME's 20px. */
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  color: var(--cat-ink);
+  background: var(--cat);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============================================================================
@@ -3268,18 +3596,31 @@ li:has(.pixl-card:focus-visible) {
    the bezel two centimetres below it. */
 
 /* ============================================================================
-   THE DETAIL BAR — the chassis strip under the screen.
+   THE DETAIL SHELF — the readout along the foot of the screen, inside the
+   glass.
 
    Present only while an icon is loaded. The screen above simply gets shorter,
    and because the grid scrolls inside itself nothing reflows: the scroll
    container just has less room.
+
+   TWO COLUMNS, NOT THREE LINES (2026-09-03). It stacked readout / tabs /
+   source down the full width, and the name and the category were left adrift
+   in a mostly empty line while the source under them ran the whole board.
+   Split, the shelf reads as the two things it actually holds: the IDENTITY on
+   the left and the SOURCE on the right, with the tabs that choose the source's
+   format sitting directly on top of it.
+
+   The gap between them is a real column gap and not a rule. A hairline here
+   would be the only vertical line drawn on the glass, and the board's own
+   argument for the chips applies: what separates two groups on a display is
+   space, not chrome.
    ========================================================================= */
 .pixl-detailbar {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: stretch;
+  gap: 1rem;
   flex: none;
-  padding: 0.625rem 0.875rem;
+  padding: 0.875rem 1rem;
   /* FLUSH TO THE SCREEN'S BOTTOM EDGE, inside the glass. It reports what is on
      the screen, so it is on the screen — it was a strip of chassis under the
      display for one pass, which put the readout on the plastic and the picture
@@ -3289,8 +3630,7 @@ li:has(.pixl-card:focus-visible) {
   /* A shelf ON the glass, not a boss on the body: no gradient of the toy's, no
      token repointing. The board's own rule is that depth belongs to the
      plastic — anything drawn on a display is drawn. So this is a flat tint one
-     step down from the screen, and its buttons are shell-toned caps, which is
-     what `.pixl-key` already is on the toolbar above.
+     step down from the screen, and its buttons are printed rather than moulded.
 
      `--color-surface`, NOT a mix of `--screen`. The first pass mixed 6% of the
      text colour into the screen and landed on rgb(232,233,228), where the muted
@@ -3302,6 +3642,439 @@ li:has(.pixl-card:focus-visible) {
   background: var(--color-surface);
 
   animation: pixl-bar-in var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* AND IT LEAVES ON A SHORTER CLOCK, TRAVELLING HALF AS FAR — §5b's rule, and
+   the toast's own build applied here. It had no exit at all. */
+.pixl-detailbar.is-closing {
+  animation: pixl-bar-out var(--duration-quick) var(--ease-smooth-out) both;
+  pointer-events: none;
+}
+
+@keyframes pixl-bar-out {
+  to {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+/* ---- The identity column ------------------------------------------------
+   NAME, TAGS, CATEGORY, ACTION, in that order, which is the order somebody
+   reads them in: what it is called, what it is near, which shelf it came off,
+   and then what to do about it. The action was up on the first line beside the
+   name until 2026-09-03, where it was a button in a row of text.
+
+   IT DOES NOT STRETCH. A readout column sized to its own longest line would
+   change width every time the selection changed, and the source's left edge
+   would walk left and right under a still cursor. A fixed basis holds it. */
+.pixl-detail-read {
+  display: flex;
+  flex: 0 0 13rem;
+  min-width: 0;
+  /* TOP-ALIGNED AND COMPACT, not stretched to the source's height. The action
+     was pinned to the column's foot with `margin-top: auto` for one pass, on
+     the reading that the two columns should finish level. They cannot: the
+     source runs 88px as an SVG and 282px as a CSS rule, so bottom-aligning put
+     a 200px hole between the category and the button on one tab and none at
+     all on the next. Four things in a stack, and whatever height the block
+     beside them needs. */
+  align-self: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+/* THE NAME AT READOUT SCALE. It was `--text-ui` — the same size as the tabs,
+   the menu items and the buttons — so the one thing the whole shelf is ABOUT
+   was tied for quietest thing on it. The DATA face, because the name is a code
+   identifier: the string you paste, not a title. */
+.pixl-detail-name {
+  max-width: 100%;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-h3);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* THE TAGS, AS PRINTING RATHER THAN CHIPS. They came off on 2026-09-03 and
+   came back the same day by request, in a quieter form than they left in: a
+   row of tag pills under the category pill is several capsules saying several
+   different kinds of thing, and only one of them carries a colour.
+
+   ONE LINE, CLIPPED. They are the variable-width element on this shelf, which
+   is what made the old bar scroll; a line that can only ever be one line tall
+   cannot do that again. */
+.pixl-detail-tags {
+  max-width: 100%;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The source column -------------------------------------------------- */
+.pixl-detail-source {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* The tabs and the Close on one line: the tabs choose what the block below
+   shows, and the Close is the one control here that is not about the block at
+   all, so it sits at the far end of them with the strip's rule running under
+   it. The source container then sits UNDER the Close, which is where the
+   reference puts its own. */
+.pixl-source-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+/* The tab strip. A tab is a printed label with a rule under the live one —
+   which is the chips' own trick next door, mass instead of depth. */
+/* THE LIVE TAB'S RULE SLIDES BETWEEN TABS rather than jumping. It was a
+   `border-bottom` on whichever tab was selected, so switching format repainted
+   two tabs and the rule teleported; as one element the strip can tween it.
+
+   The mechanism is the skill's tabs-sliding: JS writes the active tab's
+   `offsetLeft` and `offsetWidth` onto the rule and CSS owns the tween. What
+   differs is what is painted — a pill is a segmented control, and this board's
+   tabs are printed labels with a rule under the live one (§6). */
+.pixl-formats {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pixl-format-rule {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  /* A 1px BASE, STRETCHED BY `scaleX` (2026-09-04). It tweened `width`, so
+     every frame of every tab change ran layout, and it declared
+     `will-change: width`, which promotes nothing and pins a layer for the whole
+     life of the shelf.
+
+     SAFE HERE AND NOT ON THE CATEGORY CHIPS, and the difference is the corner:
+     `border-radius` resolves against the unscaled box, so scaling a 1px base
+     turns a capsule into an ellipse. This is a 2px-tall square-cornered rule
+     with no radius to distort. Same mechanism, opposite conclusion, because the
+     shapes are different. */
+  width: 1px;
+  height: 2px;
+  background: var(--color-text);
+  transform-origin: left center;
+  transform: translateX(0) scaleX(0);
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.pixl-format {
+  flex: none;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  background: none;
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-format:not([aria-selected="true"]):hover {
+    color: var(--color-text);
+  }
+}
+
+.pixl-format[aria-selected="true"] {
+  color: var(--color-text);
+}
+
+/* THE CLOSE IS NOT ONE OF THE ACTIONS, and three separate things say so.
+
+   It is the only GLYPH-ONLY control on the shelf, the only rounded RECTANGLE
+   among capsules, and it is now a whole column away from the chevron — which
+   it used to sit one 0.75rem gap from, putting "open more options" and "throw
+   all of this away" within a trackpad slip of each other. A shape, a distance
+   and an absence of words: any one of them alone was not enough, and the
+   distance is the one that actually prevents the misclick. */
+.pixl-panel-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.125rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-ui);
+  line-height: 1;
+  color: var(--color-text-muted);
+  background: none;
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    background-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-panel-close:hover {
+    color: var(--color-text);
+    border-color: var(--color-text);
+    background: var(--color-bg);
+  }
+}
+
+/* THE SOURCE, with its own Copy in the top-right — which is where the
+   reference puts it, and where anyone who has just read a line of markup will
+   look.
+
+   IT HUGS ITS CONTENT: no cap, no inner scrollbar. It was capped at 7rem with
+   `overflow: auto`, which put a scroll region inside a shelf that is itself
+   inside the one scrolling thing on the page — three nested scrolls to read
+   twelve lines of markup. The shelf takes the height the markup needs and the
+   GRID above gives it up, which is the trade the grid already exists to make
+   (it scrolls inside itself, so it loses rows rather than reflowing).
+
+   `flex: 1` so the block, and not the gap above it, absorbs whatever height
+   the row's other column leaves over. */
+.pixl-code {
+  position: relative;
+  flex: 1 1 auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* IT IS THE SAME BUTTON AS THE SPLIT'S MAIN HALF, in the outlined weight —
+   it carries `.pixl-panel-action` for its shape, padding, type and hover, and
+   adds only where it sits and what it sits on.
+
+   They were two different objects doing one job: a filled capsule at the foot
+   of the identity column and a small square-cornered chip over the source, so
+   the shelf offered Copy twice in two vocabularies. One family, two weights:
+   filled is the primary, outlined is the same action within reach of the thing
+   it copies. */
+/* WRITTEN WITH BOTH ITS CLASSES, and that is load-bearing rather than tidy.
+   `.pixl-panel-action` is declared LOWER in this file and sets
+   `background: none`, so at equal specificity it wins and the button comes out
+   transparent over the markup — which is what the contrast sweep caught the
+   moment the two were merged. Naming both classes is the same specificity the
+   element actually has. */
+.pixl-panel-action.pixl-code-copy {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  /* OPAQUE, because it lies over the source. A translucent chip with markup
+     running under it is unreadable in both directions. */
+  background: var(--color-surface);
+}
+
+.pixl-code-text {
+  /* Room on the right for the copy button, which lies over this. */
+  padding: 0.5rem 5rem 0.5rem 0.625rem;
+  color: var(--color-text);
+  font-family: var(--font-data), monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  /* WRAPS RATHER THAN PRETTY-PRINTS: the writer emits one line, and
+     re-indenting for display would show something other than what Copy puts on
+     the clipboard.
+
+     IT BREAKS AT THE SPACES FIRST. This was `word-break: break-all`, which
+     breaks inside a word whether or not a space was available — so every line
+     ended mid-attribute (`fill="#0000` / `00"`) and the block read as a wall
+     of characters rather than as markup. `overflow-wrap: anywhere` only breaks
+     inside a token when the token genuinely does not fit, which on this shelf
+     is the data URI and nothing else. */
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ---- The split button, and the one menu on this board -------------------- */
+/* IT SITS UNDER THE CATEGORY, last in the identity column: name, tags,
+   category, action. It was up on the first line beside the name, where it read
+   as a button dropped into a row of text rather than as the thing you do with
+   what the column just told you. */
+.pixl-menu-wrap {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+.pixl-panel-action {
+  flex: none;
+  padding: 0.4375rem 0.875rem;
+  /* PILLS, like the reference. A capsule reads as an action you press; the
+     4px radius everything else on the glass uses reads as a field — which is
+     why the Close, which is not an action on the icon, takes that radius
+     instead. */
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  white-space: nowrap;
+  color: var(--color-text);
+  background: none;
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    background-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* THE ONE ALMOST EVERYONE CAME FOR, as an inverse block — the ink filled and
+   the label knocked out. Not the accent: the selected CARD already wears it on
+   the grid above, and a filled accent button here would be the colour that
+   means "this one" saying it about two different things. */
+.pixl-panel-primary {
+  border-color: transparent;
+  color: var(--color-bg);
+  background: var(--color-text);
+}
+
+@media (hover: hover) {
+  .pixl-panel-primary:hover {
+    background: color-mix(in srgb, var(--color-text) 82%, var(--color-bg));
+  }
+
+  /* The outlined weight darkens its keyline rather than filling: a fill here
+     would be a second primary two inches from the first. */
+  .pixl-panel-action:not(.pixl-panel-primary):hover {
+    border-color: var(--color-text);
+  }
+}
+
+/* ONE BUTTON WITH A SEAM, not two buttons side by side: the chevron opens more
+   ways to do what the main half already does, so they are one control. */
+.pixl-split-main {
+  border-radius: 999px 0 0 999px;
+  padding-right: 0.625rem;
+}
+
+.pixl-split-more {
+  padding-inline: 0.625rem 0.75rem;
+  border-radius: 0 999px 999px 0;
+  border-left: 1px solid color-mix(in srgb, var(--color-bg) 35%, transparent);
+}
+
+/* THE MENU — and it is the ONLY thing on this board that opens.
+   BACKLOG §D argued against exactly this ("a selector fits the board better
+   than a menu, since nothing on this board opens"), and the owner asked for it
+   twice against that note. It is recorded rather than re-argued: the rule now
+   has one exception and this is it.
+
+   IT DROPS UPWARD AND FROM THE LEFT, because that is where its button is: the
+   split sits at the foot of the identity column, so the menu is anchored to
+   the column's left edge rather than the shelf's right one. */
+.pixl-menu {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  bottom: calc(100% + 0.375rem);
+  min-width: 11rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-overlay);
+  /* IT GROWS FROM THE CHEVRON IT BELONGS TO. Scaling from any other corner
+     makes it look like it arrived from somewhere else. */
+  transform-origin: bottom left;
+  transform: scale(1);
+  opacity: 1;
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    opacity var(--duration-fast) var(--ease-smooth-out);
+  will-change: transform, opacity;
+}
+
+/* IT OPENS ON A TRANSITION, NOT A KEYFRAME (2026-09-04). KEYFRAMES DO NOT
+   RETARGET: the chevron is a toggle, so opening and immediately closing removed
+   a running `pixl-menu-in`, which snapped the menu to full scale and opacity
+   before the closing transition started from there. A transition interrupted
+   mid-flight simply reverses from where it is.
+
+   `@starting-style` is what gives a transition something to start FROM on an
+   element that has just been inserted. Where it is unsupported the menu appears
+   with no entrance, which is a degradation rather than a defect. */
+@starting-style {
+  .pixl-menu {
+    transform: scale(var(--scale-menu));
+    opacity: 0;
+  }
+}
+
+/* CLOSES FASTER THAN IT OPENS, and from nearer its rest size — §5b's rule, and
+   the reason the unmount is deferred at all (`useDismissible`). */
+.pixl-menu.is-closing {
+  transform: scale(var(--scale-tiny));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    opacity var(--duration-quick) var(--ease-smooth-out);
+  animation: none;
+}
+
+/* A LABEL SWAPPING IN PLACE — the copy buttons, and the source when the tab
+   changes. ENTER ONLY, deliberately: the skill's recipe exits the old text
+   first, and holding "Copy" for 150ms before showing "Copied" delays the one
+   piece of feedback the button exists to give. React's `key` gives the reflow
+   the recipe warns about needing, for free. */
+@keyframes pixl-swap-in {
+  from {
+    transform: translateY(var(--distance-micro));
+    filter: blur(var(--blur-small));
+    opacity: 0;
+  }
+}
+
+.pixl-swap {
+  display: inline-block;
+  animation: pixl-swap-in var(--duration-quick) var(--ease-in-out);
+}
+
+.pixl-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  white-space: nowrap;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  color: var(--color-text);
+  background: none;
+  transition: background-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-menu-item:hover {
+    background: var(--color-surface);
+  }
+}
+
+.pixl-menu-rule {
+  display: block;
+  margin: 0.25rem 0.5rem;
+  border-top: 1px solid var(--color-border);
 }
 
 @keyframes pixl-bar-in {
@@ -3321,41 +4094,39 @@ li:has(.pixl-card:focus-visible) {
   }
 }
 
-.pixl-detailbar-read {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-/* The caps SCROLL rather than wrap. A bar that grew a second row would push
-   the screen up whenever a long name arrived — which is the exact defect that
-   moving this content out of the mini screen was fixing. */
-.pixl-detailbar-actions {
-  display: flex;
-  gap: 0.375rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px;
-}
-
-.pixl-detailbar-actions::-webkit-scrollbar {
-  display: none;
-}
-
 @media (width < 64rem) {
-  /* Two rows on a phone: the readout cannot share 390px with four caps and
-     still show a name. The caps keep their own scroll on the second row. */
+  /* NO COLUMN TO SPLIT at 390px, so the two stack — which is the same content
+     in the same order, not a second layout. */
   .pixl-detailbar {
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 
-  .pixl-detailbar-read {
-    flex: 1 1 60%;
+  .pixl-detail-read {
+    flex: none;
+    width: 100%;
   }
 
-  .pixl-detailbar-actions {
-    order: 3;
-    flex: 1 1 100%;
+  .pixl-detail-name {
+    font-size: var(--text-body);
+  }
+
+  /* A REAL TARGET ON A PHONE. 28px is a comfortable click and an awkward tap,
+     and this is the control that throws the selection away. */
+  .pixl-panel-close {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  /* AND THE SOURCE IS CAPPED HERE, alone. Hugging is right on a board 800px
+     wide, where a data URI is a dozen lines; at 390px the same string is
+     nearer thirty, and a shelf that tall would leave no screen above it to
+     show the icons the shelf is describing. The phone has no height to give,
+     so this is the one place the block scrolls. */
+  .pixl-code-text {
+    max-height: 8rem;
+    overflow: auto;
   }
 }
 
@@ -3578,7 +4349,12 @@ li:has(.pixl-card:focus-visible) {
    is, so there is no clock in between to be wrong about — the same rule, and
    the same measured reason, as the size rail's marker. */
 .pixl-drum-reel[data-turning="true"] {
-  transition: none;
+  /* THE 45ms BRIDGE, which this comment's own reference actually has and this
+     rule did not. `transition: none` is not "follow the finger", it is "move
+     only on frames that carry a pointer event" — and the rail's note measured
+     17 frames in 121 receiving none. A stationary frame under a moving finger
+     is the stutter the bridge exists to remove. */
+  transition: transform var(--duration-follow) linear;
 }
 
 /* A FACE OF THE DRUM: the printed name, and nothing else. */
@@ -3704,7 +4480,9 @@ li:has(.pixl-card:focus-visible) {
 }
 
 .pixl-thumb-barrel[data-turning="true"] {
-  transition: none;
+  /* Same bridge as the reel above: the grip and the window turn together, so
+     they cannot be on two different clocks. */
+  transition: transform var(--duration-follow) linear;
 }
 
 /* One rib: a flat panel of the drum's own plastic, lit along its crown and

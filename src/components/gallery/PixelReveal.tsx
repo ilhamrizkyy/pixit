@@ -215,7 +215,19 @@ export function PixelReveal({
   const shownRun = shown?.run ?? null;
   useEffect(() => {
     if (shownRun === null) return;
-    const timer = setTimeout(() => setSettled(shownRun), REVEAL_TOTAL_MS);
+    /* NO WAIT UNDER REDUCED MOTION. The CSS zeroes the delays and hides the
+       static, but this timer still held the per-cell render for the full 530ms
+       — and `layoutCells` merges horizontal runs, which is what removes the
+       anti-aliasing seam between abutting rects. So the picture arrived
+       unmerged and then visibly re-knitted half a second later, which is a
+       motion event for someone who asked for none. */
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const timer = setTimeout(
+      () => setSettled(shownRun),
+      reduced ? 0 : REVEAL_TOTAL_MS,
+    );
     return () => clearTimeout(timer);
   }, [shownRun]);
 
@@ -275,7 +287,10 @@ export function PixelReveal({
 /** The finished picture: the merged walk, exactly as every other surface draws it. */
 function Settled({ cells, cellStyle }: { cells: Cells; cellStyle: CellStyle }) {
   return (
-    <g>
+    /* Named so a test can tell the merged picture from the scatter. Under
+       reduced motion the reveal hands straight to this, with no scatter at
+       all. */
+    <g className="pixl-reveal-settled">
       {layoutCells(cells, cellStyle).map(({ key, color, shape }) =>
         shape.kind === "circle" ? (
           <circle

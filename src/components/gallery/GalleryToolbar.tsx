@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { IconPreview } from "@/components/IconPreview";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
@@ -15,16 +15,28 @@ import { hasSheetFilters, type GallerySettings } from "./settings";
  * that changes how an icon is DRAWN — colour, size, shape — is on the body,
  * because the body is what operates the screen.
  *
- * These are recesses in the SCREEN, not wells in the body: the header sits on
- * the pale surface the icons sit on, so it takes that surface's shallow dish
- * rather than the blue holes drilled through the toy's panel.
+ * BOTH ARE DRAWN, NOT MOULDED. They sit on the glass, and the board's rule is
+ * that depth belongs to the plastic — so the field's boundary is a real line
+ * rather than a fake recess, and the chips carry no raised face. That rule was
+ * being read as "therefore generic", which is what left this header as the last
+ * piece of the pre-board design still standing. It is not what the rule says:
+ * the dot matrix, the segment readout and Pixel Materialize are all flat, all
+ * drawn on glass, and all unmistakably this device.
  */
 
-/* The gallery searches with its own search icon. An icon set reaching for
-   someone else's glyphs in its own chrome does not believe its own set. */
-const SEARCH_ICON_CELLS =
-  getIcon("search")?.cells.map((cell) => (cell === null ? null : "currentColor")) ??
+/* The gallery draws its own chrome from its own set. An icon set reaching for
+   someone else's glyphs does not believe its own set — so the search field
+   carries `search`, and every category chip is indexed by `play`.
+
+   Cells remapped to `currentColor`, which is what lets one drawing serve seven
+   categories: the mark inherits `--cat-ink` from the chip it sits in, so no hex
+   ever reaches a component (DESIGN.md §6). */
+const asChrome = (id: string) =>
+  getIcon(id)?.cells.map((cell) => (cell === null ? null : "currentColor")) ??
   null;
+
+const SEARCH_ICON_CELLS = asChrome("search");
+const CHIP_ICON_CELLS = asChrome("play");
 
 type GalleryToolbarProps = {
   search: string;
@@ -56,8 +68,14 @@ export function GalleryToolbar({
           type="search"
           value={search}
           onChange={(event) => onSearch(event.target.value)}
-          placeholder="Search icons…"
-          aria-label="Search icons by name or tag"
+          /* THE USEFUL HALF WAS HIDDEN IN THE ACCESSIBLE NAME, where sighted
+             users never see it: the placeholder said "Search icons…" while only
+             a screen reader was told it matches tags. The field's own glyph
+             already says "search", so the word was doing no work. It also now
+             matches the composer's import picker, which has said this all
+             along — two search fields on one product saying two things. */
+          placeholder="Search by name or tag"
+          aria-label="Search icons"
           className="w-full min-w-0 bg-transparent pr-2 pl-9 text-ui text-text placeholder:text-text-muted focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {search && (
@@ -65,7 +83,9 @@ export function GalleryToolbar({
             type="button"
             onClick={() => onSearch("")}
             aria-label="Clear search"
-            className="shrink-0 px-2.5 text-caption text-text-muted transition-colors hover:text-text"
+            /* 24x24 MINIMUM (WCAG 2.5.8 AA). It measured 27x18 at a 12px glyph,
+               inside a 44px-tall container with the room to spare. */
+            className="grid size-6 shrink-0 mr-2 place-items-center rounded-sm text-caption text-text-muted transition-colors hover:text-text"
           >
             ✕
           </button>
@@ -80,7 +100,7 @@ export function GalleryToolbar({
         aria-haspopup="dialog"
         aria-expanded={filtersOpen}
         aria-label="Display settings"
-        className="pixl-key relative flex h-11 w-11 shrink-0 items-center justify-center text-text-muted lg:hidden"
+        className="pixl-screen-key relative flex h-11 w-11 shrink-0 items-center justify-center text-text-muted lg:hidden"
       >
         <FilterGlyph />
         {/* A dot rather than a count: it answers "is anything in here set",
@@ -105,6 +125,15 @@ export function GalleryToolbar({
  * you learn once and no tint ever means "this one". Selection is carried by
  * WEIGHT instead — an unselected chip is an outline in its tint, a selected one
  * is filled with it. Same colour, different mass.
+ *
+ * THE FILL TRAVELS (2026-09-04). It repainted in place while the board's other
+ * tablist — the detail shelf's format tabs — slides, so one device spoke two
+ * selection languages. It cannot borrow that build as-is, because a travelling
+ * accent bar would be a second accent and §7 forbids it; a travelling FILL
+ * breaks neither rule. It is a transition on `transform`, never on `width`, so
+ * a held arrow key produces one continuous slide that retargets rather than
+ * restarting — which matters here more than anywhere, because this is an
+ * automatic-activation tablist and key repeat fires it every 30-90ms.
  *
  * That is also the rule that separates the two controls: chips are flat because
  * they are on the screen, and keys have bodies because they are on the plastic.
@@ -139,10 +168,41 @@ type CategoryChipsProps = {
 
 export function CategoryChips({ settings, onSettings }: CategoryChipsProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const fillRef = useRef<HTMLSpanElement>(null);
+  const placed = useRef(false);
   const active = Math.max(
     TAB_IDS.findIndex((id) => id === settings.category),
     0,
   );
+
+  /* THE FILL IS MEASURED, NOT GUESSED. Same mechanism the detail shelf's format
+     rule uses: JS writes the live chip's box, CSS owns the tween.
+
+     THE TINT IS SET INSTANTLY AND ONLY THE GEOMETRY ANIMATES. Tweening the
+     background between two tints would paint unmeasured intermediate colours
+     under a label, and DESIGN.md §6 measured these tints for AA. */
+  useLayoutEffect(() => {
+    const fill = fillRef.current;
+    const chip = refs.current[active];
+    if (fill === null || chip === null || chip === undefined) return;
+
+    const move = () => {
+      fill.style.transform = `translateX(${chip.offsetLeft}px)`;
+      fill.style.width = `${chip.offsetWidth}px`;
+    };
+    /* FIRST PAINT WRITES THE POSITION WITH THE TRANSITION SUSPENDED, or the
+       fill grows out of the row's left edge every time the gallery mounts. */
+    if (placed.current) {
+      move();
+      return;
+    }
+    const previous = fill.style.transition;
+    fill.style.transition = "none";
+    move();
+    void fill.offsetWidth;
+    fill.style.transition = previous;
+    placed.current = true;
+  }, [active]);
 
   function select(index: number) {
     // Wraps, as the APG suggests for a tablist: walking off one end is how you
@@ -171,6 +231,14 @@ export function CategoryChips({ settings, onSettings }: CategoryChipsProps) {
       onKeyDown={onKeyDown}
       className="pixl-chips"
     >
+      {/* Behind every chip, wearing the LIVE category's tint. Decorative: the
+          selection is already on the chips themselves via `aria-selected`. */}
+      <span
+        ref={fillRef}
+        aria-hidden="true"
+        data-category={TAB_IDS[active]}
+        className="pixl-chip-fill"
+      />
       {TAB_IDS.map((id, index) => {
         const selected = index === active;
         return (
@@ -190,8 +258,17 @@ export function CategoryChips({ settings, onSettings }: CategoryChipsProps) {
             // Roving tabindex: the row is one stop, arrows do the rest.
             tabIndex={selected ? 0 : -1}
             onClick={() => select(index)}
-            className="pixl-chip text-ui"
+            className="pixl-chip"
           >
+            {/* THE MARK. Decorative: the chip's accessible name is already the
+                category, and a second reading of it would be noise. Rendered on
+                every chip and revealed only on the live one — see the CSS for
+                why it is not conditionally mounted. */}
+            {CHIP_ICON_CELLS && (
+              <span aria-hidden="true" className="pixl-chip-mark flex">
+                <IconPreview cells={CHIP_ICON_CELLS} size={14} />
+              </span>
+            )}
             {TAB_LABELS[id]}
           </button>
         );

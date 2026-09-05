@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { Gallery } from "@/components/gallery/Gallery";
 import { icons } from "@/registry";
 import { CELL_UNITS, GRID_SIZE, VIEW_BOX } from "@/engine/constants";
+import { COPY_FORMATS, FORMAT_LABELS } from "@/engine/formats";
 import { cellsToPngBlob, downloadSvg } from "@/lib/download";
 
 /**
@@ -114,7 +115,7 @@ describe("the mini screen", () => {
     // CLEARING has to be audible too — which is exactly why the status is on
     // the screen rather than on the bar: the bar is gone by then.
     await user.click(
-      within(detailBar()).getByRole("button", { name: "Clear selection" }),
+      within(detailBar()).getByRole("button", { name: "Close" }),
     );
     await waitFor(() => expect(status().textContent).toBe("No icon selected"));
   });
@@ -162,6 +163,23 @@ describe("the mini screen", () => {
   });
 });
 
+/**
+ * DOWNLOAD SVG MOVED BEHIND THE CHEVRON on 2026-09-03, when the shelf's four
+ * flat buttons became a split button plus a menu. Copy is one press; every
+ * other way of getting the icon out is one press further.
+ *
+ * These tests use Download SVG to inspect the markup rather than to test the
+ * download, so they open the menu first. Asserted where the markup is actually
+ * produced: Copy and Download are built from the same string, so one of them
+ * covers the guarantee for both.
+ */
+async function downloadButton(user: ReturnType<typeof userEvent.setup>, bar: HTMLElement) {
+  await user.click(
+    within(bar).getByRole("button", { name: "More export options" }),
+  );
+  return within(bar).getByRole("menuitem", { name: "Download SVG" });
+}
+
 describe("the detail bar", () => {
   it("appears only with a selection, and carries the readout and every action", async () => {
     const user = userEvent.setup();
@@ -172,18 +190,75 @@ describe("the detail bar", () => {
     expect(within(bar).getByRole("heading", { level: 2 }).textContent).toBe(
       icons[0].name,
     );
-    const readout = bar.querySelector("p")!.textContent ?? "";
-    expect(readout).toContain(icons[0].category);
-    expect(readout).toContain(icons[0].tags.join(" · "));
+    /* THE TAGS AND THE CATEGORY, IN THAT ORDER — the identity column reads
+       name, tags, category, action. The tags came off on 2026-09-03 (BACKLOG
+       §D called them the weakest thing here) and came back the same day by
+       request, set as one clipped line of printing rather than a row of pills:
+       they are the variable-width element on this shelf, and a line that can
+       only ever be one line tall is what stops that forcing a scroll again. */
+    expect(bar.querySelector(".pixl-detail-tags")!.textContent).toBe(
+      icons[0].tags.join(", "),
+    );
+    expect(bar.querySelector(".pixl-cat")!.textContent).toBe(
+      icons[0].category,
+    );
 
+    /* AND IN THAT READING ORDER: what it is called, what it is near, which
+       shelf it came off, and then what to do about it. The action was up on
+       the first line beside the name until 2026-09-03, where it read as a
+       button dropped into a row of text. DOM order, because that is what a
+       screen reader and the Tab key both follow. */
+    const column = bar.querySelector(".pixl-detail-read")!;
+    expect(
+      [...column.children].map((el) =>
+        el.tagName === "H2"
+          ? "name"
+          : el.classList.contains("pixl-detail-tags")
+            ? "tags"
+            : el.classList.contains("pixl-cat")
+              ? "category"
+              : "action",
+      ),
+    ).toEqual(["name", "tags", "category", "action"]);
+
+    /* ON THE SHELF ITSELF: the format tabs, the split button, and the ✕.
+       "Copy name" went with the rebuild — the name is right there to select,
+       and the split button's three formats are what people actually came for. */
+    /* TWO WAYS TO COPY, WITH TWO NAMES. The pill and the block's own button do
+       the same thing, which is what the reference does — but they must not
+       share an accessible name, or a screen-reader user has no way to tell
+       which one they are on. They did for one pass. */
     for (const name of [
       "Copy SVG",
-      "Download SVG",
-      "Download PNG",
-      "Copy name",
-      "Clear selection",
+      "Copy source",
+      "More export options",
+      "Close",
     ]) {
       expect(within(bar).getByRole("button", { name })).toBeTruthy();
+    }
+
+    /* EVERY FORMAT GETS A TAB, read from the engine rather than listed here —
+       a hard-coded list would keep passing after a sixth format was added and
+       never printed. */
+    for (const format of COPY_FORMATS) {
+      expect(
+        within(bar).getByRole("tab", { name: FORMAT_LABELS[format] }),
+      ).toBeTruthy();
+    }
+
+    // AND BEHIND THE CHEVRON: every format again, plus the two downloads.
+    await user.click(
+      within(bar).getByRole("button", { name: "More export options" }),
+    );
+    for (const format of COPY_FORMATS) {
+      expect(
+        within(bar).getByRole("menuitem", {
+          name: `Copy ${FORMAT_LABELS[format]}`,
+        }),
+      ).toBeTruthy();
+    }
+    for (const name of ["Download SVG", "Download PNG"]) {
+      expect(within(bar).getByRole("menuitem", { name })).toBeTruthy();
     }
   });
 
@@ -215,7 +290,7 @@ describe("the detail bar", () => {
 
     const bar = await loadIcon(user);
     await user.click(
-      within(bar).getByRole("button", { name: "Clear selection" }),
+      within(bar).getByRole("button", { name: "Close" }),
     );
     await waitFor(() => expect(noBar()).toBeNull());
   });
@@ -290,9 +365,7 @@ describe("cell shape", () => {
 
       await user.click(shapeKey(style));
       const bar = await loadIcon(user);
-      await user.click(
-        within(bar).getByRole("button", { name: "Download SVG" }),
-      );
+      await user.click(await downloadButton(user, bar));
 
       // Asserted where the markup is actually produced. Download and Copy are
       // built from the same string, so one of them covers the guarantee.
@@ -306,7 +379,7 @@ describe("cell shape", () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
     const bar = await loadIcon(user);
-    await user.click(within(bar).getByRole("button", { name: "Download SVG" }));
+    await user.click(await downloadButton(user, bar));
 
     const [, markup] = vi.mocked(downloadSvg).mock.calls[0];
     expect(markup).toContain("<rect");
@@ -364,7 +437,7 @@ describe("cell shape", () => {
     expect(grid.querySelector("svg")?.getAttribute("width")).toBe("48");
 
     const bar = await loadIcon(user);
-    await user.click(within(bar).getByRole("button", { name: "Download SVG" }));
+    await user.click(await downloadButton(user, bar));
     const [, markup] = vi.mocked(downloadSvg).mock.calls[0];
     expect(markup).toContain('width="120"');
     expect(markup).toContain('height="120"');
@@ -372,7 +445,11 @@ describe("cell shape", () => {
     // rendered dimensions follow the scale.
     expect(markup).toContain(`viewBox="${VIEW_BOX}"`);
 
-    await user.click(within(bar).getByRole("button", { name: "Download PNG" }));
+    // Behind the chevron too, with Download SVG.
+    await user.click(
+      within(bar).getByRole("button", { name: "More export options" }),
+    );
+    await user.click(within(bar).getByRole("menuitem", { name: "Download PNG" }));
     expect(vi.mocked(cellsToPngBlob).mock.calls[0][1]).toEqual({ pixels: 120 });
   });
 
@@ -381,7 +458,7 @@ describe("cell shape", () => {
     render(<Gallery icons={icons} />);
 
     const bar = await loadIcon(user);
-    await user.click(within(bar).getByRole("button", { name: "Download SVG" }));
+    await user.click(await downloadButton(user, bar));
     const [, markup] = vi.mocked(downloadSvg).mock.calls[0];
     // The default, drawn and exported at the same number.
     expect(markup).toContain('width="24"');

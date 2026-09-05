@@ -44,7 +44,7 @@ export function IconCard({
       type="button"
       onClick={() => onSelect(icon)}
       aria-label={local ? `${icon.name} (saved locally)` : icon.name}
-      title={local ? `${icon.name} — saved in this browser only` : icon.name}
+      title={local ? `${icon.name} (saved in this browser only)` : icon.name}
       className={`pixl-card group relative flex w-full flex-col items-center justify-center p-2 ${
         selected ? "is-selected" : ""
       } ${

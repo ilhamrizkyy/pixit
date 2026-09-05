@@ -70,6 +70,14 @@ export default defineConfig({
     timeout: 180_000,
     // The composer is closed by default and gated in its route handler. The
     // tests need it open; nothing else does, and this never reaches a deploy.
-    env: { PIXLE_COMPOSER_ENABLED: "true" },
+    env: {
+      PIXLE_COMPOSER_ENABLED: "true",
+      /* ITS OWN BUILD DIRECTORY. `next dev` serves out of `.next`, and this
+         command rebuilds it — so running the suite while a dev server was up
+         deleted that server's chunks underneath it. The page still rendered and
+         hydration never completed, so every control silently stopped
+         responding. See the note in `next.config.ts`. */
+      NEXT_DIST_DIR: ".next-e2e",
+    },
   },
 });

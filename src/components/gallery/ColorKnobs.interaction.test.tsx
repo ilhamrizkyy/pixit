@@ -40,7 +40,7 @@ afterEach(cleanup);
 const body = () => screen.getByRole("complementary");
 const knob = (name: string) => within(body()).getByRole("slider", { name });
 const hex = () =>
-  within(body()).getByLabelText("Icon colour, as a hex value") as HTMLInputElement;
+  within(body()).getByLabelText("Icon color, as a hex value") as HTMLInputElement;
 
 /** What the grid is actually painting. */
 const drawnColor = () =>

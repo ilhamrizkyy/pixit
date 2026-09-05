@@ -24,7 +24,7 @@ const pressStart2P = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "Pixit — pixel icons + composer",
+  title: "Pixit: pixel icons and composer",
   description:
     "An open-source pixel, 32-bit, and arcade icon set with an in-browser composer. MIT licensed.",
 };

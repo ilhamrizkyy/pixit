@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * The board as an OBJECT: sized to the window, with one scroll inside it.
@@ -119,27 +119,58 @@ test("the mini screen's gutters match: board edge and big screen alike", async (
   expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(1);
 });
 
-test("the detail bar is INSIDE the glass, not a strip of chassis under it", async ({
+/**
+ * THE DETAIL SHELF IS INSIDE THE GLASS, AND IT DOES NOT RESHAPE THE BOARD.
+ *
+ * IT WAS A RIGHT-HAND SIDEBAR FOR TWO PASSES and neither was the right object.
+ * The first was a fourth CHASSIS column outboard of the size rail, which
+ * rebuilt the case to hold a readout about the screen — a chassis does not
+ * change shape because you clicked something. The second floated on the glass
+ * and covered the icons it was describing.
+ *
+ * Three assertions, and the middle one is what those two passes would fail:
+ *
+ * 1. Contained by the screen on every side, and flush to its bottom edge — on
+ *    the glass, not on a strip of chassis under it.
+ * 2. THE BOARD AND THE RAIL DO NOT MOVE. The shelf is inside the screen, so
+ *    selecting an icon changes what the display is showing and nothing else.
+ * 3. The grid keeps its WIDTH. It gives up height, which is the one dimension
+ *    it can spare because it scrolls inside itself.
+ */
+test("the detail shelf sits inside the glass and reshapes nothing outside it", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto("/");
-  await page
-    .getByRole("button", { name: /arrow-right/ })
-    .first()
-    .click();
+
+  const before = {
+    board: (await page.locator(".pixl-board").boundingBox())!.width,
+    screen: (await page.locator(".pixl-screen").boundingBox())!,
+    rail: (await page.locator(".pixl-rail").first().boundingBox())!.x,
+  };
+
+  await page.getByRole("button", { name: /arrow-right/ }).first().click();
   await settle(page);
 
   const glass = (await page.locator(".pixl-screen").boundingBox())!;
   const bar = (await page.locator(".pixl-detailbar").boundingBox())!;
 
-  // Contained on every side, and flush to the screen's bottom edge.
+  // 1. ON the glass, flush to its foot.
   expect(bar.x).toBeGreaterThanOrEqual(glass.x - 1);
   expect(bar.x + bar.width).toBeLessThanOrEqual(glass.x + glass.width + 1);
   expect(bar.y).toBeGreaterThan(glass.y);
   expect(
     Math.abs(bar.y + bar.height - (glass.y + glass.height)),
   ).toBeLessThanOrEqual(1);
+
+  // 2. NOTHING OUTSIDE THE SCREEN MOVED.
+  const board = (await page.locator(".pixl-board").boundingBox())!.width;
+  const rail = (await page.locator(".pixl-rail").first().boundingBox())!.x;
+  expect(board, "the shelf resized the board").toBe(before.board);
+  expect(rail, "the shelf moved the size rail").toBe(before.rail);
+
+  // 3. And the screen kept its width — it gives up HEIGHT, nothing else.
+  expect(glass.width, "the shelf narrowed the grid").toBe(before.screen.width);
 });
 
 test("the Shape switch is mounted through the case, at the column's width", async ({
@@ -410,7 +441,7 @@ test("the hex readout prints its letters in capitals", async ({ page }) => {
   await page.goto("/");
 
   // Dark's default is #ffffff, which is all letters and no digits.
-  const field = page.getByLabel("Icon colour, as a hex value");
+  const field = page.getByLabel("Icon color, as a hex value");
   await expect(field).toHaveValue("ffffff");
 
   const shown = await page.evaluate(() => {
@@ -820,7 +851,7 @@ test("the whole hex readout is a text field, not a 7ch slot in one", async ({
   const focused = await page.evaluate(
     () => document.activeElement?.getAttribute("aria-label") ?? null,
   );
-  expect(focused).toBe("Icon colour, as a hex value");
+  expect(focused).toBe("Icon color, as a hex value");
 });
 
 /**
@@ -1036,6 +1067,533 @@ test("only the PIP turns — the dial's lighting stays where the light is", asyn
   const after = await read();
   expect(after.spin).not.toBe(0);
   expect(after.dial).toBe(0);
+});
+
+/**
+ * THE DETAIL BAR HAS A HIERARCHY, AND IT IS CARRIED BY FILL (2026-09-03).
+ *
+ * It was four identically bordered boxes in a row: Copy SVG, which is what
+ * almost everyone came for, looked exactly like Copy name. Four boxes alike
+ * state that all four matter equally.
+ *
+ * FILL, NOT CHROME, because this is inside the glass and the board's rule is
+ * that depth belongs to the plastic — anything drawn on a display is drawn
+ * (§1). An inverse block is what a monochrome display does to say "this one",
+ * and it costs no colour.
+ *
+ * AND NOT THE ACCENT. The selected CARD wears `--accent` on this same screen;
+ * a filled accent button two inches below it would be the one colour that means
+ * "this one" saying it about two different things at once. That is the
+ * regression this guards — accent is one `background` declaration away.
+ */
+test("the detail shelf's primary action is filled, and the tabs are not", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const bar = await page.evaluate(() => {
+    const parse = (v: string) => {
+      const srgb = /color\(srgb ([^)]+)\)/.exec(v);
+      if (srgb !== null) {
+        const parts = srgb[1].trim().split(/[\s/]+/).map(Number);
+        return [...parts.slice(0, 3).map((n) => n * 255), parts[3] ?? 1];
+      }
+      const parts = v.replace(/[^\d,.]/g, "").split(",").map(Number);
+      return [...parts.slice(0, 3), parts[3] ?? 1];
+    };
+    const token = (name: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = getComputedStyle(
+        document.documentElement,
+      ).getPropertyValue(name);
+      document.documentElement.append(probe);
+      const out = parse(getComputedStyle(probe).color);
+      probe.remove();
+      return out;
+    };
+    const primary = document.querySelector(".pixl-panel-primary")!;
+    const rest = [...document.querySelectorAll(".pixl-format")];
+    const read = (el: Element) => {
+      const cs = getComputedStyle(el);
+      return {
+        fill: parse(cs.backgroundColor),
+        ink: parse(cs.color),
+        border: cs.borderTopWidth,
+      };
+    };
+    return {
+      primary: read(primary),
+      rest: rest.map(read),
+      accent: token("--color-accent"),
+      ground: parse(getComputedStyle(document.querySelector(".pixl-detailbar")!).backgroundColor),
+    };
+  });
+
+  // THE PRIMARY IS FILLED, opaquely.
+  expect(bar.primary.fill[3], "the primary is not filled").toBe(1);
+
+  // AND IT IS INVERSE — its fill is on the far side of the bar from its ink,
+  // which is the whole of what an inverse block is.
+  const linear = (v: number) =>
+    v / 255 <= 0.03928 ? v / 255 / 12.92 : ((v / 255 + 0.055) / 1.055) ** 2.4;
+  const lum = ([r, g, b]: number[]) =>
+    0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+  const ground = lum(bar.ground);
+  expect(
+    Math.sign(lum(bar.primary.fill) - ground),
+    "the primary's fill does not invert against the bar",
+  ).toBe(-Math.sign(lum(bar.primary.ink) - ground));
+
+  // NOT THE ACCENT.
+  const [pr, pg, pb] = bar.primary.fill;
+  const [ar, ag, ab] = bar.accent;
+  expect(
+    Math.abs(pr - ar) + Math.abs(pg - ag) + Math.abs(pb - ab),
+    `the primary wears the accent, which the selected card already means`,
+  ).toBeGreaterThan(60);
+
+  /* AND THE OTHERS CARRY NO CHROME AT ALL — no fill, no border. Both are
+     checked: the four bordered boxes came back as easily as they went. */
+  /* AND THE FORMAT TABS CARRY NO FILL AT ALL. A tab is a printed label with a
+     rule under the live one — the chips' own trick next door, mass instead of
+     depth. A filled tab would be a second thing on this shelf claiming to be
+     the primary action. */
+  expect(bar.rest.length, "no format tabs found").toBeGreaterThan(1);
+  for (const tab of bar.rest) {
+    expect(tab.fill[3], "a format tab is filled").toBe(0);
+  }
+});
+
+/**
+ * THE SHELF'S MOTION — three things, and each replaces a cut with a move.
+ *
+ * 1. THE LIVE TAB'S RULE SLIDES. It was a `border-bottom` on whichever tab was
+ *    selected, so switching format repainted two tabs and the rule teleported.
+ *    As one element the strip can tween it, which is the transitions.dev
+ *    tabs-sliding mechanism with a rule where the recipe paints a pill.
+ * 2. IT IS PLACED WITHOUT A TRANSITION ON FIRST PAINT. The recipe's own listed
+ *    mistake: without suspending the transition for the first write, the rule
+ *    animates in from zero width at the left edge every time an icon is picked.
+ * 3. THE MENU IS HELD FOR ITS CLOSE, and NOT held for anyone who asked for less
+ *    motion. A surface that unmounts on close has nothing to animate on, and
+ *    making a reduced-motion user sit through a delay they cannot see is worse
+ *    than no animation at all.
+ */
+test("the format rule slides between tabs rather than jumping", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const rule = page.locator(".pixl-format-rule");
+  const first = page.getByRole("tab", { name: "SVG" });
+  const last = page.getByRole("tab", { name: "Data URI" });
+
+  /* 2. ON THE LIVE TAB THE MOMENT THE SHELF EXISTS — same left edge, same
+        width. A rule that animated in would be narrower than its tab here. */
+  const startTab = (await first.boundingBox())!;
+  const start = (await rule.boundingBox())!;
+  expect(Math.abs(start.x - startTab.x), "the rule is not on the live tab").toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(start.width - startTab.width),
+    "the rule did not take the tab's width on first paint",
+  ).toBeLessThanOrEqual(1);
+
+  // 1. AND IT IS IN BETWEEN MID-FLIGHT, which a jump never is.
+  const target = (await last.boundingBox())!;
+  await last.click();
+  await page.waitForTimeout(90);
+  const mid = (await rule.boundingBox())!;
+  expect(
+    mid.x,
+    `mid-slide ${mid.x} is not past the start ${start.x}`,
+  ).toBeGreaterThan(start.x + 4);
+  expect(
+    mid.x,
+    `mid-slide ${mid.x} already reached the target ${target.x}`,
+  ).toBeLessThan(target.x - 4);
+
+  // And it lands ON the tab, not near enough. A pixel of slack for the
+  // sub-pixel rounding `offsetLeft` does against a fractional bounding box.
+  await expect
+    .poll(async () => Math.abs((await rule.boundingBox())!.x - target.x))
+    .toBeLessThanOrEqual(1);
+});
+
+/**
+ * THE SOURCE HUGS ITS CONTENT, and the SHELF is what absorbs it.
+ *
+ * It was capped at 7rem with `overflow: auto`, which put a scroll region
+ * inside a shelf that sits inside the one scrolling thing on the page — three
+ * nested scrolls to read twelve lines of markup. Uncapped, the shelf takes the
+ * height each format needs and the GRID gives it up, which is the trade the
+ * grid already exists to make.
+ *
+ * Both halves are checked, because only together are they safe: a block that
+ * hugs inside a board that cannot shrink is a board that overflows the window.
+ * Every format is walked, since they differ by a factor of three — an SVG is
+ * ~90px of markup and a CSS rule carrying the same art as a data URI is ~280.
+ */
+test("the source block hugs every format, and the board still fits the window", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const heights: number[] = [];
+  for (const tab of ["SVG", "React", "HTML", "CSS", "Data URI"]) {
+    await page.getByRole("tab", { name: tab }).click();
+
+    const seen = await page.evaluate(() => {
+      const pre = document.querySelector(".pixl-code-text")!;
+      const board = document.querySelector(".pixl-board")!.getBoundingClientRect();
+      return {
+        // NOT A SCROLL REGION: the rendered box is the content's own height.
+        overflow: pre.scrollHeight - pre.clientHeight,
+        shelf: document.querySelector(".pixl-detailbar")!.getBoundingClientRect()
+          .height,
+        // AND THE BOARD STILL FITS, which is the other half of the trade.
+        spills: board.bottom - window.innerHeight,
+      };
+    });
+
+    expect(seen.overflow, `${tab} scrolls inside the block`).toBeLessThanOrEqual(1);
+    expect(seen.spills, `${tab} pushed the board past the window`).toBeLessThanOrEqual(1);
+    heights.push(seen.shelf);
+  }
+
+  /* AND THE SHELF ACTUALLY MOVED. If the block had silently kept a cap, every
+     format would come back the same height and each assertion above would pass
+     on a fixed box. */
+  expect(
+    Math.max(...heights) - Math.min(...heights),
+    "every format produced the same shelf height, so the block is still capped",
+  ).toBeGreaterThan(40);
+});
+
+/**
+ * THE TWO COPY BUTTONS ARE ONE FAMILY IN TWO WEIGHTS (2026-09-03).
+ *
+ * The shelf offers Copy twice on purpose — once at the foot of the identity
+ * column and once within reach of the source it copies. For one pass they were
+ * two different OBJECTS: a filled capsule and a small square-cornered chip, in
+ * different paddings and different type. Two vocabularies for one action.
+ *
+ * What must match is the SHAPE and the TYPE; what must differ is the FILL,
+ * because only one of them is the primary. Both directions are asserted: made
+ * identical, the shelf would carry two primaries.
+ */
+test("the shelf's two Copy buttons are one control in two weights", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const pair = await page.evaluate(() => {
+    const read = (sel: string) => {
+      const cs = getComputedStyle(document.querySelector(sel)!);
+      return {
+        radius: cs.borderTopLeftRadius,
+        font: `${cs.fontFamily}/${cs.fontSize}`,
+        padY: cs.paddingTop,
+        fill: cs.backgroundColor,
+      };
+    };
+    return { primary: read(".pixl-split-main"), block: read(".pixl-code-copy") };
+  });
+
+  // SAME OBJECT: shape, type and padding come from the one class.
+  expect(pair.block.radius, "the two Copy buttons are different shapes").toBe(
+    pair.primary.radius,
+  );
+  expect(pair.block.font, "the two Copy buttons are set differently").toBe(
+    pair.primary.font,
+  );
+  expect(pair.block.padY, "the two Copy buttons are different sizes").toBe(
+    pair.primary.padY,
+  );
+
+  // TWO WEIGHTS: one is filled and one is not.
+  expect(
+    pair.block.fill,
+    "both Copy buttons are filled, so the shelf has two primaries",
+  ).not.toBe(pair.primary.fill);
+});
+
+/**
+ * THE SEARCH FIELD IS A CUT WITH A REAL BOUNDARY, AND FOCUS ADDS TO IT.
+ *
+ * Two rules, one element, and both had been broken since before the board was
+ * built — this field was the last piece of the pre-board design still in place.
+ *
+ * 1. FOCUS ADDS ITS RING TO THE STACK. DESIGN.md §5c records fixing exactly this
+ *    on `.pixl-well`: swapping the whole `box-shadow` is how focusing a field
+ *    flattens the hole. `.pixl-field` never got the fix, so clicking in dropped
+ *    the boundary line entirely.
+ * 2. THE BOUNDARY CARRIES THE FIELD, NOT THE FILL. Anything on a display is
+ *    drawn, so this gets a real line rather than a deep fake recess. It measured
+ *    1.27:1 against the screen where WCAG 1.4.11 asks 3:1 for a control
+ *    boundary, and the fill inside it 1.10:1 light and 1.06:1 dark.
+ */
+for (const theme of ["light", "dark"] as const) {
+  test(`the search field keeps its boundary when focused (${theme})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript((t) => {
+      try {
+        localStorage.setItem("pixle-theme", t);
+      } catch {}
+    }, theme);
+    await page.goto("/");
+
+    const field = page.locator(".pixl-field");
+    const shadowLayers = async () =>
+      (await field.evaluate((el) => getComputedStyle(el).boxShadow))
+        .split(/,(?![^(]*\))/)
+        .map((layer) => layer.trim());
+
+    const resting = await shadowLayers();
+    expect(resting.length, "the field has no shadow stack at all").toBeGreaterThan(1);
+
+    await page.locator(".pixl-field input").focus();
+    const focused = await shadowLayers();
+
+    // 1. EVERY RESTING LAYER SURVIVES, and the ring is added on top.
+    for (const layer of resting) {
+      expect(
+        focused,
+        `focusing dropped a resting layer: ${layer}`,
+      ).toContain(layer);
+    }
+    expect(
+      focused.length,
+      "focus did not add a ring",
+    ).toBeGreaterThan(resting.length);
+
+    // 2. THE BOUNDARY CLEARS 3:1 AGAINST THE SCREEN BEHIND IT.
+    const ratio = await page.evaluate(() => {
+      const parse = (v: string) => {
+        const n = v.match(/-?[\d.]+/g)!.map(Number);
+        // `color(srgb r g b / a)` channels are 0..1; `rgb()` are 0..255.
+        return v.startsWith("color(")
+          ? [n[0] * 255, n[1] * 255, n[2] * 255, n[3] ?? 1]
+          : [n[0], n[1], n[2], n[3] ?? 1];
+      };
+      const lin = (c: number) =>
+        c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4;
+      const lum = (c: number[]) =>
+        0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+
+      const probe = document.createElement("span");
+      probe.style.color = getComputedStyle(
+        document.documentElement,
+      ).getPropertyValue("--screen-field-line");
+      document.body.append(probe);
+      const line = parse(getComputedStyle(probe).color);
+      probe.remove();
+
+      const screen = parse(
+        getComputedStyle(document.querySelector(".pixl-screen")!).backgroundColor,
+      );
+      const a = lum(line);
+      const b = lum(screen);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    expect(
+      ratio,
+      `the field's boundary is ${ratio.toFixed(2)}:1 against the screen, under 1.4.11's 3:1`,
+    ).toBeGreaterThanOrEqual(3);
+  });
+}
+
+/**
+ * THE GALLERY CAN SHOW A REFUSAL, AND FOR A LONG TIME IT COULD NOT.
+ *
+ * It held the toast as a bare string and rendered `<Toast>` with no `tone`, so
+ * everything defaulted to `info` — while the copy path sends real refusals
+ * through the same channel. "Could not copy" arrived bottom-centre,
+ * `role="status"`, for 2.2 seconds, where INTERACTION.md §7 asks for
+ * top-centre, `role="alert"`, for 4.5. The composer had done this correctly
+ * since it was built; the public route, which almost all traffic lands on, had
+ * no error path at all.
+ *
+ * The clipboard is stubbed to fail rather than mocked away, so this exercises
+ * the real refusal branch.
+ */
+test("a refused copy is an ALERT at the top, not an ambient confirmation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => {
+    // Both routes `copyText` can take, so the fallback cannot quietly succeed.
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: () => Promise.reject(new Error("blocked")) },
+    });
+    document.execCommand = () => false;
+  });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  await page.getByRole("button", { name: "Copy SVG" }).click();
+
+  const toast = page.locator("[data-toast]");
+  await expect(toast).toBeVisible();
+  await expect(toast, "a refusal is delivered as a confirmation").toHaveAttribute(
+    "data-toast",
+    "error",
+  );
+  await expect(toast, "a refusal does not interrupt").toHaveAttribute(
+    "role",
+    "alert",
+  );
+
+  // AND IT TAKES THE TOP, clear of the shelf it is about.
+  const box = (await toast.boundingBox())!;
+  expect(
+    box.y,
+    "the refusal sits in the confirmation's corner",
+  ).toBeLessThan(900 / 2);
+});
+
+/**
+ * AN IDENTICAL REPEATED MESSAGE IS A NEW TOAST (INTERACTION.md §7).
+ *
+ * The gallery held the toast as a bare string, so `setToast("SVG copied")`
+ * twice in a row was a no-op in React state: the second copy produced no new
+ * toast, no second announcement, and the first toast's clock kept running from
+ * the first press. Copying twice looked like the first confirmation had simply
+ * never left. The composer solved this with a nonce; the gallery never got one.
+ */
+test("copying twice restarts the toast rather than leaving the first standing", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const copy = page.getByRole("button", { name: "Copy SVG" });
+  const toast = page.locator("[data-toast]");
+
+  await copy.click();
+  await expect(toast).toBeVisible();
+  // A stamp on the node itself: if React reuses the element, this survives.
+  await toast.evaluate((el) => el.setAttribute("data-probe", "first"));
+
+  // Let the first one age, then send the identical message again.
+  await page.waitForTimeout(600);
+  await copy.click();
+  await expect(toast).toBeVisible();
+
+  await expect(
+    toast,
+    "the second copy reused the first toast, so its clock never restarted",
+  ).not.toHaveAttribute("data-probe", "first");
+});
+
+/**
+ * COPY FEEDBACK BELONGS TO THE BUTTON THAT WAS PRESSED.
+ *
+ * The shelf offers Copy twice on purpose — the filled primary at the foot of
+ * the identity column, and the same control in its outlined weight in the
+ * source block's corner. They read one shared label, so pressing either one
+ * turned BOTH to "Copied": a button reporting an action nobody took on it, a
+ * whole column away from the press.
+ *
+ * Checked in both directions, because a fix that attributes one and not the
+ * other is the same bug with a smaller blast radius.
+ */
+test("each Copy button reports its own press, not the other's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const primary = page.locator(".pixl-split-main");
+  const block = page.locator(".pixl-code-copy");
+
+  /* BOTH LABELS READ AT ONE INSTANT, and that is the whole test.
+
+     Written with two `toHaveText` calls it passes against the bug it names:
+     the feedback clears itself after 1.6s, and a web-first assertion RETRIES
+     for five. So "the other button is still at rest" became true on its own
+     before the assertion gave up, and a mutation restoring the shared label
+     sailed through. A self-healing state cannot be checked with a retrying
+     matcher. */
+  const bothAfter = async (press: () => Promise<void>, pressed: Locator) => {
+    await press();
+    // The clipboard write is async: wait for the pressed button only.
+    await expect(pressed).toHaveText(/Copied|Could not copy/);
+    return page.evaluate(() => ({
+      primary: document.querySelector(".pixl-split-main")?.textContent?.trim(),
+      block: document.querySelector(".pixl-code-copy")?.textContent?.trim(),
+    }));
+  };
+
+  // 1. THE BLOCK'S OWN COPY leaves the primary alone.
+  const afterBlock = await bothAfter(() => block.click(), block);
+  expect(afterBlock.block).toBe("Copied");
+  expect(
+    afterBlock.primary,
+    "the primary reported a press that landed on the source block",
+  ).toBe("Copy SVG");
+
+  // Let the 1.6s reset run out before the second half.
+  await expect(block).toHaveText("Copy", { timeout: 3000 });
+
+  // 2. AND THE PRIMARY leaves the block alone.
+  const afterPrimary = await bothAfter(() => primary.click(), primary);
+  expect(afterPrimary.primary).toBe("Copied");
+  expect(
+    afterPrimary.block,
+    "the source block reported a press that landed on the primary",
+  ).toBe("Copy");
+});
+
+test("the export menu is held for its close, and not for reduced motion", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/");
+  await page.locator(".pixl-card").first().click();
+  await expect(page.locator(".pixl-detailbar")).toBeVisible();
+
+  const chevron = page.getByRole("button", { name: "More export options" });
+  const menu = page.locator(".pixl-menu");
+
+  await chevron.click();
+  await expect(menu).toBeVisible();
+
+  /* 3. HELD, and marked, so the closing state has something to paint. Read
+        immediately: the whole point is that it outlives the click. */
+  await chevron.click();
+  await expect(menu).toHaveClass(/is-closing/);
+  await expect(menu).toHaveCount(0);
+
+  /* AND NOT HELD when the motion is not wanted. `useDismissible` skips the
+     wait, so the menu is gone on the same tick rather than lingering through an
+     animation the viewer has asked not to see. */
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await chevron.click();
+  await expect(menu).toBeVisible();
+  await chevron.click();
+  await expect(menu).toHaveCount(0, { timeout: 100 });
 });
 
 test("the icon card is a visible step off the grid's ground", async ({

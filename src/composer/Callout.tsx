@@ -10,8 +10,15 @@
  * the legend is a layer over the object, not a change to it.
  *
  * Absolutely positioned and `aria-hidden`: turning the legend on must not move
- * a control out from under the pointer, and every control already carries this
- * same text as its accessible name.
+ * a control out from under the pointer, and every control's accessible name
+ * CONTAINS the caption it is labelled with — which is what WCAG 2.5.3 asks, so
+ * a speech-input user can say the word they can see.
+ *
+ * That claim used to read "carries this same text", and it was false in exactly
+ * one place: the eyedropper's caption is `Pick` and its name was `Eyedropper`,
+ * with no overlap at all. Corrected on both sides 2026-09-04 — the name is now
+ * `Pick color (eyedropper)`. The comment is recorded here rather than deleted
+ * because a docblock asserting a rule is how the one violation stayed invisible.
  */
 export function Callout({
   side,

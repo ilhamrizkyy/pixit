@@ -165,9 +165,12 @@ function ResourceRow({ item }: { item: Resource }) {
     <>
       <div className="flex flex-wrap items-baseline gap-2">
         <span className="text-ui text-text">{item.label}</span>
+        {/* Sentence case, like every other label in the product. It was
+            lowercase against Contribute's "Not open yet" — two conventions for
+            the same kind of badge. */}
         {item.status === "planned" && (
           <span className="rounded-full bg-surface px-2 py-0.5 text-caption text-text-muted">
-            planned
+            Planned
           </span>
         )}
       </div>

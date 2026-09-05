@@ -261,9 +261,12 @@ True black (#000) and true white (#fff) are reachable.
 | Body    | Inter          | Long-form prose in Guide / Resources |
 | Data    | JetBrains Mono | Counts, hex, sizes, code |
 
-**Pixel face = Press Start 2P**, scoped to the **wordmark, h1, h2, the
-gallery's section eyebrows** (Search / Display / Categories) **and the hex
-readout's segments**. The readout is the one place it runs at 16px rather than
+**Pixel face = Press Start 2P**, scoped to the **wordmark, h1, h2 and the hex
+readout's segments**. (It listed "the gallery's section eyebrows (Search /
+Display / Categories)" until 2026-09-04. Those were the OLD sidebar's headings;
+nothing has rendered one since the board rebuild, and the screen's header does
+not want them — a label over an obvious control costs vertical space on the one
+surface that scrolls.) The readout is the one place it runs at 16px rather than
 12: it is a display, not a label, and 16 is on the face's own 8px grid. It has very wide
 advance widths, so it does not run to prose h3 and below, where the horizontal
 cost stops paying for itself — the eyebrows are the exception because they are
@@ -510,9 +513,51 @@ why that came back off. The one thing worth keeping from the experiment is the
 diagnosis: a surface that repoints the toy's tokens must be a surface the toy's
 controls actually stand on, and the nav is not.
 
-**The screen's header** — two lines inside the screen: **Search** (+reset) on
-the first, the **category chips** on the second. Both answer the same question —
-*what is on the screen right now* — and both line up with the icons they filter.
+**The screen's header** — two lines inside the screen: **Search** (+reset and
+the count) on the first, the **category chips** on the second. Both answer the
+same question — *what is on the screen right now* — and both line up with the
+icons they filter.
+
+**REBUILT 2026-09-04, and the reason is worth more than the result.** Until then
+`.pixl-field` carried this comment: *"A field in the CONTENT area, which is plain
+shell — not the toy. The toy is the nav and the sidebar."* That is the
+architecture §1 retired on 2026-08-29. **The search field and the chip row were
+the last two pieces of the pre-board design still in place** — the board was
+rebuilt around them and neither was revisited. Every other part of the device
+earned a construction paragraph; the glass never did.
+
+The second half is a rule that got over-read. §1 says chips are flat because
+they are drawn on glass, which is right, and "flat" was allowed to collapse into
+"generic". The device disproves that on its own: the LCD readout, the dot matrix
+and Pixel Materialize are all flat, all drawn, and all unmistakably this
+product. **A display has its own vocabulary and the header was using none of
+it.**
+
+- **The FIELD's boundary carries it, not its fill.** It is not a well drilled
+  through plastic, so it does not get a well's deep gradient — it gets a real
+  line, `--screen-field-line`, solved for 3:1 against the screen (1.4.11). The
+  old build spent its whole budget on an inset shadow *pretending* to be a
+  recess and left the line at `--color-border`: **1.27:1**, with the fill inside
+  it at **1.10:1 light and 1.06:1 dark**, so the largest element on the board
+  was locatable only by the placeholder text inside it.
+- **Focus ADDS its ring to the stack.** It replaced the whole `box-shadow`,
+  dropping the boundary the instant you clicked in — the exact bug §5c records
+  fixing on `.pixl-well`, in the one field that never got the fix. Tested in
+  both themes, and the test was mutation-checked against the old rule.
+- **A COUNT was printed at the field's far end and taken off the same day**, by
+  request. The argument for it still holds on paper: the field runs 948px at
+  1440 with ~850px empty, two controls narrow the same set, and nothing reports
+  their combined result. It reads as a status line on a surface whose whole job
+  is to be quiet, which is the same objection that took the maker credit and the
+  panel resolution off the mini screen's bezel. Recorded so it is not rebuilt.
+- **The chips are PRINTED, not set like nav links.** 12px, uppercase, tracked.
+  The drum's faces are uppercase and the rail's numbers take the data face; the
+  chips had the site's generic 14px UI type.
+- **The FILL TRAVELS.** See below.
+- **The mobile filter key is drawn, not moulded.** It carried `.pixl-key`, whose
+  cap casts an *outer* drop shadow — a raised part throwing shade onto what it
+  sits on, and it sits on the display. The chips were paying for a rule the
+  control beside them ignored.
 
 **Colour moved to the body on 2026-08-28.** It sat beside search for the reason
 Lucide puts it there, and the board supplies a better one: the body is what
@@ -1230,10 +1275,107 @@ tint whether or not it is chosen, so the row is a legend you learn once and no
 tint ever means *this one* — which is what lets seven colours coexist with §7's
 single-accent rule.
 
-**Selection is carried by MASS**: an unselected chip is an outline in its tint,
-a selected one is filled with it. Same hue, different weight. The ring is the
-INK held back rather than the tint itself, because the tints are too pale to
-draw a 1px line with on a near-white screen.
+**Selection is carried by MASS**: an unselected chip is a printed label, a
+selected one sits on a filled capsule in its tint. Same hue, different weight.
+
+**THE CHIPS HAVE NO OUTLINE AT ALL (2026-09-04).** Seven outlined capsules read
+as seven BUTTONS sitting on the display, which is the shape of hardware and the
+one thing a control drawn on glass must not claim. Removing them made selection
+STRONGER rather than weaker: the travelling fill is now the only box in the row,
+so the single thing that means *chosen* is also the single thing enclosed.
+
+**The live chip is marked with the set's own `play` icon.** It is the instinct
+the search field already had — it renders `getIcon("search")` rather than
+borrowing somebody else's magnifier — applied to the chips: cells remapped to
+`currentColor`, so one drawing serves seven categories and inherits `--cat-ink`
+from whichever chip it sits in. No hex reaches a component.
+
+- **On the LIVE chip only.** On all seven it is a bullet; on one it is a
+  POINTER, which is what a right-facing triangle beside a word has always been.
+- **Rendered on all seven and revealed on one.** Mounting it only on the live
+  chip changes that chip's WIDTH the moment it becomes live, so every chip to
+  its right shifts and the travelling fill ends up measuring a box that moves
+  while it moves toward it. Reserving the space costs 16px a chip and buys a row
+  that never reflows; the labels then sit on a marker column, which is what an
+  index looks like anyway. It fades on the capsule's own clock, so the mark and
+  the fill arrive together rather than as two events.
+- **`--cat-ink`, not `--cat`.** The tint is a ground colour, pale by
+  construction so a label can sit on it and clear AA; at this size it is nearly
+  invisible on a near-white screen. The ink is the same category colour with
+  nothing held back. Measured 6.47:1 light and 7.93:1 dark, worst case.
+- **HOVER DRAWS NO BOX; it previews the mark instead.** A hover wash was 87% of
+  the way to selected (1.14:1 against the selected fill, where the fill itself
+  was 1.18:1 to 1.31:1 against the screen), and it also EXPOSED the reserve:
+  while nothing is painted the reserved space is invisible and the labels simply
+  sit on a marker column, but paint a background behind one and it becomes a
+  hole with the label pushed off to the right. Hovering now shows the pointer
+  held back where it would land. The one thing the reserve was costing is the
+  thing it shows.
+- **It was a plain 8px square for one pass** — a literal cell, on the argument
+  that a square is what every icon is MADE of. True, and the duller mark: a
+  glyph is what the set actually IS.
+
+**This replaced a keyline that could not be made to work.** The ring was the ink
+held back, because the tints are too pale to draw a 1px line with on a near-white
+screen — and even raised to a solved-for-3:1 per-theme token, it was still seven
+boxes. `--chip-line` went with it: a token kept for a consumer that does not
+exist is worse than a deleted one (§2).
+
+**THE FILL TRAVELS, as one capsule behind the row (2026-09-04).** The board's
+other tablist — the detail shelf's format tabs — already slides, so one device
+was speaking two selection languages. The chips cannot borrow that build as-is,
+because a travelling *accent bar* would be a second accent and §7 forbids it. A
+travelling **fill** breaks neither rule: it wears the live category's own tint,
+so colour still indexes and selection is still mass.
+
+- **The chip paints no background of its own.** Two fills would mean the capsule
+  slides between chips that are already filled, and the travel is invisible.
+  Border and ink carry the state on their own for the frame before the capsule
+  is measured.
+- **A transition, never a keyframe.** A held arrow key on an
+  automatic-activation tablist fires every 30-90ms, so the one thing that must
+  not happen is a restart. A transition retargets; it is strictly calmer under
+  key repeat than the seven overlapping colour fades it replaced.
+- **It tweens `width`, and `scaleX` was tried first and cannot draw the shape.**
+  Scaling a 1px base is the compositor-friendly build, and `border-radius`
+  resolves against the UNSCALED box — so the horizontal radius clamps to 0.5px
+  and the scale stretches it into an **ellipse with pointed ends**. The cost of
+  the fix is bounded: the capsule is absolutely positioned and out of flow, so a
+  width tween relayouts itself and nothing else.
+  **The shape cannot be read back from CSS**, which is why the test asserts the
+  SCALE instead: a 1px element at `scaleX(132)` still reports
+  `border-top-left-radius: 999px`, because the computed value is the specified
+  one. A radius assertion there passes against the exact bug it names.
+- **The tint is set INSTANTLY and only the transform animates.** Tweening
+  `background-color` between two tints paints unmeasured intermediate colours
+  under a label, and these tints were measured for AA. Every frame now shows one
+  of the seven measured tints.
+- Same measure-then-tween mechanism as `.pixl-format-rule`, first write with the
+  transition suspended, or it grows out of the row's left edge on every mount.
+
+**MASS HAD TO ACTUALLY CARRY IT, and it was not.** Measured before the rebuild:
+selected fill against the screen **1.18:1** (All) to 1.31:1, and hover fill
+against *selected* fill **1.14:1** — so the delta carrying HOVER was nearly the
+one carrying SELECTION, and hovering any chip while All was selected gave you
+two filled chips with the wrong one louder. Three fixes, none of them an accent:
+hover dropped to a 30% wash, the selected chip took `font-weight: 700`, and
+`--cat-all` was re-stepped off `#ececee`, which had made the DEFAULT selection
+the only grey object in a coloured row — it read as *disabled*, on every first
+visit.
+
+**The keyline weight is a per-theme token, solved rather than picked.**
+`--chip-line` is 70% light and 55% dark: one value cannot serve both, since a
+dark ink over a near-white screen needs more of itself than a light ink over a
+near-black one. 21 of 28 border states had measured under 3:1, bottoming out at
+1.64:1. All 28 now clear it, minimum 3.62.
+
+**The row says it continues.** At 390px it holds 625px of chips in a 318px box
+with scrollbars suppressed, and the cut landed 0.8px past a chip's edge — three
+of seven categories off-screen behind what read as a complete four-chip row. A
+mask fades the last 2rem, which is the display's own way of saying there is
+more: nothing is drawn, something is unlit. Chips also take a 44px minimum on a
+coarse pointer, since 33px was the one place the row both scrolled and was
+tapped.
 
 The tints were **measured, not eyeballed**: a 14px label clears AA on its own
 chip in both themes, filled and unfilled, and a test holds it there — one axe
@@ -1253,6 +1395,23 @@ height (seven turned labels need ~600px) and gives back width (the column is
 **The sheet carries no border.** A rule around the grid drew a box around the
 icons, and the icons should read as the page's content rather than as a
 container's contents.
+
+**The grid's wave is DEBOUNCED by 80ms (2026-09-04).** The chips are an
+automatic-activation tablist, so holding an arrow key changes category every
+30-90ms — and the wave takes 676ms to land its last item. It restarted roughly
+seven times per held key, flashing the grid empty on each restart and finishing
+none of them. The FILTER is still instant; only the animation waits for the
+category to settle, so a fast scrub swaps with no animation at all and one wave
+lands when you stop.
+
+**THE WAVE IS SLOWER THAN §5b'S SCALE, ON ITS OWN TOKEN (2026-09-04).**
+`--duration-wave` is 560ms against `--duration-slow`'s 400, and the offset is
+20ms rather than 12. At the shared clock the switch read as a blink rather than
+as a wave. This is the THIRD documented exemption from the motion scale and it
+is the same one the other two hold: §5b's clocks govern surfaces opening and
+closing, and this is the screen redrawing its whole picture. The stagger cap
+moved with it and is still solved rather than picked — 400ms / 20ms is 20 — so
+the set growing to 200 icons cannot turn this into a four-second sweep.
 
 **The grid arrives as a WAVE on a category switch.** Each icon enters on its
 own 400ms rise-and-scale, offset **12ms** per item — the offset shrank rather
@@ -1475,12 +1634,73 @@ black one reads as the frame of a display. (`--mini-legend-ink` was measured at
 5.6:1 on the light bezel and 6.6:1 on the dark, so one ink served both; it went
 with the printing on 2026-09-03 and had no second reader.)
 
-**The detail bar is the display's own bottom shelf, INSIDE the glass**: the name
-in the data face, category and tags beside it, then Copy SVG / Download SVG /
-Download PNG / Copy name as FLAT buttons — depth belongs to the plastic, and
-domed caps on a display read as a piece of chassis that wandered inside — and
-the ✕ rightmost and separated — it undoes the
-selection the rest of the bar acts on, so it is not one of them.
+**The detail bar is the display's own bottom shelf, INSIDE the glass**, and it
+is built in **TWO COLUMNS (2026-09-03)**:
+
+| Column | Carries |
+|---|---|
+| **Identity** (13rem, fixed) | the **name**, the **tags**, the **category**, and the **Copy** split button |
+| **Source** (the rest) | the **format tabs** with the **✕** at their far end, and the **source block** under them |
+
+**The identity column reads top to bottom, and the order is the argument**:
+what it is called, what it is near, which shelf it came off, and then what to
+do about it. It stacked readout / tabs / source down the full width for one
+pass, which left the name and the category adrift in a mostly empty line while
+the source under them ran the whole board — and put the action up on the first
+line beside the name, where it read as a button dropped into a row of text.
+
+- **The name is at READOUT scale** (`--text-h3`), in the DATA face because it is
+  a code identifier: the string you paste, not a title. It was `--text-ui`, the
+  same size as the tabs, the menu items and every button, so the one thing the
+  shelf is ABOUT was tied for quietest thing on it.
+- **The tags are PRINTING, not chips.** They came off on 2026-09-03 (BACKLOG §D
+  called them the weakest thing here) and came back the same day by request, in
+  a quieter form than they left in: a row of tag pills under the category pill
+  is several capsules saying several different kinds of thing, and only one of
+  them carries a colour. **One line, clipped** — they are the variable-width
+  element on this shelf, and a line that can only ever be one line tall cannot
+  force the scroll they forced before.
+- **The column does not stretch.** The action was pinned to its foot with
+  `margin-top: auto` for one pass, so the two columns would finish level. They
+  cannot: the source runs 88px as an SVG and 282px as a CSS rule, so
+  bottom-aligning put a 200px hole between the category and the button on one
+  tab and none at all on the next.
+
+**The ✕ IS NOT ONE OF THE ACTIONS, and three separate things say so.** It is the
+only glyph-only control on the shelf, the only rounded **rectangle** among
+capsules, and it is a whole column away from the split button's chevron — which
+it used to sit one 0.75rem gap from, putting *open more options* and *throw all
+of this away* within a trackpad slip of each other. A shape, an absence of
+words, and a distance: the distance is the one that actually prevents the
+misclick.
+
+**Copy appears TWICE, as one control in two weights.** Once at the foot of the
+identity column as the filled primary, and once in the source block's top-right
+corner within reach of the markup it copies. For one pass they were two
+different OBJECTS — a filled capsule and a small square-cornered chip, in
+different paddings and different type — which is two vocabularies for one
+action. They share a class now: same shape, same type, same padding, and only
+the fill differs, because only one of them is the primary. Their accessible
+names still differ (`Copy SVG` and `Copy source`), or a screen-reader user has
+no way to tell which one they are on.
+
+**THE SOURCE BLOCK HUGS ITS CONTENT.** No cap and no inner scrollbar: it was
+capped at 7rem with `overflow: auto`, which put a scroll region inside a shelf
+that is itself inside the one scrolling thing on the page — three nested scrolls
+to read twelve lines of markup. The shelf takes the height each format needs and
+the **grid** gives it up, which is the trade the grid already exists to make.
+Measured at 1440×900: 155px of shelf for SVG, 349px for CSS, and the board still
+inside the window at every stop.
+
+- **It breaks at the SPACES first.** `word-break: break-all` breaks inside a
+  word whether or not a space was available, so every line ended mid-attribute
+  (`fill="#0000` / `00"`) and the block read as a wall of characters rather than
+  as markup. `overflow-wrap: anywhere` only breaks inside a token when the token
+  genuinely does not fit, which here is the data URI and nothing else.
+- **The phone is the one place it still scrolls.** Hugging is right on a block
+  800px wide, where a data URI is a dozen lines; at 390px the same string is
+  nearer thirty, and a shelf that tall would leave no screen above it to show
+  the icons it is describing.
 
 It was a strip of chassis *under* the screen for one pass, which put the readout
 on the plastic and the picture it describes somewhere else. It reports what is
@@ -1496,11 +1716,9 @@ workaround; it is the pairing the ramp was measured for.
 
 It exists **only while an icon is loaded**. That is a real layout change, and it
 costs nothing: the screen above simply gets shorter, and because the grid scrolls
-inside itself nothing reflows — the scroll container just has less room. The caps
-**scroll rather than wrap** for the same reason, since a bar that grew a second
-row would push the screen up whenever a long name arrived, which is the defect
-this whole move was fixing. Below `lg` it takes two rows deliberately, because a
-390px bar cannot show a name and four caps at once.
+inside itself nothing reflows — the scroll container just has less room. Below
+`lg` the two columns simply **stack**, which is the same content in the same
+order rather than a second layout.
 
 **Neither is a dialog.** Both are parts of the board; nothing opens, so nothing
 claims `aria-modal` and the cards carry no `aria-haspopup`. Two consequences:

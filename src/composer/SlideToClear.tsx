@@ -106,7 +106,9 @@ export function SlideToClear() {
         /* Travels the FULL groove: at the last column the handle's right edge
            meets the right end, so its reachable track is the groove minus its
            own width. The old divisor capped it at 11/12 of the way across. */
-        style={{ left: `calc(${(handle + 1) / GRID_SIZE} * (100% - 34px))` }}
+        style={{
+          transform: `translateX(calc(${(handle + 1) / GRID_SIZE} * (100cqw - 34px)))`,
+        }}
       />
     </div>
   );

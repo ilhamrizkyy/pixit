@@ -38,9 +38,9 @@ export function useTools(): Tool[] {
   const act = store.getState();
 
   return [
-    { name: "mirror", label: "Mirror", caption: "Mirror", title: "Mirror painting across the vertical centre", pressed: mirror, onClick: () => act.toggleMirror() },
+    { name: "mirror", label: "Mirror", caption: "Mirror", title: "Mirror painting across the vertical center", pressed: mirror, onClick: () => act.toggleMirror() },
     { name: "grid", label: "Grid guide", caption: "Grid", pressed: gridGuide, onClick: () => act.toggleGridGuide() },
-    { name: "eyedropper", label: "Eyedropper", caption: "Pick", title: "Then tap a filled cell to take its colour", pressed: armed, onClick: () => act.armEyedropper() },
+    { name: "eyedropper", label: "Pick color (eyedropper)", caption: "Pick", title: "Then tap a filled cell to take its color", pressed: armed, onClick: () => act.armEyedropper() },
     { name: "undo", label: "Undo", caption: "Undo", disabled: !canUndo, onClick: () => act.undo() },
     { name: "flip-h", label: "Flip horizontally", caption: "Flip H", onClick: () => act.flipH() },
     { name: "flip-v", label: "Flip vertically", caption: "Flip V", onClick: () => act.flipV() },

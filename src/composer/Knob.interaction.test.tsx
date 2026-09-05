@@ -23,7 +23,7 @@ describe("the knobs are real controls, not decoration", () => {
     // Drive the paint to a grey FIRST. The default is fully saturated now, so
     // this no longer comes for free — and without it the test would pass on a
     // colour whose hex can carry hue perfectly well, proving nothing.
-    const field = screen.getByLabelText("Paint colour, hex");
+    const field = screen.getByLabelText("Paint color, hex");
     await user.clear(field);
     await user.type(field, "#111111");
     expect(now("Hue")).toBe(0);
@@ -57,7 +57,7 @@ describe("the knobs are real controls, not decoration", () => {
   it("snaps the knobs to a hex typed into the field", async () => {
     const user = userEvent.setup();
     render(<Composer />);
-    const field = screen.getByLabelText("Paint colour, hex");
+    const field = screen.getByLabelText("Paint color, hex");
 
     await user.clear(field);
     await user.type(field, "#00ff00");
@@ -101,7 +101,7 @@ describe("the composer opens ready to draw", () => {
     // Mid lightness is the only position where the knob can travel as far
     // toward black as toward white; opening near black spends most of its
     // range before the first turn.
-    expect(screen.getByLabelText("Paint colour, hex")).toHaveProperty(
+    expect(screen.getByLabelText("Paint color, hex")).toHaveProperty(
       "value",
       "#ff0000",
     );

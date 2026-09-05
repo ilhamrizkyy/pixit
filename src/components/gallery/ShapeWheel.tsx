@@ -327,7 +327,7 @@ export function ShapeWheel({ settings, onSettings }: ShapeWheelProps) {
                   type="button"
                   role="radio"
                   aria-checked={checked}
-                  title={`${SHAPE_LABELS[style]} — ${SHAPE_HINTS[style]}`}
+                  title={`${SHAPE_LABELS[style]}: ${SHAPE_HINTS[style]}`}
                   // Roving tabindex: the group is one Tab stop, arrows do the rest.
                   tabIndex={checked ? 0 : -1}
                   // A click that arrives at the end of a real drag is not a

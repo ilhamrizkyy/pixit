@@ -78,11 +78,11 @@ export function useDock(onNotify: (message: string, tone?: ToastTone) => void) {
     const fail = (message: string) => onNotify(message, "error");
 
     if (draft.name.trim() === "") {
-      fail("Give the icon a name before copying its entry.");
+      fail("Name the icon before publishing.");
       return;
     }
     if (draft.cells.every((cell) => cell === null)) {
-      fail("Draw something before copying its entry.");
+      fail("Draw something before publishing.");
       return;
     }
 
@@ -98,20 +98,35 @@ export function useDock(onNotify: (message: string, tone?: ToastTone) => void) {
       return;
     }
 
-    const entry = toRegistryEntry({
-      id,
-      name: id,
-      category: draft.category,
-      tags: draft.tags,
-      cells: draft.cells,
-      createdAt: new Date().toISOString(),
-    });
+    /* IT CAN REFUSE, AND IT USED TO REFUSE BY THROWING. `cellsToArt` caps a
+       drawing at `ART_CHARS.length` colours, and nothing here caught it — so
+       publishing an 11-colour drawing was a dead click with a console error and
+       no toast at all. The HSL knobs reach that easily. Everything else on this
+       path fails through `fail()`; this is the one that did not. */
+    let entry: string;
+    try {
+      entry = toRegistryEntry({
+        id,
+        name: id,
+        category: draft.category,
+        tags: draft.tags,
+        cells: draft.cells,
+        createdAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      fail(
+        error instanceof Error
+          ? error.message
+          : "That drawing cannot be written as a registry entry.",
+      );
+      return;
+    }
 
     // ONE clipboard write, read once. Calling copyText twice — as the first
     // draft of this did, to pick the message and then the tone — writes twice
     // and lets the two halves of the same toast disagree.
     if (await copyText(entry)) {
-      onNotify("Entry copied — paste it into src/registry/icons.ts");
+      onNotify("Ready to publish. Paste the entry into src/registry/icons.ts.");
     } else {
       fail("Could not reach the clipboard.");
     }
@@ -159,7 +174,7 @@ export function useDock(onNotify: (message: string, tone?: ToastTone) => void) {
       return;
     }
     if (isIdTaken(id, taken)) {
-      fail(`"${id}" already exists. Names must be unique — pick another.`);
+      fail(`"${id}" already exists. Pick a different name.`);
       return;
     }
 

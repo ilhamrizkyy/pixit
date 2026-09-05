@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Toast } from "@/components/Toast";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Toast, type ToastTone } from "@/components/Toast";
+import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
 import { recolorCells } from "@/engine/color";
 import { renderedIconSize } from "@/engine/constants";
 import { searchIcons } from "@/registry/search";
-import type { IconDef } from "@/engine/types";
+import { CATEGORIES, type IconDef } from "@/engine/types";
 import { useLocalIcons } from "@/composer/useLocalIcons";
 import { mergeIcons } from "@/registry/merge";
 import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
@@ -71,7 +72,70 @@ export function Gallery({ icons: registry }: GalleryProps) {
   const [settings, setSettings] = useState<GallerySettings>(DEFAULT_SETTINGS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<IconDef | null>(null);
-  const [toast, setToast] = useState("");
+  /* THE SHELF LEAVES THE WAY IT ARRIVED. It animated in and then vanished on
+     frame one, while the mini screen beside it dematerialises over 310ms — so
+     one press of ✕ read as two unrelated events. §5b asks for closes that are
+     FASTER than opens, not absent, and every other overlay on this board already
+     defers its unmount for exactly this.
+
+     `cancel` is what makes it safe to overtake: picking another icon during the
+     150ms must keep the new selection rather than have a pending timer null it.
+     Selecting is the common case, so the shelf simply swaps. */
+  const shelf = useDismissible(() => setSelected(null), CLOSE_MS.modal);
+  const selectIcon = useCallback(
+    (icon: IconDef | null) => {
+      shelf.cancel();
+      setSelected(icon);
+    },
+    [shelf],
+  );
+  /* THE GALLERY COULD NOT SHOW A REFUSAL. It held the toast as a bare string
+     and rendered `<Toast>` with no `tone`, so everything defaulted to `info` —
+     while `useIconActions` sends real refusals through the same channel. "Could
+     not copy" arrived bottom-centre, `role="status"`, for 2.2s, when
+     INTERACTION.md §7 asks for top-centre, `role="alert"`, for 4.5s. The
+     composer has done this correctly since it was built; the public route, which
+     almost all traffic lands on, had no error path at all.
+
+     THE NONCE is the other half. `setToast("SVG copied")` twice in a row is a
+     no-op in React state, so a second copy produced no new toast and no second
+     announcement, and the first toast's clock kept running from the first press.
+     §7 names this case exactly: an identical repeated message is a NEW toast. */
+  const [notice, setNotice] = useState<{
+    text: string;
+    tone: ToastTone;
+    nonce: number;
+  } | null>(null);
+  const notify = useCallback((text: string, tone: ToastTone = "info") => {
+    setNotice((previous) => ({ text, tone, nonce: (previous?.nonce ?? 0) + 1 }));
+  }, []);
+
+  /* THE WAVE IS DEBOUNCED, NOT KEYED ON THE CATEGORY (2026-09-04).
+
+     The grid keyed on `settings.category`, so every category change unmounted
+     and remounted all 24 items and restarted `pixl-icon-in` from `opacity: 0`.
+     The chips are an AUTOMATIC-ACTIVATION tablist, so holding an arrow key
+     fires a change every 30-90ms — and the wave takes 676ms to land its last
+     item. Holding the key restarted it roughly seven times, flashing the grid
+     empty on each restart, and finished none of them.
+
+     So the FILTER stays instant and the WAVE waits. `--duration-micro` (80ms)
+     is transitions.dev's documented intent-delay beat, for exactly this: filter
+     the accidental triggers. A fast scrub through the categories now swaps with
+     no animation at all, which is what a scrub should look like, and one wave
+     lands when you stop. */
+  const [wave, setWave] = useState(0);
+  const firstWave = useRef(true);
+  useEffect(() => {
+    // The first render already plays the entrance; bumping it here would
+    // replay the whole grid 80ms after load.
+    if (firstWave.current) {
+      firstWave.current = false;
+      return;
+    }
+    const timer = setTimeout(() => setWave((n) => n + 1), 80);
+    return () => clearTimeout(timer);
+  }, [settings.category]);
 
   const theme = useResolvedTheme();
   const themeColor = THEME_ICON_COLOR[theme];
@@ -106,6 +170,18 @@ export function Gallery({ icons: registry }: GalleryProps) {
 
   return (
     <main className="pixl-board">
+      {/* THE PAGE'S HEADING, AND IT CANNOT BE VISIBLE. axe reported
+          `page-has-heading-one` on the public route: the board is an OBJECT, and
+          every word printed on it is a legend moulded into a part — a title bar
+          across the top would be the one piece of web page on a device that has
+          spent every other decision not being one. The board's own badge is the
+          wordmark and it is `aria-hidden`, being decoration cut into the case.
+
+          So the heading is real, first in the reading order, and off-screen. It
+          is the one place the product gets to say what it is to a screen reader
+          and to a search engine, both of which arrive with no idea. */}
+      <h1 className="sr-only">Pixit pixel icons</h1>
+
       {/* `min-h-0` is what lets the grid inside scroll instead of the page.
           Without it a flex child refuses to shrink below its content and the
           whole board grows past the viewport.
@@ -181,7 +257,7 @@ export function Gallery({ icons: registry }: GalleryProps) {
               share one inset so the chips line up with the icons they filter,
               and the screen needs a margin the way a printed page does — at
               `p-2` the first row of icons sat against the glass. */}
-          <div className="flex shrink-0 flex-col gap-2 p-3 lg:p-5">
+          <div className="flex shrink-0 flex-col gap-2 p-3 pb-1 lg:p-5 lg:pb-1">
             <GalleryToolbar
               search={search}
               onSearch={setSearch}
@@ -206,21 +282,27 @@ export function Gallery({ icons: registry }: GalleryProps) {
                 Deliberately not keyed on the search text as well — that changes
                 on each keystroke, and re-running an entrance animation per
                 character is the flicker, not the cure. */}
-            <div key={settings.category} className="pixl-grid-swap">
+            <div key={wave} className="pixl-grid-swap">
               {visible.length === 0 ? (
                 <EmptyState
                   query={search.trim() || undefined}
-                  // Clear whichever thing is actually hiding the icons: the
-                  // search if there is one, otherwise the category filter.
-                  onReset={
-                    search.trim()
-                      ? () => setSearch("")
-                      : settings.category !== "all"
-                        ? () => setSettings({ ...settings, category: "all" })
-                        : undefined
+                  category={
+                    settings.category === "all"
+                      ? undefined
+                      : CATEGORIES.find((c) => c.id === settings.category)
+                          ?.label
                   }
-                  resetLabel={
-                    search.trim() ? "Clear search" : "Show all categories"
+                  /* CLEARS BOTH, in one press. It used to clear whichever one
+                     it guessed was responsible, which meant that with a query
+                     AND a category active it cleared the query and left you on
+                     the same dead end. One button, everything off. */
+                  onReset={
+                    search.trim() || settings.category !== "all"
+                      ? () => {
+                          setSearch("");
+                          setSettings({ ...settings, category: "all" });
+                        }
+                      : undefined
                   }
                 />
               ) : (
@@ -236,7 +318,7 @@ export function Gallery({ icons: registry }: GalleryProps) {
                    largest icon fills its seat without ever overflowing. */
                 <ul
                   aria-label="Icons"
-                  className="grid list-none grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-2 p-1"
+                  className="grid list-none grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-3 p-1"
                 >
                   {/* Each li IS the grid item. `display: contents` would be
                       tidier CSS but has a history of dropping list semantics
@@ -261,7 +343,7 @@ export function Gallery({ icons: registry }: GalleryProps) {
                         cellStyle={settings.cellStyle}
                         selected={selected?.id === icon.id}
                         local={localIds.has(icon.id)}
-                        onSelect={setSelected}
+                        onSelect={selectIcon}
                       />
                     </li>
                   ))}
@@ -274,15 +356,34 @@ export function Gallery({ icons: registry }: GalleryProps) {
               of chassis under it. It reports what is on the screen, so it is on
               the screen. It exists only while an icon is loaded: the panel above
               simply gets shorter, and because the grid scrolls inside itself
-              nothing reflows. */}
+              nothing reflows.
+
+              BELOW `lg` ONLY, since 2026-09-03. The desktop board has a detail
+              PANEL in a column of its own, which can show the source; a strip
+              inside the glass cannot, without growing. Down here it is the only
+              surface there is — the whole left side of the board is hidden on a
+              phone (BACKLOG §J) — so it stays, and it keeps the document-level
+              Escape for every width, because it is mounted at every width. */}
+          {/* THE DETAIL SHELF, inside the glass and along the bottom of the
+              screen. It reports what is on the screen, so it is on the screen.
+
+              IT WAS A RIGHT-HAND SIDEBAR FOR TWO PASSES and neither worked: a
+              fourth CHASSIS column that rebuilt the case to hold a readout
+              about the display, then a panel floating on the glass that covered
+              the icons it was describing. Horizontal at the foot is where a
+              readout about the picture goes.
+
+              It exists only while an icon is loaded: the grid above simply gets
+              shorter, and because it scrolls inside itself nothing reflows. */}
           {selected && (
             <DetailBar
+              closing={shelf.closing}
               icon={selected}
               displayCells={displayCells.get(selected.id) ?? selected.cells}
               cellStyle={settings.cellStyle}
               size={settings.size}
-              onClose={() => setSelected(null)}
-              onNotify={setToast}
+              onClose={shelf.requestClose}
+              onNotify={notify}
             />
           )}
         </div>
@@ -318,7 +419,14 @@ export function Gallery({ icons: registry }: GalleryProps) {
         />
       )}
 
-      {toast && <Toast message={toast} onDismiss={() => setToast("")} />}
+      {notice && (
+        <Toast
+          key={notice.nonce}
+          message={notice.text}
+          tone={notice.tone}
+          onDismiss={() => setNotice(null)}
+        />
+      )}
     </main>
   );
 }

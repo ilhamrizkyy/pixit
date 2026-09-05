@@ -158,16 +158,42 @@
     ships on, and the size rail redraws the whole set from 16 to 120.
 
 **Still open**
-- **What a stronger DETAIL BAR carries (2026-08-30).** Direction agreed, content
-  undecided — it is where the effort that was going to "see in action" goes.
-  The constraint is that the bar exists *because* a panel was deleted: the mini
-  screen held the name, tags, four caps and an SVG disclosure for one iteration,
-  and a four-tag icon added ~110px of text to a 264px column. So anything added
-  **replaces**, never appends. Two leads to weigh: the **tags** are the weakest
-  thing on it — search already matches them, and they are the variable-width
-  element forcing the scroll — and **copy-as formats** (§E) are the strongest
-  thing missing. If those land, a body-side selector setting *what Copy copies*
-  fits the board better than a menu, since nothing on this board opens.
+- ~~**What a stronger DETAIL BAR carries (2026-08-30).**~~ **RESOLVED
+  2026-09-03**, and both leads it named were taken. The **copy-as formats** (§E)
+  landed: SVG / React / HTML / CSS / Data URI, as a tab strip with the source
+  visible under it, modelled on Lucide's icon page. The category wears its own
+  `--cat-*` tint.
+  - **THE TAGS CAME OFF AND WENT BACK ON, the same day.** This entry called
+    them the weakest thing on the bar — search already matches them, so they
+    are shown to somebody who has by definition already found the icon — and
+    they were the variable-width element forcing the scroll. Both halves were
+    right about the OLD bar and the second half is what the rebuild fixed: the
+    shelf is two columns now, and the tags are one clipped line of printing in
+    the left one rather than a row of pills competing with the category's tint.
+    A line that can only ever be one line tall cannot force a scroll. So they
+    are back by request, and the argument that removed them no longer applies.
+  - **THE §H TRADE IS THEREFORE OFF.** That section planned to spend the tags'
+    seat on a contributor's `author` credit. There is no seat to spend now —
+    the identity column would simply gain a fifth line, which is a decision to
+    make on its own merits when contribution ships rather than one already
+    made here.
+  - **FORMATS, NOT FRAMEWORKS**, and that is a constraint rather than a
+    preference: Lucide offers eight framework tabs because it ships eight
+    packages, and Resources lists ours as planned. A React tab reading
+    `import { FloppyDisk } from "pixit"` would be code that does not run. Every
+    format offered is built from cells with no package behind it, and the tab
+    strip is already the right container for framework tabs the day the package
+    lands.
+  - **THE MENU IS THE ONE THING ON THIS BOARD THAT OPENS**, and this entry
+    argued against exactly that: "a selector setting *what Copy copies* fits the
+    board better than a menu, since nothing on this board opens". The owner
+    asked for the split button twice against that note, so the rule now has one
+    exception rather than none. Recorded, not re-argued.
+  - **It took two wrong shapes first**, both worth keeping: a fourth CHASSIS
+    column outboard of the size rail, which rebuilt the case to hold a readout
+    about the screen; and a panel floating on the glass, which covered the icons
+    it was describing. A readout about the picture goes along the foot of the
+    picture.
 - **Auth:** Supabase recommended (smaller blast radius than a repo-write
   token). Parked — see G.
 - **Import scope:** v1 only guarantees round-tripping the tool's own export
@@ -196,7 +222,8 @@
 
 ## E. Gallery — future explorations (post-v1)
 
-Copy-as (JSX / React component / data URI); multi-select + bulk download;
+~~Copy-as (JSX / React component / data URI)~~ **— DONE 2026-09-03, see §D**;
+multi-select + bulk download;
 favorites; recently-added; keyboard grid navigation; sharing a **configured**
 view (colour, size and shape in the URL, Lucide-style — distinct from the
 `?icon=` address settled in §D, which names only which icon);
@@ -274,11 +301,11 @@ deliberately, never as a side effect.
   insert time, not two endpoints.
 - **Contributors are attributed, on the DETAIL BAR.** The `author` column
   already exists and defaults to `ilham`; nothing reads it yet.
-  - **It has to REPLACE something.** The bar exists because a panel was deleted
-    (§D), and its caps already scroll rather than wrap. The **tags** are the
-    obvious trade: search already matches on them, so they are being shown to
-    someone who has by definition already found the icon, and they are the
-    variable-width element forcing the scroll.
+  - ~~**It has to REPLACE something.**~~ **Obsolete 2026-09-03.** The trade was
+    the tags' seat, and the shelf's rebuild took the tags off and put them back
+    within a day (§D) — so there is no seat waiting. The identity column would
+    gain a fifth line, which is a small decision to make when this ships rather
+    than one already made.
   - Open: whether every icon shows an author, or only contributed ones. Always
     is a consistent rule and reads as noise while the set is 24 icons by one
     person; only-when-contributed is quieter now and is a rule with an

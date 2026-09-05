@@ -58,7 +58,7 @@ describe("cells to art and back", () => {
   it("refuses a drawing with more colours than an art map can name", () => {
     const fill: Record<number, string> = {};
     for (let i = 0; i < 11; i++) fill[i] = `#0000${i.toString(16).padStart(2, "0")}`;
-    expect(() => cellsToArt(draw(fill))).toThrow(/colours/);
+    expect(() => cellsToArt(draw(fill))).toThrow(/colors/);
   });
 
   it("keeps rows square, so the loader's own shape check passes", () => {

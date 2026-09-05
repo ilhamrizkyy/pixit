@@ -198,7 +198,7 @@ function readPaddingCells(viewBox: string | undefined): number {
   const symmetric = minY === minX && pad >= 0 && pad % CELL_UNITS === 0;
   if (!symmetric || width !== CANVAS_UNITS + pad * 2 || height !== width) {
     fail(
-      `viewBox="${viewBox}" is not a Pixit canvas — expected "${VIEW_BOX}" or a symmetrically padded form of it`,
+      `viewBox="${viewBox}" is not a Pixit canvas. Expected "${VIEW_BOX}" or a symmetrically padded form of it`,
     );
   }
 
@@ -235,7 +235,7 @@ function paintRect(
   const height = readUnits(attributes, "height");
 
   if (height !== CELL_UNITS) {
-    fail(`<rect> height="${height}" — every exported rect is one cell tall`);
+    fail(`<rect> height="${height}" is wrong: every exported rect is one cell tall`);
   }
   if (x % CELL_UNITS !== 0 || y % CELL_UNITS !== 0) {
     fail(`<rect> at (${x}, ${y}) is off the ${CELL_UNITS}-unit cell grid`);
@@ -389,7 +389,7 @@ export function svgToCells(svg: string): Cells {
     }
 
     fail(
-      `unsupported element <${name}> — a Pixit export holds only <title> and <rect>`,
+      `unsupported element <${name}>: a Pixit export holds only <title> and <rect>`,
     );
   }
 

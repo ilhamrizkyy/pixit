@@ -59,7 +59,7 @@ export function HexField({ stacked = false }: { stacked?: boolean }) {
     return (
       <div className="shrink-0">
         <label htmlFor="pixl-hex" className="sr-only">
-          Paint colour, hex
+          Paint color, hex
         </label>
         {field}
       </div>
@@ -69,7 +69,7 @@ export function HexField({ stacked = false }: { stacked?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor="pixl-hex" className="text-caption text-text-muted">
-        Paint colour
+        Paint color
       </label>
       {field}
     </div>

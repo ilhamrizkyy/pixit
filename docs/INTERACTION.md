@@ -135,13 +135,32 @@
   device is visible at once and the **icon grid is the only scrolling thing on
   the page** — the picture moves inside the glass rather than the device sliding
   up the page. The screen's header (search, chips) stays put while it does.
-- **Search**: matches name + tags; category counts reflect the active search.
+- **Search**: matches name + tags, and says so in its own placeholder rather
+  than only in its accessible name. **No counts, anywhere.** This entry read
+  "category counts reflect the active search" until 2026-09-04 and no count of
+  any kind existed, with a test pinning their absence. A combined readout was
+  built in the field's empty right end and removed the same day by request: it
+  reads as a status line on a surface whose whole job is to be quiet.
 - **Category chips**: All + the six fixed categories, as **flat tinted chips on
   the screen**, the header's second line under Search. Both lines answer one
   question — what is on the screen right now.
   - **Each chip keeps its own tint in both states.** Selection is carried by
     MASS: unselected is an outline in the tint, selected is filled with it. The
     colour identifies the category and never means "this one".
+  - **The fill TRAVELS.** It is one capsule behind the row that slides to
+    whichever chip is live, wearing that category's tint. It moves on
+    `transform`, so holding an arrow key produces one continuous slide rather
+    than restarting, which matters because focusing a chip selects it.
+  - **The labels are printed**: uppercase and tracked, the way the Shape drum's
+    faces are, rather than set like nav links. The live one is marked by the
+    set's own **play** icon in its category's colour, which points at the label
+    the way a right-facing triangle beside a word always has; the mark's space
+    is reserved on every chip so the row never reflows as selection moves. There
+    are no outlines: seven outlined
+    capsules read as seven buttons on the display, and with them gone the
+    travelling fill is the only enclosed thing in the row.
+  - On a phone the row fades at its right edge to say it continues, and the
+    chips take a 44px minimum.
   - **A real tablist.** One Tab stop for the whole row, then ←/→ between
     categories (wrapping at both ends) and **Home/End** for the ends. ↑/↓ are
     left to the page, so a keyboard user is never stranded on the row. The row
@@ -325,13 +344,34 @@
     stagger and no static.
 
 - **Card click** → the icon loads into the **mini screen**, and the **detail
-  bar** appears along the bottom of the icon screen — inside the glass, not on
-  the chassis — carrying the name, category, tags, Copy SVG / Download SVG /
-  Download PNG / Copy name, and a ✕ at the far right that clears the selection.
+  shelf** appears along the bottom of the icon screen — inside the glass, not on
+  the chassis — in **two columns**: the **identity** on the left (name, tags,
+  category, and the **Copy** split button, in that reading order) and the
+  **source** on the right (the format tabs with the ✕ at their far end, and the
+  code block under them).
+  - **Copy is one press, and the chevron holds the rest.** The split button's
+    main half copies the live format and says which one it is; the menu behind
+    the chevron carries every format plus Download SVG and Download PNG.
+  - **The format tabs choose what the block shows and what Copy copies** —
+    SVG / React / HTML / CSS / Data URI. ←/→ move between them, and the rule
+    under the live one slides rather than jumping.
+  - **The source block hugs its content**: no cap and no inner scrollbar, so the
+    shelf is as tall as the format needs and the icon grid above gives up the
+    height. Below `lg` it is capped, since a data URI on a 390px bar is nearer
+    thirty lines than twelve.
+  - **Copy appears twice on purpose**: the filled primary at the foot of the
+    identity column, and the same control in its outlined weight in the code
+    block's corner, within reach of the markup. Same shape and type, different
+    fill, different accessible names.
+  - **The ✕ is glyph-only and a rounded rectangle**, which is what marks it out
+    among the capsules: it is the one control that is not an action on the icon.
+    It sits a whole column from the chevron, so *open more options* and *throw
+    all of this away* are not a trackpad slip apart.
   - **Neither is a dialog and neither is modal.** The screen is a permanent part
-    of the board, showing the bare lattice until something is chosen; the bar is
-    a strip of the chassis. Nothing opens and nothing dims. Clicking another
-    icon swaps both rather than closing and reopening anything.
+    of the board, showing the bare lattice until something is chosen; the shelf
+    is printed on the glass. Nothing dims, and the export menu is the one thing
+    on this board that opens. Clicking another icon swaps both rather than
+    closing and reopening anything.
   - **Escape is read at the document**, from the bar — nothing here ever takes
     focus, so after clicking a card the focus is still on the card and a handler
     on the bar would never see the key. It steps aside for anything inside a
@@ -339,8 +379,9 @@
   - The state is announced **politely, from the screen** — it has to cover
     clearing as well as loading, and the bar does not exist to announce its own
     removal.
-  - The bar's caps **scroll rather than wrap**; below `lg` it takes two rows,
-    since a 390px bar cannot show a name and four caps at once.
+  - Below `lg` the two columns simply **stack** — the same content in the same
+    order, not a second layout, since a 390px bar cannot show a name and a code
+    block side by side.
   - **There is no SVG-markup disclosure.** Download SVG needs no clipboard API,
     so it is the fallback now, and a failed copy says so.
 - **What you see is what you copy.** Every export is built from the displayed

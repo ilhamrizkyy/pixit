@@ -165,7 +165,7 @@ function CompactDock({
           aria-label="Icon details"
           aria-expanded={sheetOpen}
           aria-controls="pixl-dock-sheet"
-          title="Category, tags, colour, import and export"
+          title="Category, tags, color, import and export"
           className="flex size-11 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-text-muted transition-colors hover:text-text"
         >
           <svg
@@ -230,7 +230,7 @@ function SaveButton({
       type="button"
       onClick={() => void dock.save()}
       disabled={dock.saving}
-      title="Keep this icon in this browser. It stays on this device until you publish it."
+      title="Keeps the icon in this browser only. Publishing is a separate step."
       className={`shrink-0 rounded-sm text-caption whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
         primary
           ? "bg-accent text-bg hover:bg-accent-hover"

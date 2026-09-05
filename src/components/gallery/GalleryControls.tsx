@@ -203,14 +203,13 @@ export function GalleryControls({
             <label
               className="pixl-swatch"
               style={{ backgroundColor: resolved }}
-              title="Pick a colour"
-            >
+              >
               <input
                 type="color"
                 value={resolved}
                 onChange={(event) => setColorText(event.target.value)}
                 className="sr-only"
-                aria-label="Pick a colour"
+                aria-label="Pick a color"
               />
             </label>
 
@@ -249,7 +248,7 @@ export function GalleryControls({
                     value={fieldValue}
                     onChange={(event) => setColorText(event.target.value)}
                     aria-invalid={invalid}
-                    aria-label="Icon colour, as a hex value"
+                    aria-label="Icon color, as a hex value"
                     className="pixl-lcd-input"
                   />
                 </span>

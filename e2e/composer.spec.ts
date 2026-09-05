@@ -157,7 +157,14 @@ test.describe("publishing", () => {
     await page.getByRole("textbox", { name: "Name" }).fill("test-square");
     await page.getByRole("button", { name: "Publish icon" }).click();
 
-    await expect(page.locator('[data-toast="info"]')).toContainText("Entry copied");
+    /* "Ready to publish", not "Entry copied" (2026-09-04). The BUTTON says
+       `Publish icon` and its three companion strings all named the mechanism it
+       hides — "copying its entry", "Entry copied" — so someone who pressed
+       Publish with an empty name was told about an "entry" they had never seen
+       a word about. The button was right; the strings around it were not. */
+    await expect(page.locator('[data-toast="info"]')).toContainText(
+      "Ready to publish",
+    );
     if (!canReadClipboard) return;
 
     const entry = await page.evaluate(() => navigator.clipboard.readText());

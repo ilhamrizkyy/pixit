@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { SIZE_STOPS } from "@/engine/constants";
+import { MAX_RENDERED_SIZE, SIZE_STOPS } from "@/engine/constants";
 
 /**
  * THE SIZE SCALE — a Braun tuning scale, in two orientations.
@@ -271,7 +271,18 @@ export function SizeScale({ size, onSize, orientation, id }: SizeScaleProps) {
         onPointerDown={beginFollow}
         className="pixl-range"
         aria-label="Size"
-        aria-valuetext={`${size} pixels`}
+        /* THE BREAK IS ANNOUNCED, NOT DRAWN. The grid's seat is a fixed 64px,
+           so 48 is the largest art it can draw and every stop above it sets the
+           exported FILE's size instead. DESIGN.md §6 and INTERACTION.md §6 both
+           say the region "is still announced (`aria-valuetext`); it is not
+           drawn" — and it was not announced either, so a screen-reader user
+           dragging from 48 to 120 heard fourteen size changes and never learned
+           the picture had stopped changing at the fifth. */
+        aria-valuetext={
+          size > MAX_RENDERED_SIZE
+            ? `${size} pixels, export size only`
+            : `${size} pixels`
+        }
       />
 
       {/* THE MARKER, over the input and deaf to the pointer — the input under
