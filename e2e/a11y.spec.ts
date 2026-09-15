@@ -82,12 +82,16 @@ test("the screen and the detail bar are reachable and announced", async ({
 }) => {
   await page.goto("/");
 
-  // The screen is part of the board and is there before anything is chosen.
+  /* THE SCREEN ARRIVES WITH THE SHELF as of 2026-09-12. It was mounted at all
+     times and drew an idle lattice, because it was the head of the board's left
+     column and a device's screen does not come and go. It moved into the detail
+     shelf, so both regions now appear on selection and leave together. */
   const screen = page.getByRole("region", { name: "Preview screen" });
-  await expect(screen).toBeVisible();
+  await expect(screen).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Selected icon" })).toHaveCount(0);
 
   await page.getByRole("button", { name: /arrow-right/ }).first().click();
+  await expect(screen).toBeVisible();
 
   const bar = page.getByRole("region", { name: "Selected icon" });
   await expect(bar).toBeVisible();
@@ -96,9 +100,15 @@ test("the screen and the detail bar are reachable and announced", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(bar).not.toHaveAttribute("aria-modal", "true");
 
-  // The status lives on the SCREEN, not on the bar, because it has to cover
-  // clearing too — and the bar does not exist to announce its own removal.
-  await expect(screen.locator("[aria-live]")).toHaveText("arrow-right loaded");
+  /* THE STATUS IS ON THE ICON PANEL, and it moved there on 2026-09-12 for the
+     reason it was on the screen before: it has to announce CLEARING as well as
+     loading, and nothing that unmounts can report its own removal. The screen
+     used to be the permanent thing; it is in the shelf now, so the panel is.
+     Asserted as OUTSIDE the shelf, which is the property that matters — a
+     future move breaks that and not a selector. */
+  const status = page.locator(".pixl-gallery > [aria-live]");
+  await expect(status).toHaveText("arrow-right loaded");
+  expect(await bar.locator("[aria-live]").count()).toBe(0);
 
   await settle(page);
   const results = await scan(page).analyze();

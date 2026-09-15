@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
  * Top nav (DESIGN.md §6): logo left, then Icons / Guide / Resources /
@@ -33,6 +32,22 @@ const LINKS = [
 export function SiteNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  /* THE HOME PAGE HAS NO BAR (2026-09-13). Its hero carries every destination
+     the bar did, which is the reference's shape: phosphoricons.com ships no
+     navigation bar at all, printing its links in the hero and repeating them in
+     the footer.
+
+     THE RULE IS "A PAGE WITH A HERO DOES NOT NEED A BAR", and it is stated that
+     way rather than "no bar anywhere" because the other three pages have no
+     hero. Dropping the bar site-wide would leave `/guide` reachable from the
+     home page and navigable only from a footer under a long article, which is a
+     worse page than the one this is fixing. Reversing either half is one line.
+
+     Returning null AFTER the hooks, never before: an early return above
+     `useState` would change the hook count between routes, which React treats
+     as a different component and refuses to reconcile. */
+  if (pathname === "/") return null;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -65,8 +80,15 @@ export function SiteNav() {
                 <Link
                   href={link.href}
                   aria-current={isActive(link.href) ? "page" : undefined}
-                  className={`text-ui no-underline transition-colors hover:text-accent ${
-                    isActive(link.href) ? "font-bold text-accent" : "text-text"
+                  /* THE ACTIVE LINK IS UNDERSCORED, not coloured (2026-09-12).
+                     It was bold + the accent, and the accent is now the ink —
+                     so the only thing left separating the live route from its
+                     neighbours was a weight, which is the weakest signal in the
+                     bar. A solid two-cell rule under the word is the monochrome
+                     answer and the arcade one: it is the same block every
+                     control on this site now throws. */
+                  className={`pixl-nav-link text-ui no-underline ${
+                    isActive(link.href) ? "is-live" : ""
                   }`}
                 >
                   {link.label}
@@ -75,7 +97,6 @@ export function SiteNav() {
             ))}
           </ul>
 
-          <ThemeToggle />
 
           <button
             type="button"
@@ -107,7 +128,7 @@ export function SiteNav() {
                 onClick={() => setMenuOpen(false)}
                 aria-current={isActive(link.href) ? "page" : undefined}
                 className={`block px-6 py-3.5 text-ui no-underline ${
-                  isActive(link.href) ? "font-bold text-accent" : "text-text"
+                  isActive(link.href) ? "font-bold text-text" : "text-text-muted"
                 }`}
               >
                 {link.label}

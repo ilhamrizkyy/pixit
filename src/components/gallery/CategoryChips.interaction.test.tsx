@@ -67,32 +67,36 @@ function tabNamed(label: string) {
   return found;
 }
 
-function shapeKeys() {
-  return within(
-    screen.getByRole("radiogroup", { name: "Shape" }),
-  ).getAllByRole("radio");
-}
+/**
+ * The shape control, a DROPDOWN as of 2026-09-13: a key printing the live value
+ * and a menu of all three behind it. Five earlier builds — a key rack, three
+ * caps, a thumbwheel, three cells and a caret stepper — see ShapeDropdown.tsx
+ * for what each got right.
+ *
+ * The key's accessible name carries the value ("Shape, Fill"), which is what
+ * lets `liveShape` read the state without opening anything: a menu button
+ * announces what it currently holds, where the stepper needed a live region
+ * because its buttons said the same thing before and after a press.
+ */
+const shapeKey = () => screen.getByRole("button", { name: /^Shape,/ });
+const liveShape = () =>
+  (shapeKey().getAttribute("aria-label") ?? "").replace("Shape, ", "");
 
-function checkedShape() {
-  const checked = shapeKeys().filter(
-    (row) => row.getAttribute("aria-checked") === "true",
-  );
-  expect(checked).toHaveLength(1);
-  /* THE ROW'S OWN TEXT IS ITS NAME. It was an `aria-label` while these were
-     transport keys carrying a glyph rather than a word; the list spells its
-     values out, so a label repeating them would be a second answer to the same
-     question. The capitals are `text-transform`, so the name here stays
-     "Square". */
-  return (checked[0].textContent ?? "").trim();
-}
-
-/** Walk the tab order until focus lands on a radio in the rack. */
-async function focusRack(user: ReturnType<typeof userEvent.setup>) {
-  for (let step = 0; step < 40; step++) {
-    if (document.activeElement?.getAttribute("role") === "radio") return;
-    await user.tab();
+/** Open the menu (idempotent) and return it. */
+async function openShape(user: ReturnType<typeof userEvent.setup>) {
+  if (shapeKey().getAttribute("aria-expanded") !== "true") {
+    await user.click(shapeKey());
   }
-  throw new Error("Never reached the rack");
+  return screen.getByRole("menu", { name: "Shape" });
+}
+
+/** Choose one value by name, from a closed or open menu. */
+async function chooseShape(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  const menu = await openShape(user);
+  await user.click(within(menu).getByRole("menuitemradio", { name: RegExp(`^${name}`) }));
 }
 
 function visibleIconCount() {
@@ -221,92 +225,91 @@ describe("category chips", () => {
   });
 });
 
-describe("the shape list", () => {
-  it("is a radiogroup, not a tablist — it changes drawing, not contents", () => {
+describe("the shape dropdown", () => {
+  it("is a menu button that names its own value", () => {
     render(<Gallery icons={icons} />);
 
-    // The distinction is not pedantry: a tab reveals a panel, and these three
-    // reveal nothing. They redraw the one panel the chips already govern, so
-    // claiming `aria-controls` over it would give the grid two owners.
-    /* PRINTED IN WHEEL ORDER, NOT ENGINE ORDER (2026-08-30). `CELL_STYLES` is
-       solid / gap / dots because that is the data; this is where a value sits
-       on a drum, and SQUARE — the default — is printed in the middle. A
-       three-position wheel resting at one end can only be turned one way, and
-       the value you start on is the one with nothing above it.
+    /* THE KEY CARRIES THE VALUE IN ITS NAME, which is what a menu button is for
+       and what the five earlier builds each solved differently — a live region
+       on the stepper, a window on the drum, the depth of a cap on the key rack.
+       Here the control simply says what it is set to. */
+    expect(liveShape()).toBe("Fill");
+    expect(shapeKey().getAttribute("aria-haspopup")).toBe("menu");
+    // Closed, it controls nothing: `aria-controls` pointing at an id that is
+    // not in the document is worse than no attribute at all.
+    expect(shapeKey().getAttribute("aria-expanded")).toBe("false");
+    expect(shapeKey().getAttribute("aria-controls")).toBeNull();
+  });
 
-       The DOM order is the printed order, which is what lets ArrowDown reach
-       the value below the live one: a group whose reading order and moving
-       order disagree is one where the arrow skips past what you can see. */
-    expect(shapeKeys().map((row) => (row.textContent ?? "").trim())).toEqual([
+  it("offers all three at once, with the live one checked", async () => {
+    const user = userEvent.setup();
+    render(<Gallery icons={icons} />);
+
+    /* THIS IS WHAT THE STEPPER COULD NOT DO. Two carets and a readout show you
+       one value and reach the far one in two presses; a menu shows all three
+       and reaches any of them in one. */
+    const menu = await openShape(user);
+    const items = within(menu).getAllByRole("menuitemradio");
+    /* Split on the hint's first word rather than on a character: the names are
+       "Fill" / "Inset" / "Round" and the hints all begin "Cells", so the label
+       is everything before it. */
+    expect(
+      items.map((item) => (item.textContent ?? "").split("Cells")[0].trim()),
+    ).toEqual([
+      "Fill",
       "Inset",
-      "Square",
       "Round",
     ]);
-    for (const row of shapeKeys()) {
-      expect(row.getAttribute("aria-controls")).toBeNull();
-      // No `aria-label`: the row's own text is its name, so a label would be a
-      // second answer to the same question and the one that wins silently.
-      expect(row.getAttribute("aria-label")).toBeNull();
-    }
+    expect(
+      items.filter((item) => item.getAttribute("aria-checked") === "true"),
+    ).toHaveLength(1);
   });
 
-  it("starts on Square, which is the group's only tab stop", () => {
-    render(<Gallery icons={icons} />);
-    expect(checkedShape()).toBe("Square");
-
-    const stops = shapeKeys().filter(
-      (row) => row.getAttribute("tabindex") === "0",
-    );
-    expect(stops.map((row) => (row.textContent ?? "").trim())).toEqual([
-      "Square",
-    ]);
-    // And it is the MIDDLE of the three, so the wheel can be turned either way
-    // from rest and both neighbours are half in the window before you touch it.
-    expect(shapeKeys().indexOf(stops[0])).toBe(1);
-  });
-
-  it("answers ALL FOUR arrows, as the APG asks of a radiogroup", async () => {
+  it("reaches any value in one press", async () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
 
-    await focusRack(user);
-    // The tab stop is the LIVE value, which is the middle face of the drum.
-    expect(document.activeElement).toBe(shapeKeys()[1]);
-
-    // Three items is a small enough group that keeping both axes inside it
-    // costs a keyboard user nothing, and the APG asks for all four on radios.
-    // Down moves to the value printed BELOW, which is what a drum's own order
-    // means — Inset, Square, Round from the top.
-    await user.keyboard("{ArrowDown}");
-    expect(checkedShape()).toBe("Round");
-    await user.keyboard("{ArrowUp}");
-    expect(checkedShape()).toBe("Square");
-    await user.keyboard("{ArrowLeft}");
-    expect(checkedShape()).toBe("Inset");
-    await user.keyboard("{ArrowRight}");
-    expect(checkedShape()).toBe("Square");
-
-    // Wraps at both ends, so the far value is one key away.
-    await user.keyboard("{ArrowUp}");
-    expect(checkedShape()).toBe("Inset");
-    await user.keyboard("{ArrowUp}");
-    expect(checkedShape()).toBe("Round");
-    await user.keyboard("{ArrowDown}");
-    expect(checkedShape()).toBe("Inset");
-
-    await user.keyboard("{End}");
-    expect(checkedShape()).toBe("Round");
-    await user.keyboard("{Home}");
-    expect(checkedShape()).toBe("Inset");
+    // Round is the FAR value: on the stepper it was two presses away in either
+    // direction, which is the cost this build exists to remove.
+    await chooseShape(user, "Round");
+    expect(liveShape()).toBe("Round");
+    expect(screen.queryByRole("menu", { name: "Shape" })).toBeNull();
   });
 
-  it("keeps focus with the selection, so the next arrow starts from here", async () => {
+  it("moves focus with the arrows and does NOT change the value", async () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
 
-    await focusRack(user);
+    /* THE CRITICAL DIFFERENCE FROM EVERY EARLIER BUILD. The stepper and the
+       radiogroup both CHANGED the shape as you arrowed, because in those the
+       focused thing was the chosen thing — and on this page that redraws every
+       icon in the grid. A menu is open OVER a value that has not changed yet,
+       so arrowing through it must move focus and nothing else. */
+    const menu = await openShape(user);
     await user.keyboard("{ArrowDown}");
-    expect(document.activeElement).toBe(shapeKeys()[2]);
+    expect(liveShape()).toBe("Fill");
+    await user.keyboard("{ArrowDown}");
+    expect(liveShape()).toBe("Fill");
+    expect(menu.contains(document.activeElement)).toBe(true);
+
+    // And Enter on the focused item is what commits it.
+    await user.keyboard("{Enter}");
+    expect(liveShape()).toBe("Round");
+  });
+
+  it("closes on Escape without choosing, and hands focus back", async () => {
+    const user = userEvent.setup();
+    render(<Gallery icons={icons} />);
+
+    await openShape(user);
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("menu", { name: "Shape" })).toBeNull();
+    expect(liveShape()).toBe("Fill");
+    // Focus lands back on the key, or the next Tab restarts from the top of
+    // the page.
+    expect(document.activeElement).toBe(shapeKey());
   });
 
   it("does not filter — every icon stays on screen at any shape", async () => {
@@ -314,8 +317,8 @@ describe("the shape list", () => {
     render(<Gallery icons={icons} />);
 
     const before = visibleIconCount();
-    await user.click(shapeKeys()[2]);
-    expect(checkedShape()).toBe("Round");
+    await chooseShape(user, "Inset");
+    expect(liveShape()).toBe("Inset");
     // This control carried the CATEGORIES once, as a key rack. A shape that
     // silently filtered would be that old job still running underneath.
     expect(visibleIconCount()).toBe(before);
@@ -323,12 +326,18 @@ describe("the shape list", () => {
 });
 
 /**
- * THE WORDS REPLACED THE GLYPHS on 2026-08-30, and this suite went with them.
+ * THE GLYPHS CAME BACK AND WENT AGAIN, within a day, and both moves were right.
  *
- * Worth stating rather than deleting quietly: the 2x2 patches were drawn by the
- * engine's own `cellNode`, so a geometry change moved them and they could never
- * say the old thing. A word can. `SHAPE_HINTS` — the tooltip — is what carries
- * the shape's actual behaviour now, and nothing checks it against the engine.
- * If the shapes ever change what they mean, this is the thing that will not
- * notice.
+ * The words arrived with the drum, because a drum is a printed scale and a
+ * scale names its values. The cost was recorded here at the time: the 2x2
+ * patches were drawn by the engine's own `cellNode`, so a geometry change moved
+ * them and they could never say the old thing, whereas a word can. Build 4
+ * brought the patches back and paid nothing for them.
+ *
+ * Build 5 gives them up again on purpose. A stepper's grammar is one value
+ * centred between two arrows, and a drawing in that seat reads as a third
+ * button — so the name is back and the engine link is gone with it.
+ * `SHAPE_HINTS` carries the behaviour in the tooltip and nothing checks it
+ * against the engine: if the shapes ever change what they MEAN, this is still
+ * the thing that will not notice.
  */

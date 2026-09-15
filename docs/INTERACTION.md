@@ -131,6 +131,27 @@
 
 ## 6. Gallery interactions
 
+- **The homepage boots (2026-09-15).** On every load of `/`, the hero comes up
+  like an arcade screen before it settles: a blinking cursor, the grid powering
+  on, the sprites rastering in row by row, PIXIT typing out, and the rest of the
+  hero wiping in under it. A little over two seconds, then it simply is the
+  hero.
+  - **Any key or press skips it** to the finished hero at once.
+  - **Every load, including a refresh.** `?intro` forces it in an automated
+    browser, which otherwise skips it.
+  - **Reduced motion never boots.**
+- **Hover a hero sprite to x-ray it.** Its neon drawing goes out and the 11 by
+  11 lattice it is drawn on comes up, with a tag naming the icon. Desktop only,
+  like the art itself; the cursor is a cell.
+- **The detail shelf floats at the foot of the screen (2026-09-15).** Choosing
+  an icon opens it pinned to the bottom of the viewport while you scroll the
+  icons, and it settles below the grid at the end of the page, so the last row
+  is never trapped under it. It is capped at about half the screen and scrolls
+  inside itself past that.
+- **Explore icons scrolls** to the gallery on an eased flight (about 700ms for
+  one screen, longer for more), and moves keyboard focus to the icon panel when
+  it lands. Any wheel, touch or key during the flight hands the scroll back.
+  Under reduced motion it jumps.
 - **The page does not scroll.** The board is sized to the window, so the whole
   device is visible at once and the **icon grid is the only scrolling thing on
   the page** — the picture moves inside the glass rather than the device sliding
@@ -169,8 +190,10 @@
     for manual activation when revealing a panel is expensive, and this one
     filters an array already in memory.
   - **Switching categories brings the icons in as a wave** — each rises and
-    scales over 400ms, offset 12ms from the one before. Typing in Search does
-    not re-run it.
+    scales over 760ms, offset 28ms from the one before, on a curve chosen to
+    spend that time rather than front-load it. Typing in Search does not re-run
+    it, and holding an arrow key does not either: the filter is instant and only
+    the animation waits for the category to settle.
   - **They were the key rack until 2026-08-28.** Filtering changes *which*
     icons are on the screen, so it belongs on the screen; how a cell is drawn
     belongs on the body. (The rack that took the caps over went too — Shape is

@@ -33,7 +33,7 @@ export default defineConfig({
     {
       name: "desktop",
       testMatch:
-        /(board|composer|a11y|contrast|reduced-motion|keys|reveal|toast)\.spec\.ts/,
+        /(board|composer|a11y|contrast|reduced-motion|keys|reveal|toast|intro)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 900 },

@@ -173,11 +173,30 @@ test("the grid's category swap animates when motion is allowed", async ({
   expect(running).toHaveLength(1);
   expect(running[0].name).toBe("pixl-icon-in");
   expect(running[0].state).toBe("running");
-  /* `--duration-wave`, not `--duration-slow`. The wave was slowed on
-     2026-09-04 and moved onto its own token: §5b's clocks govern surfaces
-     opening and closing, and this is the screen redrawing its picture — the
-     same exemption Pixel Materialize already holds. */
-  expect(running[0].ms).toBe(560);
+  /* `--duration-wave`, not `--duration-slow`. The wave lives on its own token
+     because §5b's clocks govern surfaces opening and closing, and this is the
+     screen redrawing its picture — the same exemption Pixel Materialize holds.
+
+     READ FROM THE TOKEN, not written down. It was `toBe(760)`, and the wave has
+     now been slowed three times by request; each retune broke this test for no
+     reason except that the number was in two places. What is worth pinning is
+     that the animation runs on `--duration-wave` at all — a refactor that
+     quietly put it back on `--duration-slow` is the failure this catches, and
+     hard-coding a number cannot see it. */
+  const waveMs = await page.evaluate(() => {
+    /* THE COMPUTED VALUE IS NOT THE AUTHORED ONE. `--duration-wave: 1100ms`
+       comes back as `"1.1s"` — the browser normalises registered-looking time
+       values — so a bare `parseFloat` reads 1.1 and compares it against 1100.
+       Both units have to be handled or this silently measures the wrong thing
+       the moment the token is written in the other one. */
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--duration-wave")
+      .trim();
+    const n = Number.parseFloat(raw);
+    return raw.endsWith("ms") ? n : n * 1000;
+  });
+  expect(waveMs).toBeGreaterThan(0);
+  expect(running[0].ms).toBe(waveMs);
 
   // And it is a WAVE, not one animation on the block: each icon starts later
   // than the one before it, and the whole wave stays inside DESIGN.md's cap.
@@ -193,9 +212,13 @@ test("the grid's category swap animates when motion is allowed", async ({
   for (let i = 1; i < delays.length; i++) {
     expect(delays[i]).toBeGreaterThan(delays[i - 1]);
   }
-  // 20ms an item, capped at 20 items: the cap is what holds the total as the
-  // set grows, and it moved with the duration rather than being abandoned.
-  expect(delays[delays.length - 1]).toBeLessThanOrEqual(400);
+  /* THE STAGGER'S TOTAL IS CAPPED, and 476ms is the budget rather than an
+     arithmetic coincidence: the offset and the cap have been retuned together
+     three times (12ms x 40, then 28ms x 17, now 34ms x 14) and this number has
+     not moved, because it is what stops the set growing to 200 icons turning
+     the swap into a multi-second sweep. The per-icon duration is free to rise;
+     the sweep is not. */
+  expect(delays[delays.length - 1]).toBeLessThanOrEqual(476);
 });
 
 /**

@@ -12,64 +12,162 @@ space grey on 2026-08-29 — see §2. Items marked
 
 ## 1. Design thesis
 
-**ONE register. The whole product is the toy.** (Rewritten 2026-08-28.)
-
-The gallery is built out of the same object the composer is, and the mapping is
-what makes that safe:
+**TWO REGISTERS. The composer is the toy; the gallery is pixel chrome.**
+(Rewritten 2026-09-12. This inverts the 2026-08-28 thesis, which is recorded
+below rather than deleted, because everything it argued is still true about the
+*composer*.)
 
 | Surface | Is |
 |---|---|
-| The gallery page | the **board** — one moulded body |
-| Icon grid | the **screen**, recessed into it |
-| Icon detail | the **mini screen** (the picture) + the **detail bar** (the controls) |
-| Sidebar | a region of the body, and what **operates** the screen |
-| Shape control | a **thumbwheel switch** — window and grip — in the Display pad |
-| Colour control | three **knobs** — the composer's own, H/S/L |
-| Category filter | **chips on the glass**, not hardware |
-| Control groups | raised **tool pads** on the body |
-| Inputs | **wells** drilled through the panel |
-| Buttons | domed **caps**, pressed 1px and no further |
+| The composer, `/create` | the **board** — one moulded body, and the only one |
+| The gallery, `/` | a **plain page**, drawn in pixel chrome |
 
-**THE NAV IS NOT PART OF THE DEVICE — corrected 2026-08-29.** It was the bezel's
-brow for one iteration, and that was the mapping over-reaching: with a moulded
-nav the whole window read as one continuous chassis with no edge to the object
-at all, and the toy's ink and accent came up into the site chrome, so the same
-nav link was one blue on the gallery and another on Guide. The board is an
-object on a page. The page is a page.
+### The gallery: pixel chrome
 
-**The board, and the split that makes it legible (2026-08-28).** The gallery is
-now literally the object: a moulded chassis with two screens recessed into it, a
-raised pad of controls, and a shelf inside the glass. The rule that
-keeps every control findable is not a heading, it is the surface it sits on:
+**The interface draws itself out of the same cell the icons are made of.** Not a
+texture and not a skin — a RULE, `--px: 2px`, and everything derives from it:
 
-> **The SCREEN carries what changes WHICH icons are shown** — search, category.
-> **The BODY carries what changes HOW they are drawn** — colour, size, shape.
+- **Every shell radius is 0.** `--radius-sm/md/lg` are named zeros, so the
+  corner is a decision rather than an omission. `--radius-toy` survives alone,
+  for the composer.
+- **Corners are BITTEN, not rounded.** `--px-notch` takes one cell out of each
+  corner, axis-aligned across twelve points — a diagonal cut is what `clip-path`
+  makes easy and it is the wrong thing: the browser antialiases the slope, which
+  puts a soft grey edge on the one shape whose whole claim is that it has none.
+  `--px-notch-l` / `--px-notch-r` are for the two halves of one split control,
+  where biting all eight corners would draw two objects that happen to touch.
+- **Boundaries are 2px lines in the page's own ink**, not shadows. Every recess
+  on the board — the five-move well, the four-wall cut, the milled groove — was
+  describing a hole in plastic. There is no plastic.
+- **The handful of exceptions are each argued where they are made**, and there
+  are three: the colour field refuses the notch (it clips the handle, and at
+  #000000, where the gallery starts, three quarters of it was cut away); the
+  knobs stayed round while they existed, because a knob is a physical part
+  rather than interface chrome; and the shape drum's barrel kept its cylinder
+  and had its smooth ramp **stepped into bands**, because pixel art shades in
+  bands and the form was never the problem.
 
-That is also why the two selectors look nothing alike. Chips are **flat**
-because they are drawn on glass; keys have **bodies** because they are moulded
-into plastic. Depth belongs to the plastic, and a chip with a raised face would
-be claiming to be hardware sitting on top of the display.
+**The hardware stayed and the chassis went.** That was the brief, and the three
+months of construction behind the controls is why it was possible at all: the
+size rail, the shape control and the colour instrument are views of
+`GallerySettings`, so replacing a view never touched a rule. The knob suite's
+tests became the field's tests almost unchanged, because none of what they
+pinned was ever about a knob.
 
-**The icons are still the stars, and they are protected by the mapping rather
-than by restraint.** They sit on the SCREEN — the same near-white surface the
-drawing lands on — so they never compete with blue. Chrome is the toy; art is
-on the glass.
+**The icons are still the stars, and pixel chrome is why.** Chrome and art are
+now drawn from the same 2px cell, so the interface cannot out-detail the thing
+it is framing — it is made of the same material, at the same resolution.
 
-### What this replaced, and why
+### The hero: an arcade screen that boots (2026-09-15)
 
-The original thesis kept two registers apart: a calm white shell so the icons
-could star, and one bold blue composer. It was defensible and it was
-forgettable — the gallery looked like every other icon site, and the thing that
-makes this project *this project* was hidden behind an owner-only route the
-public can never reach.
+**The homepage hero is its own world, the way the composer is.** It paints CRT
+glass in both themes and never takes the gallery's adaptive ground. Built
+against a pinned brief (an arcade intro, replacing a blueprint setting-out
+concept), then revised by the owner the same day.
 
-An intermediate step was tried first and rejected by eye: the shell keeping its
-white palette but borrowing the toy's PHYSICS (raised pads, recessed wells,
-1px key travel). It was better and still bland — the construction reads as
-craft only once it carries the material too.
+| Part | Is |
+|---|---|
+| Ground | `--crt` #05070d, two faint pools of light, and a cell grid in **11 by 11 blocks** (24px cells, a major line every eleventh), so every block on the screen is one icon's canvas |
+| Glass | scanlines and vignette on `::after`, a step-end flicker, one slow rolling band |
+| Palette | `--neon-cyan` is the system colour; the name is `--neon-yellow`; `--neon-orange` and `--neon-green` are accents. Scoped to `.pixl-hero` |
+| Type | Press Start 2P for the name (48 / 72 / 96px); **VT323** for the sentence, the links and the x-ray tags, loaded with `preload: false` so other routes pay nothing |
+| Keys | glow, not the offset block: `drop-shadow` on the link, the notch clipped on the face inside it, because a clip-path cuts off its own element's filter |
+| Art | the set's own icons composed like phosphoricons.com: two big pieces **bleeding off the screen** (a 264px one off the top, a 528px one off the bottom right), four small ones idling between them. **Which icon and which neon sit in each seat is dealt at random on every load**, from a pool of object-like icons (thin glyphs like dots or chevrons turn into stray strokes at 528px); no icon twice, each neon at most twice, the two big pieces never the same colour. Dealt in the browser so the server and client agree, and every sprite rasters in when it lands |
+| X-ray | hover a piece and its neon goes out to reveal the **11 by 11 lattice** it is drawn on, lit cells as hollow squares, with a tag naming the icon. Phosphor's inspect move, carrying Pixit's own mechanism |
 
-**The restraint that remains** is that icons never sit on the CHASSIS, and the
-accent is still one colour. What was dropped is the idea that calm equals deferential.
+**The big pieces sit on the grid.** Their cells are 24 or 48px, and their
+top-left corners snap to the 24px pitch with `round()`, so a piece's x-ray
+lattice is the background's own lattice, lit.
+
+**The boot, in order:** a dark screen with a blinking cyan block cursor where
+the name will start; the grid powers on in uneven frames; the sprites raster in,
+one row of their eleven cells per step; PIXIT types out of the cursor, each
+letter struck over-bright and settling; the tag, sentence, keys and links wipe in
+under it. A little over two seconds. The clock is one table, `introTimeline.ts`.
+
+**Three rules keep it safe to have:**
+
+- **The default is the finished hero.** Every hiding rule is scoped under
+  `html[data-intro="play"]`, which a pre-paint script sets. No script, a
+  crawler, a skip, or reduced motion all land on the same page.
+- **Stepped, never eased.** `steps()` and `step-end`, every duration a multiple
+  of `--f` (one frame at 12fps). The rolling band is the one continuous motion.
+- **Nobody waits for it.** It plays on every load, so any key or press skips it,
+  and the ambient loops pause off-screen.
+
+**What came off, and why, so none of it is rebuilt by accident:**
+
+- **The cyan-and-magenta RGB split on the name**, and magenta everywhere. It
+  read as a social app's logo, not a cabinet.
+- **The corner HUD** (PLAYER 1, a load bar, CREDIT 01, an icon counter) and the
+  four corner brackets. The count moved into the tag above the name.
+- **The skeleton blocks**: dithered rectangles with `BLK 02 TITLE` tabs that
+  filled column by column before each piece of content. The tabs went first,
+  then the blocks.
+- **INSERT COIN** and once-per-tab memory. The boot plays on every load, so a
+  replay button had nothing to replay.
+
+**Exceptions this section makes, stated:** the grid background (earned: the
+subject is a lattice), four colours on one surface (scoped, and §7's single
+accent still holds everywhere else), and a small tag above the heading (it
+carries the set's real count rather than a slogan).
+
+### What moved, on 2026-09-12
+
+| Was | Is |
+|---|---|
+| three colour knobs + segment readout | a saturation/lightness **field** with a hue strip |
+| a thumbwheel drum printing SQUARE / INSET / ROUND | **three cells in a row**, drawn by `cellNode` |
+| a 709px vertical size rail in the right gutter | the **horizontal** build, in the control column |
+| a mini screen at the head of the left column | inside the **detail shelf**, at the foot of the picture |
+| the board sized to the viewport, grid scrolling inside | the **page scrolls**, as a page does |
+
+The knob colour setter is not deleted. It is saved verbatim in
+`design-plans/reserved/` for the composer, which keeps the chassis and is the
+surface those dials were always moulded into.
+
+### Why the page stopped being a device
+
+The rail is the clearest case, and it stands for all of them. It needed ~700px
+to print fourteen stops without crowding, and only a viewport-height board could
+give it that. So the board was locked to the viewport, which at 24 icons left
+**79% of the screen empty at 1440x900** — measured — with the detail shelf
+stranded at the bottom of the window. Every one of those constraints was
+downstream of a chassis. Lay the rail down and the whole chain goes: no length
+requirement, no viewport lock, no hole.
+
+### What this replaced, and why (kept)
+
+The 2026-08-28 thesis was **ONE register: the whole product is the toy.** The
+gallery page was the board, the icon grid its recessed screen, the sidebar a
+region of the moulding, inputs wells drilled through the panel, buttons domed
+caps pressed 1px and no further. Its argument against the *original* two-register
+design was that a calm white shell "looked like every other icon site, and the
+thing that makes this project this project was hidden behind an owner-only route
+the public can never reach."
+
+**That objection is real and it has a different answer now.** CLAUDE.md rule 1
+keeps `/create` owner-only in v1, so the board is still visible to one person.
+What answers it is that the public page is unmistakably this product *without*
+being a moulded object: Press Start 2P, the dot matrix, Pixel Materialize, the
+pixel `search` glyph, the `play` chip mark, the seven `--cat-*` tints, and now a
+register that could not be pasted onto another product because it is built from
+the icons' own geometry.
+
+**The one thing the old thesis got exactly right, and it survives:** the split
+between what changes WHICH icons are shown and what changes HOW they are drawn.
+Search and category are on the screen; colour, size and shape are in the control
+column. That was argued from surfaces — glass versus plastic — and it turns out
+to have been about information all along, which is why it outlived the surfaces.
+
+**THE NAV WAS NEVER PART OF THE DEVICE** (corrected 2026-08-29, and now moot for
+the gallery). It was the bezel's brow for one iteration, and that was the mapping
+over-reaching: with a moulded nav the whole window read as one continuous chassis
+with no edge to the object at all. Still true of the composer.
+
+**The restraint that remains** is that icons never sit on `--frame`, and the
+accent is still one colour — which is why the size marker gave up its orange when
+the chassis left. See §7.
 
 ## 2. Color tokens (CSS variables at :root)
 
@@ -497,6 +595,17 @@ than left at browser defaults, and data (counts, hex, sizes) uses
 68ch measure.
 
 ## 6. Component specs
+
+> **STALE IN PLACES, 2026-09-12.** This section was written when the gallery was
+> the board, and large parts of it describe controls that have been replaced:
+> the size rail's vertical channel and magnifier, the Shape thumbwheel, the
+> three colour knobs and their segment readout, the mini screen's bezel and cut,
+> and the board's engraved badge. The **behaviour** in those entries is mostly
+> still live — what a control does, what it refuses, what it announces — and the
+> **construction** is not. Each replacement carries its own argument in the file
+> that draws it; §1 lists what moved. Everything about the COMPOSER here is
+> current, since the composer keeps the chassis.
+
 
 **Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
 owner-only actions. **Plain shell: a flat `--bg` fill and a `--border`
@@ -1404,20 +1513,34 @@ none of them. The FILTER is still instant; only the animation waits for the
 category to settle, so a fast scrub swaps with no animation at all and one wave
 lands when you stop.
 
-**THE WAVE IS SLOWER THAN §5b'S SCALE, ON ITS OWN TOKEN (2026-09-04).**
-`--duration-wave` is 560ms against `--duration-slow`'s 400, and the offset is
-20ms rather than 12. At the shared clock the switch read as a blink rather than
-as a wave. This is the THIRD documented exemption from the motion scale and it
-is the same one the other two hold: §5b's clocks govern surfaces opening and
-closing, and this is the screen redrawing its whole picture. The stagger cap
-moved with it and is still solved rather than picked — 400ms / 20ms is 20 — so
-the set growing to 200 icons cannot turn this into a four-second sweep.
+**THE WAVE HAS ITS OWN CLOCK *AND* ITS OWN CURVE, both outside §5b's scale.**
+This is the THIRD documented exemption from the motion scale, and it holds the
+same one the other two do: those clocks govern surfaces opening and closing, and
+this is the screen redrawing its whole picture.
 
-**The grid arrives as a WAVE on a category switch.** Each icon enters on its
-own 400ms rise-and-scale, offset **12ms** per item — the offset shrank rather
-than the cap bending, since §5b holds a stagger's total to about 300ms and 24
-icons at the house's 40ms offset would run 960ms. Capped at 40 items, because
-the set is meant to grow.
+`--duration-wave` is **760ms** against `--duration-slow`'s 400, and the offset is
+**28ms** rather than 12. The stagger cap moves with the duration and is still
+solved rather than picked — 476ms / 28ms is 17 — so the set growing to 200 icons
+cannot turn this into a multi-second sweep.
+
+**AND `--ease-wave` IS THE HALF THE DURATION COULD NOT BUY (2026-09-05).** It
+was slowed once to 560ms and read as barely different, because the duration was
+never what made it feel fast: `--ease-smooth-out` is
+`cubic-bezier(0.22, 1, 0.36, 1)`, which reaches y=1 almost immediately and
+covers about 80% of its distance in the first third. At any duration the visible
+movement is crammed into the opening ~190ms and the rest is a tail nobody
+perceives — so raising the clock lengthened the tail and changed almost nothing.
+`cubic-bezier(0.4, 0.05, 0.2, 1)` spends the time it is given: a gentler start,
+the travel across the middle, a soft settle. **The lesson generalises — when a
+motion reads as too fast at a long duration, check the curve before the
+number.**
+
+**The grid arrives as a WAVE on a category switch.** Each icon enters on its own
+rise-and-scale, offset per item, on the clock and curve above. (This paragraph
+carried the original 400ms / 12ms / cap-40 numbers until 2026-09-05, three
+changes after they stopped being true — a second description of one rule is a
+second thing to keep in step, so it now points at the one above rather than
+restating it.)
 
 **Shape** sets how each filled cell is drawn, for every icon at once. The engine
 keeps its own words — `cells`, `CellStyle`, `solid` / `gap` / `dots` — and the

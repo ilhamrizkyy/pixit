@@ -24,6 +24,11 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // The e2e build, which is `.next` under another name: Playwright's
+    // webServer sets NEXT_DIST_DIR so a production build cannot delete a
+    // running dev server's chunks. Same generated output, same reason to skip
+    // it — it reported 187 errors in code nobody here wrote.
+    ".next-e2e/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

@@ -3,74 +3,52 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Theme store. Shared, because the gallery needs the resolved theme too — the
- * default icon color is black in light and white in dark, so it has to follow
- * the theme as it changes.
+ * Theme store — and as of 2026-09-13 it is READ-ONLY: the OS decides, and
+ * nothing on the site overrides it.
  *
- * Two explicit values, Light and Dark. System is not a third value but the
- * DEFAULT: until a choice is made no data-theme is set and the CSS media query
- * decides, so a first visit already matches the OS and keeps following it.
+ * THE TOGGLE IS GONE, which is the reference's shape (phosphoricons.com ships
+ * no theme control at all), and removing the CONTROL without removing the
+ * STORAGE would have been the worse half of the job. `setTheme` wrote
+ * `localStorage` and the init script read it back before first paint — so
+ * anybody who had pressed Dark on an earlier visit would keep a dark page
+ * forever, with the one control that could change it no longer on the page. A
+ * preference nobody can revise is not a preference, it is a stuck state.
+ *
+ * So the whole layer went: the key, the same-tab event, the pre-paint init
+ * script and the setter. What is left is a subscription to
+ * `prefers-color-scheme`, which needs no script to avoid a flash because the
+ * media query is applied by the stylesheet at parse time.
+ *
+ * `[data-theme]` SURVIVES IN THE STYLESHEET, deliberately. Nothing sets it now,
+ * so `:root[data-theme="dark"]` simply never matches and the media query's
+ * `:not([data-theme="light"])` is always true — the CSS behaves correctly with
+ * the attribute absent. It is kept because `[data-ground="dark"]` rides that
+ * same rule as a second selector, and because a theme control is a decision
+ * that could come back. That is a real exception to the rule about tokens kept
+ * for consumers that do not exist (DESIGN.md §2): this one HAS a live consumer.
+ *
+ * THE GALLERY'S GROUND IS A DIFFERENT THING and does not come through here. It
+ * is derived from the icon colour by `groundFor` and scoped to the gallery
+ * region, so a page can be light while the icons sit on a dark surface.
  */
 
 export type Theme = "light" | "dark";
 
-export const THEME_STORAGE_KEY = "pixle-theme";
-
-/** Fired on same-tab changes; the storage event only covers other tabs. */
-const THEME_EVENT = "pixle-theme-change";
-
 const DARK_QUERY = "(prefers-color-scheme: dark)";
-
-/**
- * Runs before first paint to stop a flash of the wrong theme. Inlined into
- * <head>, so it must stay dependency-free and defensive: a browser with
- * storage blocked should fall back to the media query, not throw.
- */
-export const THEME_INIT_SCRIPT = `
-try {
-  var t = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
-  if (t === "light" || t === "dark") {
-    document.documentElement.setAttribute("data-theme", t);
-  }
-} catch (e) {}
-`;
 
 function subscribe(onChange: () => void): () => void {
   const media = window.matchMedia(DARK_QUERY);
-  window.addEventListener(THEME_EVENT, onChange);
-  window.addEventListener("storage", onChange);
   media.addEventListener("change", onChange);
-  return () => {
-    window.removeEventListener(THEME_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-    media.removeEventListener("change", onChange);
-  };
+  return () => media.removeEventListener("change", onChange);
 }
 
-/** The resolved theme: an explicit choice if there is one, else the OS. */
 function getSnapshot(): Theme {
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === "light" || stored === "dark") return stored;
-  } catch {
-    // Storage unavailable — fall through to the media query.
-  }
   return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
 }
 
 /** The server cannot know the OS preference; light is the safe assumption. */
 function getServerSnapshot(): Theme {
   return "light";
-}
-
-export function setTheme(theme: Theme): void {
-  document.documentElement.setAttribute("data-theme", theme);
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // The preference simply will not persist.
-  }
-  window.dispatchEvent(new Event(THEME_EVENT));
 }
 
 /**

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openColor } from "./board";
 
 /**
  * Text contrast on surfaces axe structurally cannot check.
@@ -106,45 +107,81 @@ function contrast(
  * measure nothing.
  */
 const SURFACES = [
-  // The nav stopped being the bezel's brow on 2026-08-29, so it is plain shell
-  // again — but it is still measured here, because axe reads a link's contrast
-  // against its own transparent background and would find nothing.
-  { name: "nav link", ink: "nav a", ground: "nav" },
+  /* THE NAV BAR IS GONE FROM THIS ROUTE (2026-09-13) and its links are in the
+     hero and the footer, so the pairings it used to stand for are measured
+     where they actually are now. `nav a` on `nav` matched the FOOTER's own
+     `<nav aria-label="Site">` after the removal — a transparent ground, which
+     this suite correctly refused rather than passing on nothing.
+
+     Every one of these is a MUTED ink, which is the exact blind spot: axe reads
+     a link against its own transparent background and finds nothing to
+     measure. `--text-muted` was darkened specifically to clear on these
+     grounds (DESIGN.md §2), and it is one `color-mix` away from being softened
+     back. */
+  /* THE HERO IS A CRT SCREEN (2026-09-15) with its own ground and a neon
+     palette scoped to it, so every ink on it is measured against `--crt`
+     rather than the page's background. The neon was picked for glow, not for
+     text, and these entries are what hold the pairings that carry reading. */
+  { name: "hero link", ink: ".pixl-hero-links a", ground: ".pixl-hero" },
+  { name: "hero tagline", ink: ".pixl-hero-line", ground: ".pixl-hero" },
+  { name: "hero tag", ink: ".pixl-hero-tag", ground: ".pixl-hero" },
+  { name: "hero secondary key", ink: ".pixl-hero-key:not(.is-primary)", ground: ".pixl-hero" },
+  { name: "hero name", ink: ".pixl-hero-mark", ground: ".pixl-hero" },
+  // An inverse block: the neon filled and the label knocked out of it. The
+  // ground is the FACE, because the link around it paints nothing and only
+  // carries the glow.
   {
-    name: "sidebar label",
-    ink: ".pixl-pad .text-text-muted",
-    // The pad, not the body: a label sits on the raised boss painted over it.
-    ground: ".pixl-pad",
+    name: "hero key",
+    ink: ".pixl-hero-key.is-primary",
+    ground: ".pixl-hero-key.is-primary .pixl-hero-key-face",
   },
-  // The Shape drum. Its faces carry WORDS, so this is plain text contrast —
-  // a higher bar than the 3:1 the glyphs they replaced were held to.
-  //
-  // THE GROUND IS THE PAPER, not the face and not the window. The paper is one
-  // smooth cylinder painted across the opening — a face that carried its own
-  // plastic put a bump at every join — so the names are printed on it and that
-  // is what they have to be read against.
-  //
-  // `.pixl-thumb-paper` rather than `.pixl-thumb-window` since 2026-08-30: the
-  // window is the CUT through the panel and paints the chassis walls of the
-  // hole, which is what makes the paper read as sunken. Reading it would
-  // measure a wall no text sits on.
-  //
-  // The GLASS over the opening is deliberately not in the ground. It darkens
-  // both ends of the window hard, and what is there is a face turned 30 degrees
-  // off the front and half out of the opening — the live value sits in the lit
-  // middle, where the cover is clear. Measuring the ends would hold a rolling
-  // drum to the bar for text you cannot read on any device that has one.
-  //
-  // ONE INK FOR EVERY FACE, so one entry. It ran as two — a held-back ink for
-  // the values turning away — and this bar is what refused it: at the paper's
-  // shaded end even a fully opaque held-back ink came to 4.47:1, so no alpha
-  // cleared AA. Printing does not get fainter as a drum turns; the surface goes
-  // into shadow and takes the printing with it. axe never looks either way: the
-  // ground is a gradient under a 3D transform.
+  { name: "footer link", ink: ".pixl-footer-links a", ground: ".pixl-footer" },
+  { name: "footer note", ink: ".pixl-footer-note", ground: ".pixl-footer" },
+  /* THE COLOUR KEY, which is the SEGMENT PANEL itself — the sage `--lcd` ground
+     with its own `--lcd-ink`, not a generic pill. It was a plain outlined key
+     with a swatch for half a day on 2026-09-13 and went back to the panel by
+     request; the selectors moved with it.
+
+     `.pixl-lcd-value` on `.pixl-lcd-key` and not on `.pixl-lcd`: both carry the
+     panel, and the one in the bar is the one on screen at load. */
   {
-    name: "drum face",
-    ink: '[role="radiogroup"] .pixl-drum-face',
-    ground: ".pixl-thumb-paper",
+    name: "colour key hex",
+    ink: ".pixl-lcd-key .pixl-lcd-value",
+    ground: ".pixl-lcd-key",
+  },
+  /* THE BAR'S OWN INK (rebuilt 2026-09-13, and this is its third home).
+
+     It was `.pixl-pad .text-text-muted` on a raised boss, then a pixel-face
+     EYEBROW and a muted VALUE in a 264px control column, and now neither: the
+     captions came off the bar by request, so `.pixl-eyebrow` is not on this
+     route at all and this entry was asserting against an element that had
+     stopped existing.
+
+     WHAT IS LEFT IN THE BAR IS THE SIZE VALUE, and it is the pairing worth
+     holding — the one piece of loose type on the sticky row, sitting on
+     `--grid-bg` rather than inside a bordered control, which is exactly the
+     case axe reads as transparent and skips.
+
+     NOT COVERED HERE, AND SAID PLAINLY: the eyebrows still exist in the mobile
+     filter sheet, and this suite runs at desktop width where that sheet is not
+     mounted. Their pairing is `--color-text` on `--color-bg`, which the hero's
+     own entries above already measure. */
+  {
+    name: "bar size value",
+    ink: ".pixl-size-value",
+    ground: ".pixl-bar",
+  },
+  /* THE SHAPE KEY'S VALUE. It was the stepper's inverted block until
+     2026-09-13 — page ink as the ground, page background as the ink — and the
+     stepper was replaced by a dropdown, whose key is an ordinary raised face.
+     So the pairing flipped back the right way up and the selector moved with
+     it. The MENU's own chosen row is the inverted one now, and it is not
+     measured here because the menu is not open on load; its two colours are the
+     same two tokens as the hero's primary key, which is. */
+  {
+    name: "shape key value",
+    ink: ".pixl-drop-value",
+    ground: ".pixl-drop-key",
   },
   // The category tints followed the taxonomy to the chips. A SELECTED chip's
   // ground is the TRAVELLING FILL parked behind it (2026-09-04) rather than a
@@ -159,7 +196,7 @@ const SURFACES = [
   {
     name: "unselected category chip",
     ink: '.pixl-chip:not([aria-selected="true"])',
-    ground: ".pixl-screen",
+    ground: ".pixl-gallery",
   },
   // The hex readout, which is a segment panel rather than a field: its ink is
   // inherited from `.pixl-lcd` and its ground is a gradient with a glass wash
@@ -240,6 +277,9 @@ for (const theme of ["light", "dark"] as const) {
     // The detail bar exists only while an icon is loaded, and half these
     // surfaces are on it.
     await page.getByRole("button", { name: /arrow-right/ }).first().click();
+    // And the hex readout moved behind the colour key on 2026-09-13, when the
+    // control column became a row in the sticky bar.
+    await openColor(page);
     await page.evaluate(
       (t) => document.documentElement.setAttribute("data-theme", t),
       theme,

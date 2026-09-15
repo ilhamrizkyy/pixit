@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniScreen } from "./MiniScreen";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   COPY_FORMATS,
@@ -175,6 +176,31 @@ export function DetailBar({
       aria-label="Selected icon"
       className={`pixl-detailbar ${closing ? "is-closing" : ""}`}
     >
+      {/* ---- The picture ----------------------------------------------
+          THE MINI SCREEN MOVED HERE ON 2026-09-12, from the head of the board's
+          left column. It was the first thing in a column of CONTROLS, which was
+          right while the column was a device's body and wrong the moment it
+          stopped being one: a display is not a control, and on a plain page it
+          sat above the colour picker with nothing to say it was a different
+          kind of thing.
+
+          The shelf is where it belongs, and the shelf's own argument is the
+          one that settles it — a readout about the picture goes along the foot
+          of the picture, and this is the picture. It now appears exactly when
+          the rest of the shelf does, which also retires the oddity that the
+          panel was mounted at all times and lit with a bare lattice for a
+          visitor who had selected nothing.
+
+          Pixel Materialize travels with it, unchanged: the reveal plays on
+          selection, and selection is now the same event that mounts this. */}
+      <div className="pixl-detail-picture">
+        <MiniScreen
+          icon={icon}
+          displayCells={displayCells}
+          cellStyle={cellStyle}
+        />
+      </div>
+
       {/* ---- The identity column --------------------------------------
           Name, tags, category, action: what it is called, what it is near,
           which shelf it came off, and then what to do about it. */}

@@ -78,7 +78,6 @@ export function FilterSheet({
             onChange={setDraft}
             themeColor={themeColor}
             idPrefix="sheet"
-            showSize
           />
         </div>
 

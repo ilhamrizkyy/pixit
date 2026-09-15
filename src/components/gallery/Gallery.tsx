@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Toast, type ToastTone } from "@/components/Toast";
 import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
-import { recolorCells } from "@/engine/color";
+import { groundFor, recolorCells } from "@/engine/color";
 import { renderedIconSize } from "@/engine/constants";
 import { searchIcons } from "@/registry/search";
 import { CATEGORIES, type IconDef } from "@/engine/types";
@@ -13,7 +13,10 @@ import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
 import { DetailBar } from "./DetailBar";
 import { EmptyState } from "./EmptyState";
 import { FilterSheet } from "./FilterSheet";
-import { GallerySidebar } from "./GallerySidebar";
+import { ColorControl } from "./ColorControl";
+import { GalleryHero } from "./GalleryHero";
+import { ShapeDropdown } from "./ShapeDropdown";
+import { SizeControl } from "./SizeControl";
 import {
   categoryTabId,
   CategoryChips,
@@ -21,8 +24,6 @@ import {
   ICON_PANEL_ID,
 } from "./GalleryToolbar";
 import { IconCard } from "./IconCard";
-import { MiniScreen } from "./MiniScreen";
-import { SizeScale } from "./SizeScale";
 import {
   DEFAULT_SETTINGS,
   resolveGalleryColor,
@@ -137,9 +138,41 @@ export function Gallery({ icons: registry }: GalleryProps) {
     return () => clearTimeout(timer);
   }, [settings.category]);
 
-  const theme = useResolvedTheme();
-  const themeColor = THEME_ICON_COLOR[theme];
+  /* THE DEFAULT COLOUR FOLLOWS THE PAGE THEME AGAIN (2026-09-13).
+     It was seeded straight off the OS for one day, by `useSystemIconColor`,
+     and that hook existed to break a cycle: while the ground was PAGE-WIDE the
+     theme was a function of the colour, so a colour read back off the theme
+     closed the loop and the ✕ became a no-op that locked you into whichever
+     ground you had landed on.
+
+     Scoping the ground to the region cuts the loop at the other end. The theme
+     no longer depends on the colour at all, so the colour is free to depend on
+     the theme — which is what keeps the empty field showing black on a light
+     page and white on a dark one. The hook was deleted with the cycle. */
+  const themeColor = THEME_ICON_COLOR[useResolvedTheme()];
   const activeColor = resolveGalleryColor(settings.colorText, themeColor);
+
+  /**
+   * THE GROUND THE ICONS ARE DRAWN ON, derived from the colour they are drawn
+   * in (2026-09-13). Phosphor's rule: the display colour is a free choice, so
+   * the surface under it cannot also be one — pick white and the region has to
+   * go dark or the art is invisible. `groundFor` solves the crossover.
+   *
+   * IT WENT PAGE-WIDE FOR A DAY AND CAME BACK, and the reference is what
+   * settled it. Phosphor writes its palette on <html>, which reads as page-wide
+   * and is not: measured, picking white moves the grid from #eeeae3 to #3e3d3a
+   * while the hero and the footer stay exactly where they were, because both
+   * paint their own ground. With a hero on this page the same logic binds —
+   * a wordmark that inverted on every colour pick is not a brand mark, it is a
+   * flicker — so the attribute goes on the REGION and the page keeps the
+   * theme the OS asked for.
+   *
+   * A plain attribute rather than an effect: it is derived state, so it belongs
+   * in the render. The `setTheme` call this replaced wrote localStorage and
+   * fired an event on every change, which was a storage write per keystroke in
+   * the hex field.
+   */
+  const ground = groundFor(activeColor);
 
   /**
    * Search matches name + tags (INTERACTION.md §6). The rule itself lives in
@@ -169,246 +202,202 @@ export function Gallery({ icons: registry }: GalleryProps) {
   }, [icons, activeColor]);
 
   return (
-    <main className="pixl-board">
-      {/* THE PAGE'S HEADING, AND IT CANNOT BE VISIBLE. axe reported
-          `page-has-heading-one` on the public route: the board is an OBJECT, and
-          every word printed on it is a legend moulded into a part — a title bar
-          across the top would be the one piece of web page on a device that has
-          spent every other decision not being one. The board's own badge is the
-          wordmark and it is `aria-hidden`, being decoration cut into the case.
+    /* A PAGE, AND IT SAYS SO (2026-09-13). `.pixl-board` was the last name
+       left over from the chassis: a "board" is an object you see all of at
+       once, and this is a hero, a gallery and a footer stacked down a document
+       that scrolls. */
+    <main className="pixl-page">
+      {/* THE HEADING IS VISIBLE AGAIN. It was `sr-only` for as long as the page
+          was a device — axe demanded a level-one heading and a title bar was
+          the one piece of web page a board could not carry, so the product's
+          name was hidden from everyone who could see. The hero is where it
+          goes. */}
+      <GalleryHero count={icons.length} />
 
-          So the heading is real, first in the reading order, and off-screen. It
-          is the one place the product gets to say what it is to a screen reader
-          and to a search engine, both of which arrive with no idea. */}
-      <h1 className="sr-only">Pixit pixel icons</h1>
+      {/* ---- THE GALLERY REGION -----------------------------------------
+          `data-ground` repoints the WHOLE palette inside this element and
+          nowhere else, so the icons always land on a surface they read against
+          while the hero and the footer keep the theme the OS asked for. See the
+          note on `ground` above, and the token blocks in globals.css. */}
+      <section
+        className="pixl-gallery"
+        data-ground={ground}
+        aria-label="Icon gallery"
+      >
+        {/* SELECTION IS ANNOUNCED FROM HERE, because this is the one element
+            that is mounted whatever is selected.
 
-      {/* `min-h-0` is what lets the grid inside scroll instead of the page.
-          Without it a flex child refuses to shrink below its content and the
-          whole board grows past the viewport.
+            It lived on the mini screen while that was the head of the left
+            column, then moved into the detail shelf with it — and the shelf
+            exists only while an icon is loaded, so the announcer went inside
+            the thing that unmounts. A region that unmounts cannot announce that
+            it has gone. Politely, because what changed is not where you
+            clicked. */}
+        <span className="sr-only" aria-live="polite">
+          {selected ? `${selected.name} loaded` : "No icon selected"}
+        </span>
 
-          The gap is the SAME token as the board's own padding: they were
-          different numbers, so the mini screen had air to the board's edge and
-          none at all to the screen beside it — which reads as a missing gap
-          rather than as two values. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-[var(--board-gutter)] lg:flex-row lg:items-start">
-        {/* ---- The board's left column: screen over body ------------------
-            Hidden below `lg`, like the body it belongs to. Shape moved into the
-            Display pad, so there is nothing left in this column that has to
-            survive on a phone — the filter sheet carries all three controls
-            down there. */}
-        {/* `min-h-0` + `self-stretch` bound this column to the board, and the
-            mini screen inside gives up height before anything scrolls — a
-            device with a shorter case has a shorter screen. Only a genuinely
-            small window gets past the screen's floor and scrolls the column;
-            the board itself never grows past the viewport, which is the rule
-            the whole layout is built on. */}
-        <div className="relative z-10 hidden min-h-0 shrink-0 flex-col lg:flex lg:w-66 lg:self-stretch">
-          {/* THE SCROLL IS THE CONTENT'S, NOT THE CASE'S. The screen and the
-              pads scroll on a short window — the mini screen gives up height
-              first, and only past its floor does anything move. The badge
-              printed on the case is not part of that: it is moulding, so it
-              sits OUTSIDE this box and stays on the bottom edge where it was
-              printed. Inside it, it slid up over the controls. */}
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <MiniScreen
-              icon={selected}
-              displayCells={
-                selected
-                  ? (displayCells.get(selected.id) ?? selected.cells)
-                  : null
-              }
-              cellStyle={settings.cellStyle}
-            />
-            <GallerySidebar
+        {/* ---- The sticky bar -------------------------------------------
+            SEARCH AND CATEGORY CHANGE WHICH ICONS ARE HERE; COLOUR, SIZE AND
+            SHAPE CHANGE HOW THEY ARE DRAWN. That split was argued from surfaces
+            — glass versus plastic — and it turns out to have been about
+            information all along, which is why it outlived the board and now
+            the sidebar too. Both halves are in one bar because there is no
+            second surface to put either on, and the bar keeps them on separate
+            rows.
+
+            IT STICKS, which is the one thing the old layout genuinely could not
+            do: the board was locked to the viewport, so there was nothing to
+            stick to. A page that scrolls can keep the controls with the icons
+            they govern. */}
+        <div className="pixl-bar">
+          {/* SHAPE IS LEFTMOST, then search, then size, then colour (by
+              request, 2026-09-13). It is the reference's order with our own
+              control in the first seat — and the seat is earned: Shape is the
+              only one of the three whose chosen value is a DRAWING, so it reads
+              as a mode the row is in rather than a number the row carries.
+
+              EVERY CONTROL IS ONE HEIGHT. They were three different ones, each
+              sized to its own contents under its own caption, which made the
+              row read as four unrelated widgets that happened to be adjacent.
+              The captions went with the unevenness: see SizeControl.tsx for why
+              the VALUE stayed when the word went.
+
+              Below `lg` the three display controls are in the filter sheet
+              instead, and only one of the two surfaces is ever mounted — which
+              is what keeps them from becoming two answers to one question. */}
+          <div className="hidden lg:contents">
+            <ShapeDropdown settings={settings} onSettings={setSettings} />
+          </div>
+
+          <GalleryToolbar
+            search={search}
+            onSearch={setSearch}
+            settings={settings}
+            onOpenFilters={() => setFiltersOpen(true)}
+            filtersOpen={filtersOpen}
+          />
+
+          <div className="hidden lg:contents">
+            <SizeControl settings={settings} onSettings={setSettings} />
+            <ColorControl
               settings={settings}
               onSettings={setSettings}
               themeColor={themeColor}
             />
           </div>
-
-          {/* ---- The case's own badge ---------------------------------------
-              THE WORDMARK PRINTED INTO THE BOTTOM-LEFT CORNER, which is where
-              most of the devices on the reference sheet carry theirs. It is
-              what the slack under the controls is for: a panel with the
-              product's name along its foot is a finished side, and the same
-              panel without one is not.
-
-              PRINTED, NOT ENGRAVED. A real cut was built first — a gradient
-              inside each glyph, shaded wall to lit floor — and it worked and
-              was still wrong for the object: the case this copies prints its
-              badge in one flat ink. See globals.css for the three passes.
-
-              Decorative and `aria-hidden`: the page's real wordmark is in the
-              nav, and this is what is printed on the case. */}
-          <p aria-hidden="true" className="pixl-board-legend">
-            PIXIT
-          </p>
         </div>
 
-        {/* ---- The screen --------------------------------------------------
-            Between the body and the size rail, so the board reads as one row of
-            parts: controls, picture, scale. */}
-        <div className="pixl-screen flex min-h-0 min-w-0 flex-1 flex-col self-stretch">
-          {/* SEARCH AND CATEGORY ARE THE SCREEN'S HEADER. Both answer "what is
-              on the screen right now", and both line up with the icons they
-              filter. Colour, size and shape are on the body, because they are
-              about how an icon is drawn rather than which ones are here. */}
-          {/* More air than the panel started with. The header and the grid
-              share one inset so the chips line up with the icons they filter,
-              and the screen needs a margin the way a printed page does — at
-              `p-2` the first row of icons sat against the glass. */}
-          <div className="flex shrink-0 flex-col gap-2 p-3 pb-1 lg:p-5 lg:pb-1">
-            <GalleryToolbar
-              search={search}
-              onSearch={setSearch}
-              settings={settings}
-              onOpenFilters={() => setFiltersOpen(true)}
-              filtersOpen={filtersOpen}
-            />
-            <CategoryChips settings={settings} onSettings={setSettings} />
-          </div>
+        {/* THE CHIPS LEFT THE BAR (2026-09-13, by request) and sit directly on
+            the icons they filter.
 
-          {/* THE ONLY SCROLL ON THE PAGE. The board is sized to the viewport,
-              so nothing outside the glass moves — the icons scroll under a
-              fixed header the way content moves on a screen, rather than the
-              whole device sliding up the page. */}
-          <div
-            id={ICON_PANEL_ID}
-            role="tabpanel"
-            aria-labelledby={categoryTabId(settings.category)}
-            className="min-h-0 flex-1 overflow-y-auto p-3 lg:p-5"
-          >
-            {/* Keyed on the category so the wave REPLAYS on every switch.
-                Deliberately not keyed on the search text as well — that changes
-                on each keystroke, and re-running an entrance animation per
-                character is the flicker, not the cure. */}
-            <div key={wave} className="pixl-grid-swap">
-              {visible.length === 0 ? (
-                <EmptyState
-                  query={search.trim() || undefined}
-                  category={
-                    settings.category === "all"
-                      ? undefined
-                      : CATEGORIES.find((c) => c.id === settings.category)
-                          ?.label
-                  }
-                  /* CLEARS BOTH, in one press. It used to clear whichever one
-                     it guessed was responsible, which meant that with a query
-                     AND a category active it cleared the query and left you on
-                     the same dead end. One button, everything off. */
-                  onReset={
-                    search.trim() || settings.category !== "all"
-                      ? () => {
-                          setSearch("");
-                          setSettings({ ...settings, category: "all" });
-                        }
-                      : undefined
-                  }
-                />
-              ) : (
-                /* DENSITY IS THE POINT. A wall of icons is what an icon set
-                   looks like; a sparse grid of big cards reads as a product
-                   listing and leaves the page mostly whitespace.
-
-                   THE TILE IS FIXED at 64px and does not track the size slider.
-                   A grid whose cells resize when you drag Size reflows the whole
-                   page under the cursor, and the thing you are trying to judge —
-                   how the icon looks — moves while you judge it. 64px with 8px
-                   padding leaves exactly 48px, the top of the size scale, so the
-                   largest icon fills its seat without ever overflowing. */
-                <ul
-                  aria-label="Icons"
-                  className="grid list-none grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-3 p-1"
-                >
-                  {/* Each li IS the grid item. `display: contents` would be
-                      tidier CSS but has a history of dropping list semantics
-                      from the accessibility tree, so the card stretches
-                      instead. */}
-                  {visible.map((icon, index) => (
-                    <li
-                      key={icon.id}
-                      /* Its place in the wave. A number, not a colour — the rule
-                         DESIGN.md §6 sets about inline style is about keeping
-                         palette out of components. */
-                      style={{ "--i": index } as React.CSSProperties}
-                    >
-                      <IconCard
-                        icon={icon}
-                        cells={displayCells.get(icon.id) ?? icon.cells}
-                        /* CAPPED. The seat is a fixed 64px, so 48 is the
-                           largest art it holds — past that the scale is
-                           setting the export size and the picture has already
-                           stopped changing. */
-                        size={renderedIconSize(settings.size)}
-                        cellStyle={settings.cellStyle}
-                        selected={selected?.id === icon.id}
-                        local={localIds.has(icon.id)}
-                        onSelect={selectIcon}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          {/* INSIDE THE GLASS, as the display's own bottom shelf — not a strip
-              of chassis under it. It reports what is on the screen, so it is on
-              the screen. It exists only while an icon is loaded: the panel above
-              simply gets shorter, and because the grid scrolls inside itself
-              nothing reflows.
-
-              BELOW `lg` ONLY, since 2026-09-03. The desktop board has a detail
-              PANEL in a column of its own, which can show the source; a strip
-              inside the glass cannot, without growing. Down here it is the only
-              surface there is — the whole left side of the board is hidden on a
-              phone (BACKLOG §J) — so it stays, and it keeps the document-level
-              Escape for every width, because it is mounted at every width. */}
-          {/* THE DETAIL SHELF, inside the glass and along the bottom of the
-              screen. It reports what is on the screen, so it is on the screen.
-
-              IT WAS A RIGHT-HAND SIDEBAR FOR TWO PASSES and neither worked: a
-              fourth CHASSIS column that rebuilt the case to hold a readout
-              about the display, then a panel floating on the glass that covered
-              the icons it was describing. Horizontal at the foot is where a
-              readout about the picture goes.
-
-              It exists only while an icon is loaded: the grid above simply gets
-              shorter, and because it scrolls inside itself nothing reflows. */}
-          {selected && (
-            <DetailBar
-              closing={shelf.closing}
-              icon={selected}
-              displayCells={displayCells.get(selected.id) ?? selected.cells}
-              cellStyle={settings.cellStyle}
-              size={settings.size}
-              onClose={shelf.requestClose}
-              onNotify={notify}
-            />
-          )}
+            They were on the bar's second row, which made one sticky object out
+            of two different questions: the bar changes HOW every icon is drawn,
+            the chips change WHICH ones are here. Out of the bar the row is also
+            free to scroll horizontally on a phone without dragging the controls
+            with it, and the bar goes back to being one line high. */}
+        <div className="pixl-chiprow">
+          <CategoryChips settings={settings} onSettings={setSettings} />
         </div>
 
-        {/* ---- The size rail ----------------------------------------------
-            ON THE BOARD'S RIGHT EDGE, past the screen — the one side of the
-            chassis that carried nothing. It is on the CHASSIS and not on the
-            glass because size changes HOW an icon is drawn, which is the body's
-            job; a slider printed on a display would be the one control claiming
-            to be hardware sitting on top of the picture.
+        <div
+          id={ICON_PANEL_ID}
+          role="tabpanel"
+          aria-labelledby={categoryTabId(settings.category)}
+          className="pixl-panel"
+          /* The hero's "Explore icons" jumps here, and a jump target that is a
+             tabpanel is already focusable for the keyboard path. */
+          tabIndex={-1}
+        >
+          {/* Keyed on the category so the wave REPLAYS on every switch.
+              Deliberately not keyed on the search text as well — that changes
+              on each keystroke, and re-running an entrance animation per
+              character is the flicker, not the cure. */}
+          <div key={wave} className="pixl-grid-swap">
+            {visible.length === 0 ? (
+              <EmptyState
+                query={search.trim() || undefined}
+                category={
+                  settings.category === "all"
+                    ? undefined
+                    : CATEGORIES.find((c) => c.id === settings.category)?.label
+                }
+                /* CLEARS BOTH, in one press. It used to clear whichever one it
+                   guessed was responsible, which meant that with a query AND a
+                   category active it cleared the query and left you on the same
+                   dead end. One button, everything off. */
+                onReset={
+                  search.trim() || settings.category !== "all"
+                    ? () => {
+                        setSearch("");
+                        setSettings({ ...settings, category: "all" });
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              /* DENSITY IS THE POINT. A wall of icons is what an icon set looks
+                 like; a sparse grid of big cards reads as a product listing and
+                 leaves the page mostly whitespace.
 
-            It stands here rather than in the Display pad because a scale wants
-            LENGTH: fourteen stops need the screen's full height to print
-            without crowding, and the pad is 264px wide. Hidden below `lg` with
-            the rest of the body — the filter sheet carries the horizontal
-            build. */}
-        <div className="hidden shrink-0 self-stretch lg:flex lg:items-center">
-          <SizeScale
+                 THE TILE IS FIXED at 64px and does not track the size control.
+                 A grid whose cells resize when you drag Size reflows the whole
+                 page under the cursor, and the thing you are trying to judge —
+                 how the icon looks — moves while you judge it. 64px with 8px
+                 padding leaves exactly 48px, the top of the size scale, so the
+                 largest icon fills its seat without ever overflowing. */
+              <ul
+                aria-label="Icons"
+                className="grid list-none grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-3 p-1"
+              >
+                {/* Each li IS the grid item. `display: contents` would be
+                    tidier CSS but has a history of dropping list semantics from
+                    the accessibility tree, so the card stretches instead. */}
+                {visible.map((icon, index) => (
+                  <li
+                    key={icon.id}
+                    /* Its place in the wave. A number, not a colour — the rule
+                       DESIGN.md §6 sets about inline style is about keeping
+                       palette out of components. */
+                    style={{ "--i": index } as React.CSSProperties}
+                  >
+                    <IconCard
+                      icon={icon}
+                      cells={displayCells.get(icon.id) ?? icon.cells}
+                      /* CAPPED. The seat is a fixed 64px, so 48 is the largest
+                         art it holds — past that the scale is setting the
+                         export size and the picture has already stopped
+                         changing. */
+                      size={renderedIconSize(settings.size)}
+                      cellStyle={settings.cellStyle}
+                      selected={selected?.id === icon.id}
+                      local={localIds.has(icon.id)}
+                      onSelect={selectIcon}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* THE DETAIL SHELF, at the foot of the region rather than inside a
+            display's glass. It reports what is on the grid, so it sits under
+            it. It exists only while an icon is loaded, and because the page
+            scrolls now that is a plain layout change with nothing to reflow
+            around it. */}
+        {selected && (
+          <DetailBar
+            closing={shelf.closing}
+            icon={selected}
+            displayCells={displayCells.get(selected.id) ?? selected.cells}
+            cellStyle={settings.cellStyle}
             size={settings.size}
-            onSize={(size) => setSettings({ ...settings, size })}
-            orientation="vertical"
-            id="board-size"
+            onClose={shelf.requestClose}
+            onNotify={notify}
           />
-        </div>
-      </div>
+        )}
+      </section>
 
       {filtersOpen && (
         <FilterSheet

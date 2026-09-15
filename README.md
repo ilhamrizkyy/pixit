@@ -4,7 +4,7 @@ An open-source pixel / 32-bit / arcade **icon set**, plus an in-browser
 **composer** styled like an Etch A Sketch. MIT licensed.
 
 > **Status: Phase 2 complete — gallery and composer both build.** The public
-> gallery has 24 icons, search, filtering, a single-color customizer,
+> gallery has 108 icons, search, filtering, a single-color customizer,
 > size/padding/transform controls, and copy/download that matches what you see.
 > The owner-only composer draws, transforms, undoes, imports and exports, with
 > its knobs and screen recess rendered in three.js. Still open: the composer

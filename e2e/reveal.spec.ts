@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openColor } from "./board";
 
 /**
  * PIXEL MATERIALIZE — the mini screen's reveal.
@@ -148,7 +149,8 @@ test("it settles to the merged walk, and a recolour does not replay it", async (
   /* AND THE REVEAL KEYS ON THE ICON, NEVER ON THE CELLS. `displayCells` is
      rebuilt whenever colour, shape or size changes, so keying on the array
      would re-materialise the whole picture on every frame of a knob drag. */
-  await page.getByRole("slider", { name: /Hue/ }).focus();
+  const panel = await openColor(page);
+  await panel.getByRole("slider", { name: /Hue/ }).focus();
   for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowRight");
 
   expect(
@@ -180,9 +182,18 @@ test("deselecting scatters the cells out, it does not fade the picture", async (
   await select(page, /floppy-disk/);
   await page.waitForTimeout(700);
 
-  // The shelf's close carries a WORD now, not a bare glyph — a lone ✕ beside
-  // a split button read as part of it.
-  await page.locator(".pixl-detailbar").getByRole("button", { name: "Close" }).click();
+  /* A SWAP, NOT A DESELECT (2026-09-12), and the change is a real narrowing.
+     The mini screen moved into the detail shelf, and the shelf unmounts 150ms
+     after Close — so on a deselect the panel is GONE well before a scatter with
+     80ms of stagger could finish, and the cells never get to leave.
+
+     The behaviour survives where it actually reads: swapping icons. §6 already
+     required the out to OVERLAP the next reveal rather than run before it,
+     precisely so clicking a second icon does not wait out a dissolve — so this
+     is the case the animation was tuned for, and it is the one still on screen
+     long enough to see. Deselecting now removes the whole shelf, which is a
+     different kind of event whatever the cells do inside it. */
+  await page.getByRole("button", { name: /arrow-right/ }).first().click();
   await page.waitForFunction(
     () =>
       document.querySelectorAll('[data-reveal="out"] .pixl-reveal-cell').length >
@@ -221,11 +232,12 @@ test("deselecting scatters the cells out, it does not fade the picture", async (
   );
   expect(going.duration).toBeLessThan(arriving);
 
-  // And the panel is back to a lit screen with nothing on it.
-  await page.waitForTimeout(500);
+  // And the panel settles on the NEW icon rather than on nothing: a swap ends
+  // with a picture, which is the half a deselect no longer gets to show.
+  await page.waitForTimeout(900);
   expect(
     await page.evaluate(
-      () => document.querySelectorAll(".pixl-reveal-cell").length,
+      () => document.querySelectorAll('[data-reveal="out"]').length,
     ),
   ).toBe(0);
   expect(

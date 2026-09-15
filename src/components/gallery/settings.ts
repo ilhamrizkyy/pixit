@@ -26,12 +26,24 @@ import type { Category } from "@/engine/types";
  * The engine's vocabulary, and what a person reads.
  *
  * The engine keeps its own words. `cells`, `CellStyle` and solid / gap / dots
- * are the DATA; Square, Inset and Round are the UI. This is the only place the
- * two meet, so the drum, the filter sheet and the Guide cannot drift into
+ * are the DATA; Fill, Inset and Round are the UI. This is the only place the
+ * two meet, so the dropdown, the filter sheet and the Guide cannot drift into
  * calling the same value three different things.
+ *
+ * `solid` READS "FILL", NOT "SQUARE" (2026-09-13, by request). Square was
+ * describing the cell's SHAPE, which is the one thing that does not change
+ * between the three: every cell is square in all of them, and Round only draws
+ * a circle inside one. What actually varies is how much of the cell is used —
+ * filled edge to edge, inset, or inset and rounded — so Fill names the
+ * difference and Square named the constant. It also stops the label colliding
+ * with the word this whole register is built out of.
+ *
+ * The ENGINE is untouched: `solid` is still `solid` in `cells`, in exports and
+ * in every stored icon. This is a display name, which is the entire reason the
+ * map exists.
  */
 export const SHAPE_LABELS: Record<CellStyle, string> = {
-  solid: "Square",
+  solid: "Fill",
   gap: "Inset",
   dots: "Round",
 };

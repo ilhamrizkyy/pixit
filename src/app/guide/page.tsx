@@ -113,7 +113,7 @@ export default function GuidePage() {
           body={
             <>
               Stored cells are always square. The gallery can draw them three
-              ways, for the whole set at once: Square fills each cell edge to
+              ways, for the whole set at once: Fill uses each cell edge to
               edge, Inset leaves a gap so the grid shows between neighbors, and
               Round draws the same node as a circle. It is a display setting and
               never part of an icon, so the data stays square whatever you are

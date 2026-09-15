@@ -54,7 +54,10 @@ export function GalleryToolbar({
   filtersOpen,
 }: GalleryToolbarProps) {
   return (
-    <div className="flex items-stretch gap-2">
+    /* GROWS INTO THE BAR. It was sized to its own content, which on the
+       sticky row left the search field at ~220px beside 500px of display
+       controls — the widest control on the page being the narrowest one. */
+    <div className="pixl-searchbar flex min-w-0 flex-1 items-stretch gap-2">
       <div className="pixl-field relative flex h-11 min-w-0 flex-1 items-center">
         {SEARCH_ICON_CELLS && (
           <span

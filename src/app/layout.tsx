@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Press_Start_2P } from "next/font/google";
+import { Inter, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
-import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { INTRO_INIT_SCRIPT } from "@/components/gallery/introTimeline";
 import "./globals.css";
 
 // UI / display face. Locked to JetBrains Mono — see DESIGN.md §4.
@@ -23,6 +24,18 @@ const pressStart2P = Press_Start_2P({
   weight: "400",
 });
 
+// The homepage hero's terminal type, for its one sentence and its links.
+// NOT PRELOADED: every other route would pay for a face it never draws. The
+// @font-face is global, and a browser only fetches a face when something on the
+// page asks for it, so the homepage downloads it on first use. The boot does
+// not show that sentence until three seconds in, which is ample.
+const terminal = VT323({
+  variable: "--font-terminal",
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "Pixit: pixel icons and composer",
   description:
@@ -42,24 +55,34 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
+      className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable} ${terminal.variable}`}
     >
       <body>
-        {/* Applies the stored theme BEFORE FIRST PAINT — without it the page
-            renders light and then snaps to dark, which is worse than no dark
-            mode at all.
+        {/* NO PRE-PAINT THEME SCRIPT (2026-09-13). There was one, and it
+            existed to read a stored preference back before first paint —
+            without it the page rendered light and snapped to dark, which is
+            worse than no dark mode at all. Nothing is stored any more: the
+            theme is `prefers-color-scheme` alone, which the stylesheet applies
+            at parse time, so there is no frame in which the wrong theme is
+            painted and no script needed to prevent one. See lib/theme.ts. */}
+        {/* THE BOOT DECIDES BEFORE FIRST PAINT (2026-09-15), which is why a
+            pre-paint script is back after the theme one left. The homepage's
+            arcade intro hides the hero's pieces only while <html> carries
+            `data-intro="play"`, and that attribute has to be there before the
+            first frame or the finished hero flashes and then vanishes to be
+            typed back in. See introTimeline.ts for when it plays.
 
-            It is the FIRST CHILD OF <body>, not a child of a hand-written
-            <head>, and both halves of that matter. A synchronous inline script
-            blocks parsing, so sitting ahead of all visible markup is early
-            enough — nothing has been painted yet. And React manages <head>
-            children as its own resources, re-creating rather than hydrating
-            them; a <script> down that path gets swapped for a <div> on the
-            client and warns. In <body> the server HTML and the React tree
-            agree, so React hydrates the tag it already sent. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+            FIRST CHILD OF <body>, for the reason the theme script was: React
+            re-creates <head> children rather than hydrating them, and a script
+            there is swapped for a <div> on the client. Here the server HTML
+            and the React tree agree. */}
+        <script dangerouslySetInnerHTML={{ __html: INTRO_INIT_SCRIPT }} />
         <SiteNav />
         {children}
+        {/* EVERY PAGE, INCLUDING THE ONE WITH NO NAV BAR. It is the second
+            place each destination is printed, and on `/` it is the only one
+            below the fold — see SiteNav for why the bar is dropped there. */}
+        <SiteFooter />
       </body>
     </html>
   );

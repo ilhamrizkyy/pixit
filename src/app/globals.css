@@ -16,6 +16,13 @@
   --color-surface-2: #fafafa;
   --color-border: #e4e4e7;
   --color-text: #111111;
+  /* THE BLOCK'S COLOUR. Ink on the light theme, which is what a hard offset
+     shadow is everywhere it is used well. Dark mode cannot take ink — a
+     near-white block behind every control would read as a glow, and pure
+     black on a #0e0e10 page is 1.1:1 and reads as nothing — so it takes a
+     lifted neutral that separates from both the page and the surfaces
+     sitting on it. */
+  --block: #111111;
   /* Darkened 2026-08-20 to clear AA on --surface, not merely on white. At
      #71717a it was 4.83:1 on #ffffff and 4.40:1 on #f4f4f5 — and cards, chips
      and panels are all on the surface tone, so the passing number was the one
@@ -29,8 +36,29 @@
   --color-text-faint: #a1a1aa;
 
   /* --- Accent: Arcade Blue. The one shell accent. ------------------------ */
-  --color-accent: #2b5bff;
-  --color-accent-hover: #1e42d6;
+  /* MONOCHROME (2026-09-12, by request: "the blue is annoying").
+
+     Arcade Blue was the shell's one accent from the first commit, and the
+     argument for it was sound while the shell was a calm white product page
+     that needed one colour to say "this one". This interface is not calm and
+     not white-on-white: every control is a hard keyline with a solid block
+     under it, so "this one" is already carried by FILL and by TRAVEL -- a
+     chosen thing is filled and sitting in its own shadow. Blue was doing a
+     job that the register had already taken over, and on a page drawn
+     entirely in ink it read as the one element from a different product.
+
+     THE PAGE IS NOT COLOURLESS, and that is the distinction. The seven
+     `--cat-*` tints stay exactly as they are: §7 has always held that they
+     are an INDEX and not an accent -- they say WHICH one, never THIS one,
+     they are all present at once, and they never move. They are now the only
+     colour on the page, which is the strongest version of that rule rather
+     than a weakening of it.
+
+     Repointed rather than replaced at sixteen call sites, so every focus
+     ring, fill and keyline moves together and putting a colour back is one
+     line per theme. */
+  --color-accent: var(--color-text);
+  --color-accent-hover: var(--color-text);
   --color-accent-subtle: #e8edff;
   /* Accent TEXT on the accent tint. The base accent on its own tint is 4.44:1
      — a hair under AA — so the pairing needs the darker step. A token rather
@@ -111,11 +139,97 @@
   --spacing-12: 48px;
   --spacing-16: 64px;
 
-  /* --- Radius (DESIGN.md §5) --------------------------------------------- */
-  --radius-sm: 4px; /* inputs */
-  --radius-md: 8px; /* cards / panels */
-  --radius-lg: 16px; /* modals */
-  --radius-toy: 32px; /* composer toy frame */
+  /* --- PIXEL CHROME (DESIGN.md §1, 2026-09-12) ---------------------------
+     THE INTERFACE IS DRAWN ON THE SAME GRID THE ICONS ARE. The gallery stopped
+     being a moulded board, and what replaces the chassis is not a texture but a
+     RULE: every edge this product draws lands on a 2px cell, with hard corners
+     and a cell bitten out of each one. It is the instinct the search field
+     already had -- it renders `getIcon("search")` rather than borrowing
+     somebody else's magnifier -- applied to the whole page.
+
+     A rule rather than a skin is what makes it survive: it scales to every new
+     component, it never fights the icons (they are the same cell), and it is
+     the one arcade register that could not be pasted onto another product.
+
+     `--px` IS THE CELL AND EVERYTHING DERIVES FROM IT. Borders, focus rings,
+     notches, dividers and the seat's inset are all multiples of it, so the
+     whole register retunes from one number. */
+  --px: 2px;
+  /* THE OFFSET BLOCK — what makes this arcade rather than retro (2026-09-12).
+
+     The first pixel-chrome pass drew everything as a 2px hairline on white, and
+     that is a 1990s dialog box: severe, flat, and the exact opposite of fun. An
+     arcade interface is CHUNKY. What carries that is a solid offset block, no
+     blur — the shadow a sticker throws, or akeycap, or a cabinet's moulded
+     label. It is depth you can count in cells rather than depth you squint at.
+
+     `--drop` is two cells, so the block reads at a glance and still lands on
+     the grid everything else is drawn on. */
+  --drop: calc(var(--px) * 2);
+  /* The corner bite, per element. A panel takes two cells, a control one. */
+  --notch: var(--px);
+
+  /* THE NOTCHED RECTANGLE, and it is AXIS-ALIGNED rather than a diagonal.
+     A 45-degree cut across the corner is what `clip-path` makes easy and it is
+     not what a pixel interface does: the browser antialiases the slope, which
+     puts a soft grey edge on the one shape whose whole claim is that it has
+     none. Twelve points and every segment horizontal or vertical, so each
+     corner is a genuine STEP -- one cell removed, drawn on the grid.
+
+     It is a variable rather than twelve classes because `var(--notch)` inside
+     it resolves against the ELEMENT that uses it, not against :root -- custom
+     property substitution is textual. So one definition serves every size. */
+  --px-notch: polygon(
+    var(--notch) 0,
+    calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch),
+    100% var(--notch),
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)),
+    0 calc(100% - var(--notch)),
+    0 var(--notch),
+    var(--notch) var(--notch)
+  );
+
+  /* HALF-NOTCHES, for the two halves of ONE control. A split button is a
+     single object with a seam down it, so biting all eight corners would draw
+     two objects that happen to touch. The outer corners are bitten; the seam
+     stays flat. */
+  --px-notch-l: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% 100%,
+    var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)),
+    0 calc(100% - var(--notch)),
+    0 var(--notch),
+    var(--notch) var(--notch)
+  );
+  --px-notch-r: polygon(
+    0 0,
+    calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch),
+    100% var(--notch),
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%
+  );
+
+  /* --- Radius (DESIGN.md §5) ---------------------------------------------
+     THE THREE SHELL RADII ARE 0 AS OF 2026-09-12, and the token survives
+     rather than being deleted from 18 rules: a named zero is what says the
+     corner is a DECISION, and it is what a future soft-cornered surface would
+     turn back on in one place. `--radius-toy` keeps its 32px because the
+     composer keeps the chassis -- it is the board now, and a moulded body has
+     a moulded corner. */
+  --radius-sm: 0px; /* inputs */
+  --radius-md: 0px; /* cards / panels */
+  --radius-lg: 0px; /* modals */
+  --radius-toy: 32px; /* composer toy frame -- the one survivor */
   --nav-h: 73px; /* top nav; the composer sizes itself against it */
   --board-line: var(--color-border); /* cell lattice; the toy overrides it */
   /* Icon cells and the grid are ALWAYS 0 radius. There is no token for that
@@ -158,7 +272,19 @@
      its whole picture, which is the same exemption Pixel Materialize and the
      hex readout's segment refresh already hold. At 400ms on the shared token it
      read as a blink rather than as a wave. */
-  --duration-wave: 560ms;
+  --duration-wave: 1100ms;
+  /* AND ITS OWN CURVE, which is the half raising the duration cannot buy.
+     `--ease-smooth-out` is cubic-bezier(0.22, 1, ...) — it reaches y=1 almost
+     immediately and covers ~80% of its distance in the first third, so at any
+     duration the visible movement is crammed into the opening ~190ms and the
+     rest is a tail nobody perceives. Slowing the clock alone lengthened the
+     tail and changed almost nothing about how fast the switch READ.
+
+     This curve spends the time it is given: a gentler start, the travel
+     distributed across the middle, and a soft settle. It stays out of §5b's
+     scale for the same reason `--duration-wave` does — those easings are for
+     surfaces opening and closing, and this is a screen redrawing a picture. */
+  --ease-wave: cubic-bezier(0.4, 0.05, 0.2, 1);
 
   /* Exponential ease-out: fast departure, long settle. The house curve. */
   --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -201,7 +327,8 @@
    <html> carries an explicit choice; its absence means follow the OS.
    ========================================================================= */
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+[data-ground="dark"] {
   --color-bg: #0e0e10;
   --color-surface: #1a1a1e;
   --color-surface-2: #141417;
@@ -222,12 +349,13 @@
   --cat-nature-ink: #a5dcb3;
   --engrave: 0 1px 0 rgb(255 255 255 / 0.1), 0 -1px 0 rgb(0 0 0 / 0.5);
   --color-text: #f4f4f5;
+  --block: #51515c;
   --color-text-muted: #a1a1aa;
   --color-text-faint: #71717a;
 
   /* Lifted so it still reads as an accent against a dark ground. */
-  --color-accent: #6b8cff;
-  --color-accent-hover: #8aa3ff;
+  --color-accent: var(--color-text);
+  --color-accent-hover: var(--color-text);
   --color-accent-subtle: #1b2450;
   /* On a dark ground the lifted accent already clears its own tint at 4.8:1,
      so the ink and the accent are the same colour here. */
@@ -268,11 +396,12 @@
     --cat-nature-ink: #a5dcb3;
     --engrave: 0 1px 0 rgb(255 255 255 / 0.1), 0 -1px 0 rgb(0 0 0 / 0.5);
     --color-text: #f4f4f5;
+    --block: #51515c;
     --color-text-muted: #a1a1aa;
     --color-text-faint: #71717a;
 
-    --color-accent: #6b8cff;
-    --color-accent-hover: #8aa3ff;
+    --color-accent: var(--color-text);
+    --color-accent-hover: var(--color-text);
     --color-accent-subtle: #1b2450;
     /* On a dark ground the lifted accent already clears its own tint at 4.8:1,
        so the ink and the accent are the same colour here. */
@@ -290,6 +419,66 @@
       rgb(0 0 0 / 0.6);
   }
 }
+/* ═══ THE ADAPTIVE GROUND (2026-09-13) ═══════════════════════════════════════
+   The gallery region carries `data-ground`, and that attribute repoints the
+   WHOLE palette inside it. Phosphor's rule: an icon set whose display colour is
+   a free choice has to guarantee the art reads, so the surface under it is
+   derived from the colour rather than chosen alongside it. `groundFor` in
+   engine/color.ts is the function; this is where it lands.
+
+   IT IS SCOPED TO THE REGION, NOT THE PAGE, and that was measured off the
+   reference rather than assumed. Phosphor writes its variables on <html>, which
+   looks page-wide — but its hero and footer paint their own ground and opt out,
+   so picking white moves the grid from #eeeae3 to #3e3d3a and leaves the hero
+   exactly where it was. The visible rule is "the gallery inverts", and a hero
+   whose wordmark flipped on every colour pick would be intolerable.
+
+   THE DARK GROUND COSTS NOTHING: it is one more selector on the theme block
+   that already exists. The LIGHT ground has to be written out, because the light
+   palette lives in Tailwind's `@theme` and cannot be re-applied to a subtree —
+   so `theme-ground.test.ts` holds every value here against its source. A
+   hand-copied palette that silently drifts is exactly the failure that block
+   invites. */
+
+[data-ground="light"] {
+  --color-bg: #ffffff;
+  --color-surface: #f4f4f5;
+  --color-surface-2: #fafafa;
+  --color-border: #e4e4e7;
+  --cat-all: #dfe0e4;
+  --cat-all-ink: #3f3f46;
+  --cat-interface: #d8e4fb;
+  --cat-interface-ink: #1b3a8c;
+  --cat-media: #e7dcfa;
+  --cat-media-ink: #4a1d8f;
+  --cat-arcade: #fbdde3;
+  --cat-arcade-ink: #9c1239;
+  --cat-system: #dbe3ea;
+  --cat-system-ink: #2f4658;
+  --cat-communication: #fae8ca;
+  --cat-communication-ink: #7c4a0c;
+  --cat-nature: #d9eedd;
+  --cat-nature-ink: #14532d;
+  --engrave: 0 1px 0 rgb(255 255 255 / 0.75);
+  --color-text: #111111;
+  --block: #111111;
+  --color-text-muted: #6a6a74;
+  --color-text-faint: #a1a1aa;
+  --color-accent: var(--color-text);
+  --color-accent-hover: var(--color-text);
+  --color-accent-subtle: #e8edff;
+  --color-accent-ink: #1e42d6;
+  --color-danger: #dc2626;
+  --color-danger-surface: #fee2e2;
+  --color-danger-ink: #b91c1c;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.08), 0 4px 12px -2px
+    rgb(0 0 0 / 0.1);
+  --shadow-overlay: 0 8px 16px -4px rgb(0 0 0 / 0.16), 0 24px 48px -12px
+    rgb(0 0 0 / 0.24);
+}
+
 
 /* ============================================================================
    Composer toy tokens (DESIGN.md §2).
@@ -432,9 +621,13 @@
      and scrollbars ship with defaults that belong to no design system, and
      they are the cheapest tell that a page was assembled rather than built. */
 
+  /* AN INVERTED BLOCK, not a tint. A pale wash was right while the accent was
+     a colour; with the palette monochrome a tint of ink is just grey, and a
+     hard invert is what a character cell has always done when it is selected.
+     It is also the cheapest 32-bit cue on the page and it costs nothing. */
   ::selection {
-    background: var(--color-accent-subtle);
-    color: var(--color-accent);
+    background: var(--color-text);
+    color: var(--color-bg);
   }
 
   :is(input, textarea) {
@@ -507,27 +700,99 @@
      selecting a card never nudges the grid. */
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  /* Hover-OUT clock: softer, so the card settles instead of snapping back. */
-  transition:
-    transform var(--duration-medium) var(--ease-smooth-out),
-    box-shadow var(--duration-medium) var(--ease-smooth-out),
-    border-color var(--duration-medium) var(--ease-smooth-out);
+  /* Nothing on the card itself moves or lifts any more — the brackets on its
+     `::before` carry hover and selection both, and they animate their own
+     length. What is left here is the border's colour, which only the selected
+     state ever touches. */
+  transition: border-color var(--duration-medium) var(--ease-smooth-out);
 }
 
+/* CORNER BRACKETS, and they are the same object the colour field's reticle is
+   (2026-09-13). A target has corners; a selection ring is a box. Four L-shaped
+   marks that only touch the corners leave the icon in the clear — which a ring
+   around a 64px tile does not, at the size the art is actually drawn.
+
+   Drawn with `conic-gradient` corner wedges rather than four pseudo-elements,
+   because a card already spends its one `::after` on the name overlay and a
+   second element per tile is 24 more nodes on the public route's first paint.
+
+   `--bracket` is how far in from the corner the arms reach; at 0 the brackets
+   are absent, which is what makes them animatable from nothing. */
+.pixl-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --bracket: 0px;
+  background:
+    linear-gradient(var(--color-text) 0 0) 0 0 / var(--bracket) var(--px) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 0 0 / var(--px) var(--bracket) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 100% 0 / var(--bracket) var(--px) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 100% 0 / var(--px) var(--bracket) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 0 100% / var(--bracket) var(--px) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 0 100% / var(--px) var(--bracket) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 100% 100% / var(--bracket) var(--px) no-repeat,
+    linear-gradient(var(--color-text) 0 0) 100% 100% / var(--px) var(--bracket) no-repeat;
+  transition: --bracket var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* The arms snap out from the corners. Registered so the length is a real
+   animatable value rather than a discrete swap — without `@property` a custom
+   property jumps, which reads as four marks appearing rather than a target
+   acquiring. */
+@property --bracket {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* HOVER REACHES FIVE CELLS, SELECTION EIGHT. They were equal for a pass, which
+   left hovering a card indistinguishable from having chosen it — the same
+   defect the chips were measured at 87% of and rebuilt for. A target that is
+   merely under the pointer is half-acquired; one you have chosen is locked. */
 @media (hover: hover) {
-  .pixl-card:hover {
-    /* Hover-IN clock: quick and direct. */
-    transition-duration: var(--duration-fast);
-    transform: translateY(-2px);
-    /* Elevation is declared ONCE. The border stays transparent under the
-       shadow — a 1px border beneath a wide soft shadow is the ghost card. */
-    box-shadow: var(--shadow-raised);
+  .pixl-card:hover::before {
+    --bracket: calc(var(--px) * 5);
   }
 }
 
-.pixl-card.is-selected {
-  border-color: var(--color-accent);
+.pixl-card.is-selected::before {
+  --bracket: calc(var(--px) * 8);
 }
+
+/* Hovering the card you already chose does not retract the brackets. */
+@media (hover: hover) {
+  .pixl-card.is-selected:hover::before {
+    --bracket: calc(var(--px) * 8);
+  }
+}
+
+/* HOVER IS THE BRACKETS AND NOTHING ELSE (2026-09-13, by request).
+
+   It lifted a cell up-left onto a solid block as well, which is the move every
+   raised control on this page makes — and a tile in a grid of twenty-four is
+   not a control you press, it is a target you point at. Twenty-four blocks
+   appearing and disappearing under a moving cursor is a page that flickers, and
+   the brackets were already saying the whole thing.
+
+   The reticle is the vocabulary now: corners on hover, longer corners on
+   selection, and no depth anywhere in the grid. */
+
+/* SELECTED IS THE BRACKETS AND NOTHING ELSE (2026-09-13). It filled the
+   reserved border as well for one pass, so a chosen card wore a full keyline
+   AND four corner marks — two things saying one thing, and the ring is the one
+   that closes the target back into a box.
+
+   THE TRANSPARENT BORDER STAYS, because it was never the mark: it reserves the
+   2px the layout would otherwise shift by. Nothing fills it now, which is the
+   rule about declaring elevation once, applied to selection. */
+
+/* AND NOTHING THROWS A BLOCK, INCLUDING SELECTED-AND-HOVERED (2026-09-13).
+   The lift came off both states on the pass before this one and this rule
+   survived it — so the one card you had chosen still jumped onto an accent
+   block the moment the pointer crossed it, which is the exact flicker the
+   removal was for. The card is the only surface on the page with no depth at
+   all, and that is deliberate: everything else here is something you press. */
 
 .pixl-card-name {
   position: absolute;
@@ -692,10 +957,6 @@ li:has(.pixl-card:focus-visible) {
      for a pass, filed under "a separate part keeps its own material" alongside
      `.pixl-key`'s soft-touch cap — and a thumbwheel is not that. It is the same
      kind of part as a knob: plastic moulded in the same shot as the chassis. */
-  --drum-hi: #fbfbf7; /* the crown, turned to the light */
-  --drum-mid: #d9d9d3; /* the shoulder */
-  --drum-lo: #a8a8a2; /* turning out of the opening */
-  --drum-ink: #1a1c20; /* the printed value */
 
   --knob-hi: #eef0f4; /* shoulder crown, where the key lands */
   --knob-mid: #d5d8df;
@@ -746,71 +1007,24 @@ li:has(.pixl-card:focus-visible) {
   --grid-bg: #ffffff;
   --grid-card: #f6f6f6;
 
-  /* The size scale's handle. AT `:root`, not on `.pixl-range`, because
-     `.pixl-scale` is its SIBLING and insets itself by half of it — a custom
-     property on the slider would not reach the marks, and an unresolved
-     `var()` is not an error anywhere, it is just a margin that never arrives
-     (§5c records this failing three times already). */
-  /* THE SIZE SCALE — a SLOT cut into the panel, a ruler printed across it, and
-     one coloured marker riding in it.
 
-     THREE PARTS, NOT FOUR, as of 2026-08-29. The slot and the channel used to
-     be two separate cuts, one inside the other, and a recess inside a recess
-     is not a deeper hole — it is a muddy one. The slot IS the channel now, so
-     there is one opening in the panel and one thing moving in it.
+  /* THE SIZE SCALE'S TOKENS ARE GONE (2026-09-12), with the rail they described.
 
-     THE MARKER IS THE BODY'S ONE ACCENT, and it is orange because the whole
-     board is a Braun homage and that is the family's marker colour — the one
-     saturated thing on any of the reference devices, used for exactly this job.
-     It replaces the ink the body was using rather than joining it, so §7's
-     single-accent rule still holds: the shell's blue never appears on the
-     chassis, and nothing else on it is coloured.
+     `--indicator`, `--strip`, `--ruler`, `--ruler-lip`, `--scale-*`,
+     `--groove-cross` and `--duration-marker` were a milled channel, a printed
+     ruler, an orange magnifier and the clocks that moved it. Size is a
+     fourteen-block meter now (SizeMeter.tsx): the blocks take `--color-accent`
+     when they are on and `--color-bg` when they are not, so there is nothing
+     left for a token to hold.
 
-     THE GROOVE IS MILLED CHASSIS, NOT A BLACK WINDOW. It was near-black in both
-     themes for one pass — the rule the Shape keys follow, a separate part in its
-     own material — and on a silver board that reads as a foreign object bolted
-     to the panel rather than a channel cut into it. A groove exposes the SAME
-     plastic, one step down and in shadow, so it stays in the chassis's family
-     and inverts with it.
+     Deleted rather than left lying here, which is §5c's own rule: an
+     unresolved `var()` is not an error anywhere, it is just a value that never
+     arrives, and that has already cost three surfaces their depth. A token
+     nothing reads is the same trap with the fuse still in.
 
-     THAT PUT THE MARKER BACK ON A MID-GREY FLOOR, which is exactly where orange
-     lives: measured, every orange tried lands between 1.0:1 and 2.6:1 there, and
-     only a brown-black #9a3412 clears 3:1 — which is not a marker colour. So the
-     marker is identified by its KEYLINE rather than by its fill, which is what
-     1.4.11 asks for and what a part seated in a groove physically has. The
-     keyline clears 4.22:1 on the light floor; in dark mode the floor is dark
-     enough that the fill carries it at 4.58:1 and the keyline is the decoration.
-     Each theme has one of the two, which is the requirement.
+     The marker's orange is recorded in §6 and in the reserved plan — it was the
+     body's one accent, and there is no body. */
 
-     The ruler inverts with the floor — a black hairline is nothing on a dark
-     groove — and both alphas are solved for 3:1 rather than eyeballed: 0.3 came
-     to 1.94:1 on the pale floor. */
-  --indicator: #f97316;
-  --strip: #a8acb4;
-  --strip-2: #8d919a;
-  --ruler: rgb(0 0 0 / 0.55);
-  /* The lit side of an engraved graduation, opposite the ink. */
-  --ruler-lip: rgb(255 255 255 / 0.4);
-
-  /* THE MARKER'S SIZE IS NOT HERE. `--scale-w`, `--scale-h`, `--scale-travel`
-     and `--groove-cross` live on `.pixl-rail` and `.pixl-bar`, because the two
-     orientations need different numbers and a global would give them one.
-     `--scale-thumb`, `--scale-thumb-h`, `--strip-h` and `--strip-inset` were
-     the horizontal-only versions and are deleted rather than left lying here:
-     an unresolved `var()` is not an error anywhere, it is just a value that
-     never arrives, and §5c records that costing three surfaces their depth
-     already. A token nothing reads is the same trap with the fuse still in. */
-
-  /* THE MARKER'S TRAVEL, for the moves it makes ON ITS OWN — a key, a click,
-     the drop into a detent when a drag ends. A DRAG IS NOT ONE OF THEM: while
-     the pointer is down the marker is placed where the finger is and this clock
-     is switched off entirely, because two passes of trying to animate a drag
-     established that no clock can be right about it. Retriggering
-     `--ease-smooth-out` every 45ms bursts then crawls; matching a linear
-     duration to the incoming pace fixed the spikes and left one dead frame per
-     detent, since a duration chosen from the last gap is a lagging guess at the
-     next. The component sets the real value; this is the floor. */
-  --duration-marker: 150ms;
   --duration-follow: 45ms;
 
   /* THE READOUT'S SEGMENT REFRESH. Adapted from transitions.dev's number
@@ -823,7 +1037,8 @@ li:has(.pixl-card:focus-visible) {
 
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+[data-ground="dark"] {
   --frame: #4d5158;
   --frame-2: #3b3e45;
   --frame-3: #2b2d33;
@@ -849,10 +1064,6 @@ li:has(.pixl-card:focus-visible) {
   /* The drum in charcoal. The crown is SOLVED rather than picked: it is the
      brightest thing the printing has to clear, and a near-white ink came to
      4.21:1 against the #6a6f79 tried first. */
-  --drum-hi: #61666e;
-  --drum-mid: #4a4e56;
-  --drum-lo: #34373d;
-  --drum-ink: #eef0f3;
 
   --knob-hi: #5e636c;
   --knob-mid: #474b53;
@@ -873,11 +1084,6 @@ li:has(.pixl-card:focus-visible) {
   --lcd-ink: #dde4d2;
   --grid-bg: #131417;
   --grid-card: #1c1d21;
-  --indicator: #f97316;
-  --strip: #2f3238;
-  --strip-2: #1f2126;
-  --ruler: rgb(255 255 255 / 0.45);
-  --ruler-lip: rgb(0 0 0 / 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -905,10 +1111,6 @@ li:has(.pixl-card:focus-visible) {
     /* The drum in charcoal. The crown is SOLVED rather than picked: it is the
        brightest thing the printing has to clear, and a near-white ink came to
        4.21:1 against the #6a6f79 tried first. */
-    --drum-hi: #61666e;
-    --drum-mid: #4a4e56;
-    --drum-lo: #34373d;
-    --drum-ink: #eef0f3;
 
     --knob-hi: #5e636c;
     --knob-mid: #474b53;
@@ -926,13 +1128,48 @@ li:has(.pixl-card:focus-visible) {
     --lcd-ink: #dde4d2;
     --grid-bg: #131417;
     --grid-card: #1c1d21;
-    --indicator: #f97316;
-    --strip: #2f3238;
-    --strip-2: #1f2126;
-    --ruler: rgb(255 255 255 / 0.45);
-    --ruler-lip: rgb(0 0 0 / 0.45);
   }
 }
+
+[data-ground="light"] {
+  --frame: #dcdee3;
+  --frame-2: #c6c9d0;
+  --frame-3: #aab0b9;
+  --bezel: #b6bac2;
+  --well: #b0b5bd;
+  --well-2: #9aa0aa;
+  --screen: #f6f7f2;
+  --toy-ink: #1b1d22;
+  --toy-ink-muted: #383c44;
+  --toy-line: rgb(0 0 0 / 0.2);
+  --toy-accent-subtle: rgb(0 0 0 / 0.07);
+  --toy-accent-ink: #14245c;
+  --screen-recess: rgb(0 0 0 / 0.08);
+  --screen-field: #eceee7;
+  --screen-field-line: #8a8f88;
+  --screen-lip: rgb(255 255 255 / 0.8);
+  --mini-bezel: #232327;
+  --mini-bezel-2: #131316;
+  --cut-shade: #6c727c;
+  --cut-lip: #f4f5f8;
+  --knob-hi: #eef0f4;
+  --knob-mid: #d5d8df;
+  --knob-lo: #b3b8c1;
+  --knob-face-lo: #b8bdc6;
+  --knob-face-hi: #e8eaef;
+  --knob-mark: #33363c;
+  --key-face: #464a52;
+  --key-face-2: #2c2f35;
+  --key-glyph: #cbcfd6;
+  --key-glyph-on: #ffffff;
+  --lcd: #abb19b;
+  --lcd-2: #9ba18a;
+  --lcd-line: rgb(0 0 0 / 0.14);
+  --lcd-ink: #1f2318;
+  --grid-bg: #ffffff;
+  --grid-card: #f6f6f6;
+}
+
 
 /* ============================================================================
    Shell hardware — the gallery IS the toy.
@@ -985,24 +1222,34 @@ li:has(.pixl-card:focus-visible) {
    asks 3:1 for a control boundary; the fill inside it measured 1.10:1 light and
    1.06:1 dark, so the largest element on the board was locatable only by the
    placeholder text inside it. */
+/* THE SEARCH FIELD, IN THE REGISTER (2026-09-12). It kept the board's
+   construction — an inset line solved for 3:1 against the screen, plus a shallow
+   recess shadow — which is what a field cut into a display looks like and is
+   nothing like what the control column beside it now is. Two vocabularies, one
+   page.
+
+   IT IS A SUNK FIELD RATHER THAN A RAISED ONE, so the block goes INSIDE it. A
+   text field is the one thing here you put something into, and a control that
+   throws a shadow onto the page is claiming to stand on it. The inner block is
+   the same two cells, cast the other way. */
 .pixl-field {
-  border-radius: var(--radius-sm);
   background: var(--screen-field);
-  box-shadow:
-    inset 0 0 0 1px var(--screen-field-line),
-    inset 0 1px 2px var(--screen-recess);
-  /* The one recess on this board that had no transition at all. */
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: inset var(--drop) var(--drop) 0 rgb(0 0 0 / 0.07);
   transition: box-shadow var(--duration-quick) var(--ease-smooth-out);
 }
 
 /* FOCUS ADDS ITS RING TO THE STACK. It replaced the whole stack, which dropped
    the boundary line the moment you clicked in — the exact bug DESIGN.md §5c
    records fixing on `.pixl-well`, in the one field that never got the fix. */
+/* FOCUS ADDS its ring to the stack rather than replacing it — the bug §5c
+   records fixing on `.pixl-well` and then shipping anyway in this one field,
+   where focusing dropped the boundary the instant you clicked in. */
 .pixl-field:focus-within {
   box-shadow:
-    inset 0 0 0 1px var(--screen-field-line),
-    inset 0 1px 2px var(--screen-recess),
-    0 0 0 2px var(--color-accent);
+    inset var(--drop) var(--drop) 0 rgb(0 0 0 / 0.07),
+    0 0 0 var(--px) var(--color-accent);
 }
 
 /* THE FILTER KEY IS DRAWN, NOT MOULDED (2026-09-04). It carried `.pixl-key`,
@@ -1010,16 +1257,22 @@ li:has(.pixl-card:focus-visible) {
    it sits on. It sits on the display. `.pixl-chips` says in as many words that
    a raised face here would claim to be hardware sitting on top of the screen,
    so the chips were paying for a rule the control beside them ignored. */
+/* THE FILTER KEY IS RAISED, unlike the field beside it, and that is the whole
+   distinction the register now carries: you press this and you type into that,
+   so this throws its block outward and the field casts one in. */
 .pixl-screen-key {
-  border-radius: var(--radius-sm);
-  background: var(--screen-field);
-  box-shadow:
-    inset 0 0 0 1px var(--screen-field-line),
-    inset 0 1px 2px var(--screen-recess);
+  background: var(--color-bg);
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
   transition:
     color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-quick) var(--ease-smooth-out),
     box-shadow var(--duration-quick) var(--ease-smooth-out);
 }
+
+/* The mobile filter key is in the same bar and follows the same rule: no sink.
+   It was the last control here still dropping two cells on press. */
 
 @media (hover: hover) {
   .pixl-screen-key:hover {
@@ -1080,17 +1333,17 @@ li:has(.pixl-card:focus-visible) {
 }
 
 .pixl-grid-swap li {
-  animation: pixl-icon-in var(--duration-wave) var(--ease-smooth-out) both;
-  /* SLOWED ON 2026-09-04, by request: at 12ms and 400ms the switch read as a
-     blink rather than as a wave. 20ms an item over 560ms now, so at 24 icons
-     the wave itself runs 460ms and the last icon settles at ~1020ms, against
-     676ms before.
+  animation: pixl-icon-in var(--duration-wave) var(--ease-wave) both;
+  /* SLOWED TWICE, 2026-09-04 and 2026-09-05, both by request. 12ms/400ms read
+     as a blink; 20ms/560ms was barely different, because the duration was not
+     what was making it feel fast — see `--ease-wave` above. 28ms an item over
+     760ms now, with the curve actually spending the clock.
 
      THE CAP IS STILL SOLVED, not picked: it holds the stagger's TOTAL, and the
-     budget moved with the exemption above. 400ms / 20ms is 20. It changes
-     nothing at 24 icons and it is what stops the set's growth turning this into
-     a four-second sweep — at 200 icons an uncapped stagger would take 4s. */
-  animation-delay: calc(min(var(--i, 0), 20) * 20ms);
+     budget moves with the duration. 476ms / 28ms is 17. It changes nothing at
+     24 icons and it is what stops the set's growth turning this into a
+     multi-second sweep — at 200 icons an uncapped stagger would run 5.6s. */
+  animation-delay: calc(min(var(--i, 0), 14) * 34ms);
 }
 
 /* AND THE DELAYS HAVE TO BE CLEARED SEPARATELY, which is the whole defect.
@@ -1171,29 +1424,31 @@ li:has(.pixl-card:focus-visible) {
    satisfied by construction rather than by care — art is on the glass, and the
    only blue anywhere near it is the plastic around the hole.
 
-   It carries a stacking context so a key that slides in sinks UNDER it: a
-   transformed sibling would otherwise paint on top of the panel it is
-   supposedly mounted through. */
-.pixl-screen {
+/* ═══ THE GALLERY REGION (2026-09-13) ════════════════════════════════════════
+
+   The bounded surface the icons live on, and the ONLY thing on the page that
+   inverts. `data-ground` on this element repoints the whole palette inside it,
+   so the art always lands on a surface it reads against while the hero above
+   and the footer below keep the theme the OS asked for.
+
+   IT HAS EDGES, and that is what the sidebar could never give it. The old
+   layout put a 264px control column in the page's left margin with nothing
+   drawing a boundary between the two — `.pixl-sidebar` was on the element and
+   had no rule in this file at all, so the separator that was asked for was
+   never drawn. A region with its own ground does not need a separator: the
+   change of surface IS the boundary, and it runs all the way round.
+
+   A KEYLINE AND NO RADIUS, like everything else here. `--radius-md` is a named
+   zero (§1), so this is stated rather than inherited. */
+.pixl-gallery {
   position: relative;
   z-index: 1;
-  border-radius: var(--radius-md);
-  /* FLAT `--grid-bg`, not the sage screen gradient. This is the big LIT display
-     — white paper for the icons — and the segment panel's tint belongs to the
-     two small screens that actually are one. The recess below still gives it
-     its depth; the ground does not have to carry that as well. */
   background: var(--grid-bg);
-  box-shadow:
-    inset 0 7px 14px -7px rgb(0 0 0 / 0.5),
-    inset 0 1px 0 rgb(0 0 0 / 0.22),
-    /* BOTH side walls. It had the left one only, so the recess ran out halfway
-       across and the screen's right edge sat flush with the chassis. */
-    inset 6px 0 14px -12px rgb(0 0 0 / 0.35),
-    inset -6px 0 14px -12px rgb(0 0 0 / 0.45),
-    /* The lit lip at the bottom of the hole. Without it a recess is a grey box
-       — §5c says this is the half that actually reads as depth. */
-    inset 0 -1px 0 var(--screen-lip);
+  border-block: var(--px) solid var(--color-text);
+  color: var(--color-text);
 }
+
+
 
 /* ============================================================================
    THE BOARD — the toy's body, and the gallery's ground.
@@ -1209,81 +1464,1379 @@ li:has(.pixl-card:focus-visible) {
    the icon grid's own text white on near-white — invisible, and invisible in
    the one place the product is actually read.
    ========================================================================= */
-.pixl-board {
-  /* ONE GUTTER, USED TWICE: the board's own padding, and the gap between the
-     body column and the screen. They were different numbers — 20px of air to
-     the board's edge, none at all between the two screens — which reads as a
-     missing gap rather than as two values. A token makes them the same thing. */
-  --board-gutter: 0.75rem;
+/* THE PAGE, NOT A BOARD (2026-09-12).
 
-  /* INSET FROM THE PAGE. A board that runs to the window edge is a background
-     colour; one with air around it is an object sitting on a surface, which is
-     the whole claim §1 makes.
+   The gallery stopped being the device. What survives here is the LAYOUT the
+   chassis was carrying — one gutter used throughout, and a page sized to the
+   viewport so the icon grid stays the only scroll — and what went is every
+   trace of moulding: the four background layers, the grain, the toy radius,
+   the lit crown and shaded foot, and the drop shadow onto the page.
 
-     LITERAL LENGTHS, NOT `var(--spacing-N)`. Tailwind v4 emits a `--spacing-N`
-     variable only when some utility in the build happens to need that step, so
-     `--spacing-5` resolved to nothing here and `padding` silently became 0 —
-     the board's whole internal gutter, gone, with no error anywhere. Same
-     failure DESIGN.md §5c already records twice more. */
-  margin: 0.75rem;
+/* ═══ THE PAGE (2026-09-13) ══════════════════════════════════════════════════
 
-  /* SIZED TO THE VIEWPORT, NOT TO ITS CONTENTS. The device is a fixed object:
-     you see all of it at once and the picture moves inside the glass, rather
-     than the whole thing sliding up the page. `height`, not `min-height` — the
-     grid inside is the only scroll on the page, and it can only claim leftover
-     space if there is a fixed amount to leave over. */
+   `.pixl-board` until today, and the name was the last thing left over from the
+   chassis. A board is an object you see all of at once; this is a hero, a
+   gallery and a footer stacked down a document.
+
+   THE VIEWPORT LOCK IS GONE FOR REAL THIS TIME. The base rule dropped
+   `height: 100dvh` on 2026-09-12 and the `lg` media block below it kept
+   `height: calc(100dvh - var(--nav-h) - 3rem)`, so the lock never actually
+   lifted on any window wide enough to see it. Measured at 1440x900 with 24
+   icons: the grid ended at 392px and the page enforced **508px of empty white**
+   beneath it, 688px at 1920x1080. That is what a fixed-height device does to a
+   set that does not fill one.
+
+   NO MARGIN AND NO GUTTER. The board was inset from the window so it read as an
+   object on a page; the page is the page, so its sections run to the edges and
+   each one insets its own content. `--board-gutter` went with it — four
+   consumers, all of them parts of the board. */
+.pixl-page {
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - var(--nav-h) - 1.5rem);
-  border-radius: var(--radius-toy);
-  padding: var(--board-gutter);
+}
 
-  /* Four background layers, as §6 requires: grain over crown over side-falloff
-     over the base ramp. A single top-to-bottom gradient is the giveaway of a
-     rectangle with a gradient on it.
+/* ONE INSET, USED BY EVERY SECTION, so the hero's first character, the search
+   field's left edge and the grid's first tile all start at the same x.
 
-     It is back on the box itself. It lived on a `::before` while the key rack
-     was hung off the chassis's right edge, because a negative-z child still
-     paints above its own parent's BACKGROUND and the tucked end of a key sat on
-     the plastic. The keys mount through the Display pad now — an ordinary
-     sibling — so plain source order does the job and the pseudo-element and its
-     `isolation: isolate` both went with it. */
-  background:
-    var(--grain),
-    radial-gradient(
-      120% 70% at 50% -8%,
-      rgb(255 255 255 / 0.17) 0%,
-      transparent 58%
-    ),
-    linear-gradient(
-      100deg,
-      rgb(0 0 0 / 0.18) 0%,
-      transparent 20%,
-      transparent 80%,
-      rgb(0 0 0 / 0.24) 100%
-    ),
-    linear-gradient(
-      180deg,
-      var(--frame) 0%,
-      var(--frame-2) 72%,
-      var(--frame-3) 100%
-    );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.34),
-    inset 0 -2px 0 rgb(0 0 0 / 0.3),
-    0 18px 40px -22px rgb(0 0 0 / 0.55);
+   It is a PADDING rather than a centred max-width wrapper, because the gallery
+   region's ground has to run edge to edge while its contents stay on the
+   measure — a centred wrapper would either inset the background with the
+   content or need a second element inside every section to undo it. `100%`
+   resolves against the section, which is the viewport, and `max()` collapses it
+   to the plain gutter as soon as the window is narrower than the measure. */
+/* ON `:root`, NOT ON `.pixl-page`. The footer is a SIBLING of the main element
+   rather than a child of it — it is mounted by the root layout so every route
+   gets one — so a token scoped to the page resolved to nothing there and the
+   footer ran flush to the window edge while everything above it sat on the
+   measure. An undefined custom property is not an error anywhere; it is just a
+   padding that never arrives (§5c). */
+:root {
+  --measure: 76rem;
+  --gutter: 1.25rem;
+  --pad-inline: max(var(--gutter), calc((100% - var(--measure)) / 2));
 }
 
 @media (width >= 64rem) {
-  .pixl-board {
-    /* SYMMETRIC AGAIN. The right margin was widened to make room for keys hung
-       off that edge; they are mounted through the Display pad now, so the extra
-       gutter went back. */
-    --board-gutter: 1.25rem;
-    margin: 1.5rem;
-    height: calc(100dvh - var(--nav-h) - 3rem);
+  :root {
+    --gutter: 2rem;
   }
 }
+
+
+/* ═══ THE HERO: AN ARCADE SCREEN THAT BOOTS ══════════════════════════════════
+
+   REBUILT 2026-09-15, by request, against an intro brief: the homepage should
+   load like a game level. See GalleryHero.tsx for the direction contract and
+   introTimeline.ts for the clock every entrance below reads from.
+
+   TWO STATES, AND THE DEFAULT IS THE FINISHED ONE. Every rule that hides a
+   piece of the hero, spawns a block or types the name is scoped under
+   `html[data-intro="play"]`, which a pre-paint script sets on the first visit
+   of a tab. Remove the attribute and the hero is simply there. That is what
+   makes the sequence safe to have at all: no script, a crawler, a reduced-
+   motion visitor, or a skip all land on the same page.
+
+   STEPPED, NEVER EASED. Arcade hardware draws in frames, so the boot does too:
+   `steps()` and `step-end` throughout, every duration a multiple of `--f` (one
+   frame at 12fps). An eased curve here would read as a web page imitating a
+   game rather than as the game.
+
+   IT IS ITS OWN WORLD, like the composer, and it never inverts. The hero paints
+   its own CRT glass in both themes; the adaptive ground stays on
+   `.pixl-gallery` below. The neon palette is scoped to this element and goes
+   nowhere else, so §7's single accent still holds for the rest of the page.
+
+   NO CYAN-AND-MAGENTA PAIR (2026-09-15, second pass). The first build split
+   the name into magenta and cyan ghosts and lit half the page magenta, and the
+   owner read it as a social app's logo rather than as a cabinet. Cyan stays as
+   the system colour, the name is arcade yellow, and orange and green are the
+   accents: the palette of a maze game, not of a video feed.
+   ═════════════════════════════════════════════════════════════════════════ */
+.pixl-hero {
+  --crt: #05070d;
+  --crt-title: #f2feff;
+  --crt-ink: #d4eef6;
+  --crt-ink-soft: #9fc3d1;
+  --neon-cyan: #00e5ff;
+  --neon-orange: #ff8a1f;
+  --neon-yellow: #ffd400;
+  --neon-green: #39ff14;
+  --glow-cyan: rgb(0 229 255 / 0.55);
+  --glow-orange: rgb(255 138 31 / 0.5);
+  --glow-yellow: rgb(255 212 0 / 0.6);
+  --glow-green: rgb(57 255 20 / 0.55);
+  --crt-line: rgb(0 229 255 / 0.07);
+  --crt-line-major: rgb(0 229 255 / 0.22);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  /* `svh`, `min-height`: see the note this replaced in git history. The hero
+     fits the smallest viewport and grows rather than clipping. */
+  min-height: 100svh;
+  color: var(--crt-ink);
+  color-scheme: dark;
+  /* Two faint pools of phosphor, where the name and the sprites sit. */
+  background:
+    radial-gradient(ellipse 60% 55% at 26% 46%, rgb(0 229 255 / 0.09), transparent 70%),
+    radial-gradient(ellipse 45% 45% at 78% 58%, rgb(255 212 0 / 0.045), transparent 70%),
+    var(--crt);
+}
+
+.pixl-hero ::selection {
+  color: var(--crt);
+  background: var(--neon-yellow);
+}
+
+/* THE CELL GRID, IN 11 BY 11 BLOCKS (2026-09-15). A two-axis grid is only
+   earned over something that IS a grid, and this product's whole subject is
+   one: every icon is 121 cells on an 11 by 11 lattice. So the major lines fall
+   every ELEVEN minor cells, and every block on the screen is one icon's canvas.
+   It was every fifth for a pass, which was just a grid.
+
+   The origin is the hero's top-left corner, not its centre, because the art
+   snaps to the same 24px pitch from the same corner: a 264px sprite then fills
+   exactly one block, and its x-ray lattice is the background's own, lit. The
+   mask fades it toward the glass's edges, where a real tube loses brightness. */
+.pixl-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--crt-line-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--crt-line-major) 1px, transparent 1px),
+    linear-gradient(var(--crt-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--crt-line) 1px, transparent 1px);
+  background-size:
+    264px 264px,
+    264px 264px,
+    24px 24px,
+    24px 24px;
+  background-position: 0 0;
+  mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, #000 35%, transparent 100%);
+}
+
+/* THE GLASS: scanlines and the tube's vignette, over everything, flickering
+   now and then. It is the top layer and takes no pointer events, so it can lie
+   across the keys without ever intercepting one. The lines are faint on purpose:
+   they sit over text, and a scanline you notice while reading is a defect. */
+.pixl-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.2) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 115% 95% at 50% 50%, transparent 58%, rgb(0 0 0 / 0.6) 100%);
+  animation: pixl-crt-flicker 7s step-end infinite;
+}
+
+@keyframes pixl-crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  38% {
+    opacity: 0.82;
+  }
+  39% {
+    opacity: 1;
+  }
+  71% {
+    opacity: 0.9;
+  }
+  72% {
+    opacity: 1;
+  }
+}
+
+/* The slow bright band a CRT rolls down its face. The one continuous motion on
+   the screen, because it is the one thing on a real tube that is not drawn in
+   frames: it is the refresh beating against the camera, or the eye. */
+.pixl-crt-roll {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 3;
+  height: 22%;
+  pointer-events: none;
+  background: linear-gradient(transparent, rgb(0 229 255 / 0.045), transparent);
+  translate: 0 -100%;
+  animation: pixl-crt-roll 9s linear infinite;
+}
+
+@keyframes pixl-crt-roll {
+  from {
+    translate: 0 -100%;
+  }
+  to {
+    translate: 0 560%;
+  }
+}
+
+/* The body spans the whole width so its padding can share the page's measure,
+   which puts an invisible box over the art. It lets the pointer through, and
+   each piece of content takes it back, so the sprites stay inspectable. */
+.pixl-hero-body {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  pointer-events: none;
+  padding: 6rem var(--pad-inline) 6.5rem;
+}
+
+@media (width >= 64rem) {
+  .pixl-hero-body {
+    padding-block: 7rem 7.5rem;
+  }
+}
+
+
+/* ─── The reticles, at the glass's two edges ─────────────────────────────────
+
+   The corner readouts (PLAYER 1, the load bar, CREDIT 01, the icon counter) and
+   the four corner brackets came off on 2026-09-15 by request. The count they
+   carried moved into the tag above the name, where it is text rather than
+   theatre. */
+.pixl-reticle {
+  display: none;
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  color: var(--neon-orange);
+  filter: drop-shadow(0 0 4px var(--glow-orange));
+  translate: 0 -50%;
+}
+
+.pixl-reticle[data-side="l"] {
+  left: 0.875rem;
+}
+
+.pixl-reticle[data-side="r"] {
+  right: 0.875rem;
+}
+
+@media (width >= 48rem) {
+  .pixl-reticle {
+    display: block;
+  }
+}
+
+
+@keyframes pixl-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ─── The pieces of the page ──────────────────────────────────────────────── */
+
+/* EACH SLOT HUGS ITS CONTENT, so the wipe crosses the text rather than the
+   whole measure, and so the body's pointer pass-through (above) hands the art
+   everything the type does not actually cover. */
+.pixl-slot {
+  position: relative;
+  pointer-events: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.pixl-slot > * {
+  margin: 0;
+}
+
+.pixl-hero-tag {
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--glow-cyan);
+}
+
+@media (width >= 64rem) {
+  .pixl-hero-tag {
+    font-size: 12px;
+  }
+}
+
+.pixl-hero-title {
+  margin-top: 1.5rem;
+}
+
+/* THE NAME, IN ARCADE YELLOW WITH A PHOSPHOR GLOW. One colour, no split: the
+   magenta and cyan ghosts it had for a pass are the exact thing that read as a
+   social app. Two glows at two radii are what make it look lit rather than
+   printed. Uppercase is `text-transform`, so the accessible name stays "Pixit".
+   Never bold (§4). */
+.pixl-hero-mark {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-pixel), monospace;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--neon-yellow);
+  text-shadow:
+    0 0 0.12em rgb(255 212 0 / 0.55),
+    0 0 0.45em rgb(255 170 0 / 0.3);
+}
+
+@media (width >= 48rem) {
+  .pixl-hero-mark {
+    font-size: 72px;
+  }
+}
+
+@media (width >= 64rem) {
+  .pixl-hero-mark {
+    font-size: 96px;
+  }
+}
+
+.pixl-hero-mark-text {
+  display: inline-block;
+  /* The face's ink stops short of its em box, so a tight line box holds the
+     glyph high. Proportional, so it holds at all three sizes. */
+  translate: 0 calc(1em / 16);
+}
+
+/* The block cursor, in the system cyan so it reads as the machine's and the
+   name as the game's. ponytail.dev ends its headline on one, and so does every
+   name-entry screen: it says the text was typed, and that more could be. */
+.pixl-hero-cursor {
+  flex: none;
+  width: 0.5em;
+  height: 0.75em;
+  margin-left: 0.125em;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 0.25em var(--glow-cyan);
+  animation: pixl-blink 1.1s step-end infinite;
+}
+
+.pixl-hero-line {
+  max-width: 34rem;
+  margin-top: 1.75rem;
+  font-family: var(--font-terminal), var(--font-display), monospace;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--crt-ink);
+}
+
+/* VT323 is drawn small inside its em box, so it needs a size a proportional
+   face would not: 36px here reads like 20px of JetBrains Mono. */
+@media (width >= 64rem) {
+  .pixl-hero-line {
+    font-size: 2.25rem;
+  }
+}
+
+.pixl-hero-keys {
+  margin-top: 2.25rem;
+}
+
+.pixl-hero-keyrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  transform-origin: left center;
+}
+
+/* THE KEYS GLOW; THEY DO NOT THROW A BLOCK. The offset block the rest of the
+   site uses is a sticker's shadow on paper, and there is no paper on a tube.
+   The glow is a `drop-shadow` on the LINK while the notch is a clip on the
+   FACE inside it: a clip-path clips its own element's filter, so putting both
+   on one element would cut the glow off at the notch. */
+.pixl-hero-key {
+  display: inline-flex;
+  color: var(--neon-cyan);
+  text-decoration: none;
+  filter: drop-shadow(0 0 5px rgb(0 229 255 / 0.4));
+  transition: filter var(--duration-quick) steps(2, end);
+}
+
+.pixl-hero-key-face {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9375rem 1.375rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgb(0 229 255 / 0.07);
+  border: var(--px) solid currentColor;
+  clip-path: var(--px-notch);
+  translate: 0 0;
+}
+
+.pixl-hero-key.is-primary {
+  color: var(--crt);
+  filter: drop-shadow(0 0 10px rgb(0 229 255 / 0.55));
+}
+
+.pixl-hero-key.is-primary .pixl-hero-key-face {
+  background: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+
+@media (hover: hover) {
+  .pixl-hero-key:hover {
+    filter: drop-shadow(0 0 12px rgb(0 229 255 / 0.8));
+  }
+
+  .pixl-hero-key:not(.is-primary):hover .pixl-hero-key-face {
+    background: rgb(0 229 255 / 0.16);
+  }
+}
+
+/* A press is a cabinet button going down one cell, not a web button fading. */
+.pixl-hero-key:active .pixl-hero-key-face {
+  translate: 0 var(--px);
+}
+
+.pixl-hero-key:focus-visible {
+  outline: var(--px) solid var(--neon-yellow);
+  outline-offset: 4px;
+}
+
+.pixl-hero-linkslot {
+  margin-top: 1.75rem;
+}
+
+.pixl-hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.pixl-hero-links li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--neon-orange);
+}
+
+.pixl-corner {
+  flex: none;
+}
+
+.pixl-hero-links a {
+  padding-bottom: var(--px);
+  font-family: var(--font-terminal), var(--font-display), monospace;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--crt-ink-soft);
+  text-decoration: none;
+  border-bottom: var(--px) solid transparent;
+}
+
+@media (hover: hover) {
+  .pixl-hero-links a:hover {
+    color: var(--neon-cyan);
+    border-bottom-color: var(--neon-cyan);
+  }
+}
+
+.pixl-hero-links a:focus-visible {
+  color: var(--neon-cyan);
+  border-bottom-color: var(--neon-cyan);
+  outline: none;
+}
+
+/* ═══ THE HERO'S ART ═════════════════════════════════════════════════════════
+
+   The set's own icons, composed the way phosphoricons.com composes its hero:
+   two big pieces bleeding off the screen, a few small ones scattered between,
+   every one inspectable. See HeroArt.tsx.
+
+   BELOW `lg` IT IS NOT RENDERED AT ALL: the hero is one column on a phone and
+   sprites behind a paragraph are a texture under text. */
+.pixl-hero-art {
+  display: none;
+}
+
+/* THE WHOLE HERO IS THE ART'S BOX, so a piece can hang off any edge (the hero
+   clips it) and so its position shares the grid's origin. */
+@media (width >= 64rem) {
+  .pixl-hero-art {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    pointer-events: none;
+  }
+}
+
+/* SNAPPED TO THE GRID. Each piece's top-left corner is rounded down to the
+   24px pitch, so its cells land on the background's lines. `round()` is recent,
+   so the unsnapped position is the fallback: a piece a few pixels off the grid
+   is a lesser picture, not a broken one. */
+.pixl-hero-sprite {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  pointer-events: auto;
+  cursor: cell;
+  color: var(--sprite);
+}
+
+@supports (left: round(down, 10%, 24px)) {
+  .pixl-hero-sprite {
+    left: round(down, var(--x), 24px);
+    top: round(down, var(--y), 24px);
+  }
+}
+
+.pixl-hero-sprite[data-neon="cyan"] {
+  --sprite: var(--neon-cyan);
+  --sprite-glow: var(--glow-cyan);
+}
+
+.pixl-hero-sprite[data-neon="yellow"] {
+  --sprite: var(--neon-yellow);
+  --sprite-glow: var(--glow-yellow);
+}
+
+.pixl-hero-sprite[data-neon="orange"] {
+  --sprite: var(--neon-orange);
+  --sprite-glow: var(--glow-orange);
+}
+
+.pixl-hero-sprite[data-neon="green"] {
+  --sprite: var(--neon-green);
+  --sprite-glow: var(--glow-green);
+}
+
+.pixl-sprite-art,
+.pixl-sprite-xray {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.pixl-sprite-art {
+  filter: drop-shadow(0 0 10px var(--sprite-glow));
+}
+
+.pixl-sprite-art > svg {
+  display: block;
+  /* EVERY SPRITE RASTERS IN when it arrives, not only during the boot. The deal
+     is made in the browser, so a sprite always lands a moment after the page;
+     drawing it in row by row is what makes that read as the screen at work. */
+  animation: pixl-raster calc(var(--f) * 6) steps(11, end) calc(var(--i) * 90ms) both;
+}
+
+/* ─── The x-ray ───────────────────────────────────────────────────────────────
+
+   Phosphor's hover fades a coloured illustration out to its line drawing and
+   names the icons inside it. Pixit's fades a sprite out to the lattice it was
+   drawn on: the 11 by 11 canvas in a faint line, the lit cells as hollow
+   squares, and a tag naming the icon. Stepped, two frames, like everything on
+   this screen; Phosphor's own is a 200ms opacity fade. */
+.pixl-sprite-xray {
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 170ms steps(2, end);
+}
+
+.pixl-sprite-lattice {
+  stroke: var(--sprite);
+  stroke-opacity: 0.35;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.pixl-sprite-cell {
+  stroke: var(--sprite);
+  stroke-width: 2px;
+  fill: color-mix(in srgb, var(--sprite) 12%, transparent);
+  vector-effect: non-scaling-stroke;
+}
+
+.pixl-sprite-art {
+  transition: opacity 170ms steps(2, end);
+}
+
+/* THE TAG names the icon in the terminal face, on a leader that steps out from
+   the sprite's corner. It sits on whichever edge stays on screen: a piece
+   bleeding off the top is labelled from below. */
+.pixl-sprite-tag {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2px 8px 1px;
+  font-family: var(--font-terminal), var(--font-display), monospace;
+  font-size: 1.375rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--crt);
+  background: var(--sprite);
+  box-shadow: 0 0 12px var(--sprite-glow);
+  opacity: 0;
+  transition: opacity 170ms steps(2, end);
+}
+
+.pixl-hero-sprite[data-tag="top"] .pixl-sprite-tag {
+  bottom: calc(100% + 12px);
+}
+
+.pixl-hero-sprite[data-tag="bottom"] .pixl-sprite-tag {
+  top: calc(100% + 12px);
+}
+
+@media (hover: hover) {
+  .pixl-hero-sprite:hover .pixl-sprite-art {
+    opacity: 0;
+  }
+
+  .pixl-hero-sprite:hover .pixl-sprite-xray,
+  .pixl-hero-sprite:hover .pixl-sprite-tag {
+    opacity: 1;
+  }
+
+  .pixl-hero-sprite:hover {
+    z-index: 1;
+  }
+}
+
+/* THE IDLE BOB. An attract screen is never still: its small sprites hop a cell
+   and drop back, two frames, on staggered clocks so no two move together. The
+   big bleeding pieces are objects rather than characters, and stay put. It
+   holds still while a sprite is being inspected. */
+.pixl-hero-sprite[data-bob] {
+  animation: pixl-bob calc(var(--f) * 10) step-end calc(var(--at) + var(--f) * 8) infinite;
+}
+
+.pixl-hero-sprite[data-bob]:nth-child(2n) {
+  animation-duration: calc(var(--f) * 13);
+}
+
+.pixl-hero-sprite[data-bob]:nth-child(3n) {
+  animation-duration: calc(var(--f) * 16);
+}
+
+@media (hover: hover) {
+  .pixl-hero-sprite[data-bob]:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes pixl-bob {
+  0% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 calc(var(--px) * -2);
+  }
+}
+
+/* ═══ THE BOOT ═══════════════════════════════════════════════════════════════
+
+   Everything from here to the end of the section applies only while <html>
+   carries `data-intro="play"`. In order: cold open, the grid powering on,
+   sprites rastering in, the title card, the rest settling. The times come from introTimeline.ts as `--at`, `--spawn` and
+   `--resolve` on each element, and `--f` and `--boot` on the hero.
+
+   FILL MODES ARE CHOSEN PER ANIMATION, not by habit. An entrance is `both`,
+   so the element is held hidden through its delay, which means its FIRST
+   keyframe must be the hidden one.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Cold open: the grid is barely there until the tube warms, then it energizes
+   in a few uneven frames rather than fading up. */
+html[data-intro="play"] .pixl-hero::before {
+  animation: pixl-energize calc(var(--f) * 6) step-end var(--boot) both;
+}
+
+@keyframes pixl-energize {
+  0% {
+    opacity: 0.2;
+  }
+  17% {
+    opacity: 0.7;
+  }
+  33% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  67% {
+    opacity: 0.55;
+  }
+  83%,
+  100% {
+    opacity: 1;
+  }
+}
+
+
+/* ─── The content, taking over from its block ─────────────────────────────── */
+
+/* Wiped in left to right in hard columns. The negative insets leave room for
+   glow outside the box. */
+html[data-intro="play"] .pixl-slot > * {
+  animation: pixl-wipe calc(var(--f) * 4) steps(8, end) var(--resolve) both;
+}
+
+@keyframes pixl-wipe {
+  from {
+    clip-path: inset(-50% 100% -50% -50%);
+  }
+  to {
+    clip-path: inset(-50%);
+  }
+}
+
+/* The keys pop rather than wipe: they are buttons arriving, not text. */
+html[data-intro="play"] .pixl-hero-keys > .pixl-hero-keyrow {
+  animation: pixl-pop calc(var(--f) * 4) step-end var(--resolve) both;
+}
+
+@keyframes pixl-pop {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    scale: 0.7;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.06;
+  }
+  75% {
+    opacity: 1;
+    scale: 0.98;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* THE TITLE CARD. The heading is never hidden: its cursor is on screen from the
+   first frame. Only the letters are, and they type out one per frame from the
+   cursor's position, struck over-bright and settling. */
+html[data-intro="play"] .pixl-hero-title > .pixl-hero-mark {
+  animation: none;
+}
+
+html[data-intro="play"] .pixl-hero-mark-text {
+  animation:
+    pixl-type calc(var(--f) * 5) step-end var(--at) both,
+    pixl-glitch calc(var(--f) * 8) step-end var(--at);
+}
+
+@keyframes pixl-type {
+  0% {
+    clip-path: inset(-60% 100% -60% -60%);
+  }
+  20% {
+    clip-path: inset(-60% 80% -60% -60%);
+  }
+  40% {
+    clip-path: inset(-60% 60% -60% -60%);
+  }
+  60% {
+    clip-path: inset(-60% 40% -60% -60%);
+  }
+  80% {
+    clip-path: inset(-60% 20% -60% -60%);
+  }
+  100% {
+    clip-path: inset(-60%);
+  }
+}
+
+/* No colour split while it types: the letters come up over-bright and settle,
+   the way a phosphor does when a character is first struck. */
+@keyframes pixl-glitch {
+  0% {
+    color: #fff8d6;
+    text-shadow:
+      0 0 0.2em var(--neon-yellow),
+      0 0 0.8em rgb(255 170 0 / 0.7);
+  }
+  25% {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 0.05em rgb(255 212 0 / 0.4);
+  }
+  50% {
+    color: #fff1a8;
+    text-shadow:
+      0 0 0.16em var(--neon-yellow),
+      0 0 0.6em rgb(255 170 0 / 0.5);
+  }
+  75% {
+    color: var(--neon-yellow);
+    text-shadow:
+      0 0 0.1em rgb(255 212 0 / 0.5),
+      0 0 0.4em rgb(255 170 0 / 0.25);
+  }
+}
+
+/* The cursor starts where the name will, and steps right one letter per frame
+   in lockstep with the type. One `ch` is one letter because the face is
+   monospaced. */
+html[data-intro="play"] .pixl-hero-cursor {
+  animation:
+    pixl-cursor-type calc(var(--f) * 5) steps(5, end) var(--at) both,
+    pixl-blink 1.1s step-end infinite;
+}
+
+@keyframes pixl-cursor-type {
+  from {
+    translate: calc(var(--chars) * -1ch) 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/* Sprites raster in: one row of their eleven cells per step, top to bottom.
+   The clip is on the drawing and the glow is on its wrapper, so the glow
+   follows exactly the rows drawn so far. */
+html[data-intro="play"] .pixl-sprite-art > svg {
+  animation: pixl-raster calc(var(--f) * 6) steps(11, end) var(--at) both;
+}
+
+@keyframes pixl-raster {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/* ─── Off-screen and reduced motion ───────────────────────────────────────── */
+
+.pixl-hero[data-offscreen] *,
+.pixl-hero[data-offscreen]::before,
+.pixl-hero[data-offscreen]::after {
+  animation-play-state: paused !important;
+}
+
+/* The boot never starts under reduced motion (the pre-paint script checks), so
+   what is left here is the ambient loops. The cursor holds steady, the sprites
+   stop idling, and the tube stops flickering and rolling. */
+@media (prefers-reduced-motion: reduce) {
+  .pixl-hero::after,
+  .pixl-hero-cursor,
+  .pixl-hero-sprite,
+  .pixl-sprite-art > svg {
+    animation: none !important;
+  }
+
+  .pixl-crt-roll {
+    display: none;
+  }
+}
+
+/* ═══ THE GALLERY'S STICKY BAR ═══════════════════════════════════════════════
+
+   One row, one height: shape, search, size, colour. The chips left it on
+   2026-09-13 and sit on the icons they filter instead — see `.pixl-chiprow`.
+
+   IT STICKS, which is the one thing the board could not do: a layout locked to
+   the viewport has nothing to stick to. Now that the page scrolls, the controls
+   stay with the icons they govern.
+
+   `top: -1px` is the reference's own trick and it is not a fudge: at `top: 0` a
+   fractional device-pixel gap opens above the bar at some zoom levels and the
+   grid shows through it as a flickering hairline. Pulling it one pixel past the
+   edge closes that for free, and the pixel is behind the region's own border.
+   ═════════════════════════════════════════════════════════════════════════ */
+.pixl-bar {
+  --bar-h: calc(var(--px) * 22);
+  position: sticky;
+  top: -1px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem var(--pad-inline);
+  background: var(--grid-bg);
+  border-bottom: var(--px) solid var(--color-text);
+}
+
+@media (width >= 64rem) {
+  .pixl-bar {
+    gap: 0.875rem;
+  }
+}
+
+/* ONE HEIGHT FOR EVERYTHING IN THE ROW. Twenty-two cells: 44px, which is also
+   the coarse-pointer minimum, so the same number serves the touch target and
+   the rhythm.
+
+   THE CONTROLS ARE NAMED, NOT SELECTED AS CHILDREN. `.pixl-bar > *` looked
+   tidier and matched almost nothing: the display controls are wrapped in a
+   `hidden lg:contents` div, and `display: contents` removes that div's BOX — so
+   the rule landed on an element that generates no box and the controls kept
+   their own heights (20px, 36px and 34px against the field's 44). A height set
+   on a `contents` element is the same class of silent no-op as an unresolved
+   `var()`, and this stylesheet has now paid for that family of bug four
+   times. */
+.pixl-drop,
+.pixl-size-slot,
+.pixl-color-slot,
+.pixl-searchbar,
+.pixl-bar .pixl-field,
+.pixl-bar .pixl-screen-key {
+  height: var(--bar-h);
+}
+
+/* THE SEARCH TAKES WHAT IS LEFT, AND NOTHING ELSE DOES (2026-09-13).
+
+   IT HAD A 26rem CEILING FOR AN HOUR AND THE CEILING IS GONE, because the thing
+   it was protecting against stopped existing. The cap was there to stop the
+   field sprawling into slack — but the slack was the symptom, and widening the
+   meter to ten-cell blocks spent it. There is no gap left to guard, so the cap
+   would be a rule with nothing to do, and `.pixl-size-slot`'s `margin-left:
+   auto` would be pushing against an edge it is already touching. Both went.
+
+   WHAT ACTUALLY CAPS THE ROW IS THE MEASURE. `--measure` is 76rem, so the bar's
+   content is 1216px at 1440 and still 1216px at 1920 — the field cannot sprawl
+   past that however wide the window gets. Measured: 423px at both, and it
+   shrinks below the fixed controls' needs on a narrower window rather than
+   overflowing.
+
+   Every fixed width in this row therefore comes out of the search, which is the
+   right way round: a search field is legible at any width above a few words,
+   and a six-character readout is not legible below its own six characters. */
+
+/* THE CHIP ROW, out of the bar and onto the icons./* THE CHIP ROW, out of the bar and onto the icons. It scrolls on its own at
+   phone width without taking the controls with it — which is what it did while
+   it was the bar's second line. */
+.pixl-chiprow {
+  padding: 0.875rem var(--pad-inline) 0;
+}
+
+.pixl-panel {
+  padding: 1rem var(--pad-inline) 1.5rem;
+}
+
+@media (width >= 64rem) {
+  .pixl-panel {
+    padding-block: 1.5rem 2.5rem;
+  }
+}
+
+/* The jump target takes no ring of its own: it is focused programmatically by
+   the hero's anchor, and a 2px outline around the whole grid is a box drawn
+   around the icons, which is the thing §6 took the sheet's border off for. */
+.pixl-panel:focus {
+  outline: none;
+}
+
+/* ═══ THE BAR'S CONTROLS ═════════════════════════════════════════════════════
+
+   THE CAPTIONS ARE GONE (2026-09-13, by request). COLOR / SIZE / SHAPE sat in
+   the pixel face over each control, which cost 18px of bar height and labelled
+   three things that say what they are by being what they are: a hex panel, a
+   meter, and a drawing of a cell. The SIZE value stayed, because a number is
+   the one thing on that control you cannot infer by looking at it.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ---- Shape: a dropdown, leftmost -------------------------------------- */
+/* WIDER, AND FIXED (2026-09-13, by request). It was sized to its own content,
+   which is the same reflow the size value had: "Fill" is four characters and
+   "Inset" and "Round" are five, so choosing a shape changed the key's width and
+   shifted the search field and everything right of it. A control must not move
+   the row by being used.
+
+   9rem holds the longest value with room, so the width is the same at all three
+   and the bar is still. */
+.pixl-drop {
+  position: relative;
+  flex: none;
+  width: 9rem;
+}
+
+.pixl-drop-key {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  padding-inline: calc(var(--px) * 4);
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
+  transition:
+    translate var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* NOTHING IN THIS BAR SINKS (2026-09-13, by request), and the reason is the
+   same one that took the block off the icon cards. A 1px-and-no-further press
+   is the right move for a moulded key on a device; these are four controls in a
+   row on a plain page, and a control that drops two cells and throws its shadow
+   away MOVES THE ROW — the chevron, the printed value and the swatch all shift
+   diagonally the moment you touch them, on the one surface that is supposed to
+   stay still while you use it.
+
+   What says a menu is open is the CHEVRON, which flips. What says a key is
+   pressed is that the thing it controls changed. Neither needed depth. */
+.pixl-drop-key[aria-expanded="true"] {
+  background: var(--color-surface);
+}
+
+.pixl-drop-key:focus-visible {
+  outline: var(--px) solid var(--color-accent);
+  outline-offset: calc(var(--px) * 2);
+}
+
+.pixl-drop-value {
+  flex: 1;
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+  /* The face's whole em box sits above the baseline, so a tight line box holds
+     the glyph 1px high. Proportional, so it scales with the size. */
+  translate: 0 calc(1em / 16);
+}
+
+.pixl-shape-glyph {
+  flex: none;
+  color: var(--color-text);
+}
+
+/* It FLIPS rather than rotating. A flip passes through a flat line at the
+   midpoint, which is what a chevron does, and works in every engine — CSS path
+   interpolation does not. */
+.pixl-drop-chevron {
+  flex: none;
+  transition: rotate var(--duration-quick) var(--ease-smooth-out);
+}
+
+.pixl-drop-chevron.is-open {
+  rotate: 180deg;
+}
+
+/* `.pixl-shapes`, NOT `.pixl-menu` — RENAMED 2026-09-13 AFTER A COLLISION.
+   `.pixl-menu` was already the detail shelf's export menu, 2700 lines further
+   down this file and therefore winning on source order. It carries
+   `bottom: calc(100% + 0.375rem)` to drop UPWARD from a button at the foot of a
+   column, which silently overrode this rule's `top` and collapsed the shape
+   menu to 10px tall — visible, focusable, and with every item stacked on the
+   same line.
+
+   That is the second time a class name has been reused across this flat global
+   stylesheet and the second time the symptom appeared nowhere near the cause:
+   `.pixl-caret` was the composer's blinking cell cursor before it was a
+   stepper's arrow, and reusing it put a 1.15s blink on both arrows forever. A
+   collision costs nothing to make and is invisible until something is measured.
+   Anything new here gets a name that is already unique in the file. */
+.pixl-shapes {
+  position: absolute;
+  top: calc(100% + var(--drop) + var(--px) * 2);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  width: max-content;
+  background: var(--color-bg);
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
+}
+
+.pixl-shapes-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text);
+  background: transparent;
+}
+
+/* THE CHOSEN ONE IS FILLED, which is the same thing selection means everywhere
+   else on this page: mass, never a colour. */
+.pixl-shapes-item[aria-checked="true"] {
+  color: var(--color-bg);
+  background: var(--color-text);
+}
+
+@media (hover: hover) {
+  .pixl-shapes-item:hover:not([aria-checked="true"]) {
+    background: var(--color-surface);
+  }
+}
+
+.pixl-shapes-item:focus-visible {
+  outline: var(--px) solid var(--color-accent);
+  outline-offset: calc(var(--px) * -2);
+}
+
+.pixl-shapes-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.pixl-shapes-text b {
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  translate: 0 calc(1em / 16);
+}
+
+.pixl-shapes-text i {
+  font-family: var(--font-display), monospace;
+  font-size: var(--text-caption);
+  font-style: normal;
+  line-height: 1.2;
+  opacity: 0.7;
+}
+
+/* ---- Size: the value, then the meter ---------------------------------- */
+.pixl-size-slot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* THREE DIGITS RESERVED, always. The scale runs 16 to 120, so the printed value
+   changes width mid-drag — and a control that grows by a character as you drag
+   it pushes everything to its right, including the panel you are reading. The
+   `ch` unit is the data face's own digit width and `tabular-nums` keeps every
+   digit that width, so the two agree. */
+.pixl-size-value {
+  min-width: 3ch;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-ui);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* ---- Colour: the segment panel, which opens ---------------------------- */
+.pixl-color-slot {
+  position: relative;
+  flex: none;
+}
+
+/* THE KEY IS THE LCD ITSELF, so this adds only what a button needs on top of
+   `.pixl-lcd` — it inherits the whole panel: the sage ground, the glass wash,
+   the keyline and the offset block. */
+/* WIDER THAN ITS CONTENT (2026-09-13, by request). Sized to the hex it prints,
+   the panel came out around 130px — against the 264px it had in the control
+   column, where it was the widest thing on the body. A readout that reports the
+   most screen-changing setting on the page should not be the narrowest control
+   in the row.
+
+   13rem is a floor rather than a width, so the panel can still grow if the
+   value ever gets longer, and the SEARCH FIELD is what gives up the space:
+   it is the only `flex: 1` in the bar, so every fixed width here comes out of
+   it. That is the trade asked for, and it is the right way round — a search
+   field is legible at any width above a few words, and a six-character readout
+   is not legible below its own six characters. */
+.pixl-lcd-key {
+  min-width: 13rem;
+  height: 100%;
+  cursor: pointer;
+  padding-inline: 0.75rem;
+}
+
+/* The value takes the room and the swatch sits at the far end, so widening the
+   panel opens a gap between the number and its sample rather than padding the
+   left edge. */
+.pixl-lcd-key .pixl-lcd-value {
+  flex: 1;
+  text-align: left;
+}
+
+/* The colour key does not sink either — see `.pixl-drop-key`. It cannot take
+   the dropdown's surface tint on top of it, because it paints the segment
+   panel's own gradient; the popover standing open under it is what reports the
+   state, and that is a whole panel rather than a 2px shift. */
+
+.pixl-lcd-key:focus-visible {
+  outline: var(--px) solid var(--color-accent);
+  outline-offset: calc(var(--px) * 2);
+}
+
+.pixl-lcd-key .pixl-lcd-value {
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  translate: 0 calc(1em / 16);
+}
+
+/* A KEYLINE, ALWAYS. This is the one element on the page whose fill is
+   arbitrary, so it is the one that can land on its own ground — at the sage
+   panel's own value it would simply not be there. The border is what makes it
+   a sample rather than a hole. */
+.pixl-lcd-chip {
+  flex: none;
+  width: calc(var(--px) * 7);
+  height: calc(var(--px) * 7);
+  border: var(--px) solid var(--lcd-ink);
+}
+
+/* THE POPOVER. It opens DOWN and is pinned to its key's RIGHT edge, because the
+   colour is the last control in the row — anchored left it would hang off the
+   window at every width the bar is rendered at.
+
+   Not a dialog and it does not trap focus: nothing behind it is disabled and
+   nothing is waiting on it. Escape closes and returns focus to the key; a press
+   that starts outside closes it. See ColorControl.tsx for why that listener is
+   `pointerdown` rather than `click`. */
+.pixl-pop {
+  position: absolute;
+  top: calc(100% + var(--drop) + var(--px) * 2);
+  right: 0;
+  z-index: 20;
+  width: 16.5rem;
+  padding: 0.875rem;
+  background: var(--color-bg);
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
+}
+
+/* ═══ THE FOOTER ═════════════════════════════════════════════════════════════
+
+   The second place every destination is printed, and on the home page the only
+   one below the fold. It carries the LICENCE as prose rather than as fine
+   print: an MIT icon set's licence is the reason somebody can use the thing.
+
+   It does not invert, for the reason the hero does not.
+   ═════════════════════════════════════════════════════════════════════════ */
+.pixl-footer {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.pixl-footer-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem 3rem;
+  padding: 3rem var(--pad-inline) 3.5rem;
+}
+
+@media (width >= 64rem) {
+  .pixl-footer-body {
+    padding-block: 4rem 4.5rem;
+  }
+}
+
+.pixl-footer-say {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 46ch;
+}
+
+.pixl-footer-mark {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 16px;
+  line-height: 1;
+  translate: 0 calc(1em / 16);
+}
+
+.pixl-footer-line {
+  margin: 0;
+  font-family: var(--font-display), monospace;
+  font-size: var(--text-ui);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* The two facts worth picking out of the sentences around them. `b` rather than
+   a weight utility, because the emphasis is semantic: these are the maker and
+   the licence, not two words that happen to be darker. */
+.pixl-footer-line b {
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.pixl-footer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pixl-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pixl-footer-links a {
+  font-family: var(--font-display), monospace;
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding-bottom: var(--px);
+  border-bottom: var(--px) solid transparent;
+  transition: color var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-footer-links a:hover {
+    color: var(--color-text);
+    border-bottom-color: var(--color-text);
+  }
+}
+
+.pixl-footer-links a:focus-visible {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+.pixl-footer-note {
+  margin: 0;
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
 
 /* A tool panel SET INTO the body — and the surface that CARRIES THE TOY'S INK.
    Everything standing on plastic needs the chassis's own text, border and
@@ -1293,54 +2846,19 @@ li:has(.pixl-card:focus-visible) {
    ancestor. Repointing at the board is not an option either — the screens are
    descendants of it, and that would paint the icon grid's own text white on
    near-white, in the one place the product is actually read. */
+/* THE CONTROL PANEL, flat. It was a region of the case with controls dropped
+   INTO it, and the whole construction went with the case.
+
+   IT NO LONGER REPOINTS THE PALETTE EITHER, and that is the half worth naming.
+   `.pixl-pad` used to set `--color-text`, `--color-border` and `--color-accent`
+   to the chassis's own ink, because the shell's blue was unreadable on plastic
+   and §6 banned it from the body. There is no body, so the ban is void and the
+   controls take the page's own tokens. The shell's `--accent` is the one accent
+   again — see the note on the rail's marker. */
 .pixl-pad {
-  --color-text: var(--toy-ink);
-  --color-text-muted: var(--toy-ink-muted);
-  --color-border: var(--toy-line);
-
-  /* THE ACCENT ON THE CHASSIS IS INK, NOT A COLOUR. It was repointed to a blue
-     for the same reason the ink was repointed to white — so the shell's accent
-     would not be unreadable on plastic. But a device does not tint its size
-     slider, its ticks and its focus rings a different blue from the rest of the
-     site; the toy's own saturation slider is `accent-white`, which is this rule
-     already being followed on the composer. So the accent here is the chassis's
-     ink: near-black on silver, white on charcoal. Nothing on the pad is blue
-     any more, which is also what took the colour out of the latched Shape
-     key. */
-  --color-accent: var(--toy-ink);
-  --color-accent-subtle: var(--toy-accent-subtle);
-  --color-accent-ink: var(--toy-accent-ink);
-  color: var(--toy-ink);
-
   border-radius: var(--radius-md);
-  /* RECESSED, NOT RAISED (2026-08-29). It was a boss: lit crown, shaded foot,
-     drop shadow onto the body. That is the right construction for a pad you
-     press buttons ON, and the wrong one for a region of the case you drop
-     controls INTO — which is what this is, and what it kept reading as the
-     opposite of. Inverting the ramp is most of the fix: dark under the lip at
-     the top, opening out toward the floor. */
-  background:
-    var(--grain),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--frame-2) 88%, black) 0%,
-      var(--frame-2) 24%,
-      var(--frame) 100%
-    );
-  /* THE LIT LOWER WALL IS A SHADOW, NOT A STOP, and that is not a style choice.
-     Labels sit on this ground: as a gradient stop the lit wall reaches
-     rgb(148,151,155) in dark mode, where the muted ink measures 2.01:1. As a
-     1px inset line it is the same cue and the text never lands on it. Same
-     reasoning as `.pixl-well`, and the same five moves. */
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.22),
-    inset 0 4px 6px -3px rgb(0 0 0 / 0.5),
-    inset 0 13px 16px -13px rgb(0 0 0 / 0.4),
-    inset 7px 0 10px -9px rgb(0 0 0 / 0.32),
-    inset -7px 0 10px -9px rgb(0 0 0 / 0.42),
-    inset 0 -1px 0 rgb(255 255 255 / 0.3),
-    0 1px 0 rgb(255 255 255 / 0.26);
 }
+
 
 /* A HOLE DRILLED THROUGH THE PANEL — rebuilt 2026-08-29 against the same
    physics the mini screen's cut got, because it was the weakest recess left on
@@ -1417,12 +2935,545 @@ li:has(.pixl-card:focus-visible) {
    full-glyph face draws two different letterforms on top of each other instead,
    and the eye reads that as flicker rather than as depth.
    ========================================================================= */
+/* ═══ CENTRING THE PIXEL FACE ════════════════════════════════════════════════
+
+   PRESS START 2P SITS HIGH IN ITS OWN LINE BOX, and every place this face is
+   vertically centred in a box has to correct for it. Measured off the live
+   font rather than guessed (`ctx.measureText` at 16px):
+
+       fontBoundingBoxAscent  16.00     actualBoundingBoxAscent  16.00
+       fontBoundingBoxDescent  0.00     actualBoundingBoxDescent -2.00
+
+   The whole em box is above the baseline and the ink stops 2px short of it, so
+   a `line-height: 1` box holds 14px of ink with 2px of nothing UNDER it and
+   none above. Flex `align-items: center` then centres the BOX, which is
+   correct, and leaves the ink 1px high — which is what reads as "the hex is not
+   centred".
+
+   `1em / 16` is that 2px expressed as a ratio, halved: 1px at 16px, 0.75px at
+   12px. So one rule serves every size the face is used at, and a future change
+   of size cannot leave a hard-coded nudge behind.
+
+
+/* ═══ THE STEPPER — shape, and the size carets (2026-09-12) ═════════════════
+
+   `◀  SQUARE  ▶`. A character select: the value in the pixel face between two
+   carets, which is the shape this control has been looking for through four
+   earlier builds. See ShapeDropdown.tsx for what each of those got right.
+
+
+/* THE ARROW IS THE SET'S OWN `play` GLYPH, mirrored for the left — see
+   Caret.tsx. `scaleX(-1)` rather than a second registry entry: a left arrow is
+   the same drawing read backwards, and a second entry is a drawing that can
+   drift from the first.
+
+   `.pixl-arrow`, NOT `.pixl-caret`: that name belongs to the composer's
+   keyboard cell cursor, which blinks forever by design. */
+.pixl-arrow {
+  display: grid;
+  place-items: center;
+}
+
+.pixl-arrow.is-back {
+  transform: scaleX(-1);
+}
+
+.pixl-meter-key {
+  flex: none;
+  display: grid;
+  place-items: center;
+  /* A GLYPH, NOT A KEY (2026-09-12, by request). It was a 32px box with a
+     keyline, a fill and an offset block — three raised objects in a row where
+     only the middle one carries a value, so the arrows read as equal in weight
+     to the thing they step. An arrow beside a readout is a pointer, and a
+     pointer does not need a body.
+
+     The target survives the box: the padding is the hit area, so it is still a
+     36px press on a coarse pointer even though nothing is drawn around it. */
+  width: calc(var(--px) * 12);
+  padding-block: calc(var(--px) * 3);
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  /* NOTHING MOVES ON HOVER. The lift was two cells up-left with the block
+     growing under it, and across a column of five controls that is a page that
+     twitches. What answers a hover is the glyph coming up to full ink from a
+     held-back rest — a response with no motion in it at all.
+
+     0.8 AT REST, NOT LOWER. Held back far enough that coming to full ink reads
+     as an answer, and not so far that an enabled arrow is mistaken for the
+     disabled one four steps below it at 0.2. */
+  opacity: 0.8;
+  transition:
+    opacity var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-meter-key:not(:disabled):hover {
+    opacity: 1;
+  }
+}
+
+/* PRESSED: the arrow leans the way it is about to take you, one cell. It is the
+   one motion left on this control, and it is directional rather than decorative
+   — the press says WHICH way as well as that it landed. */
+.pixl-meter-key:active:not(:disabled) {
+  opacity: 1;
+  transform: translateX(var(--px));
+}
+
+.pixl-meter-key:active:not(:disabled) .pixl-arrow.is-back {
+  transform: scaleX(-1) translateX(var(--px));
+}
+
+/* A CLAMPED END, on the size arrows only — the shape cycle wraps and never
+   reaches one. HELD BACK, NOT SUNKEN: it used to drop into its own block, which
+   is what a pressed key does, so a disabled arrow read as permanently held
+   down. There is no block to sink into now, and an arrow with nowhere to go
+   should simply go quiet. */
+.pixl-meter-key:disabled {
+  cursor: default;
+  opacity: 0.2;
+}
+
+.pixl-meter-key:focus-visible {
+  outline: var(--px) solid var(--color-text);
+  outline-offset: var(--px);
+}
+
+/* THE VALUE: the pixel face, which is the single strongest 32-bit cue on the
+   page and costs no colour at all. 12px rather than the face's own 8px grid,
+   for §4's reason — it stays under the 14px controls around it, and a label
+   that outranks its own content is the worse defect.
+
+
+/* The nav's live route, marked by a block rather than by a colour. Two cells,
+   which is the same rule every raised control on this site throws. */
+.pixl-nav-link {
+  color: var(--color-text-muted);
+  padding-bottom: var(--px);
+  border-bottom: var(--px) solid transparent;
+  transition: color var(--duration-quick) var(--ease-smooth-out);
+}
+
+.pixl-nav-link:hover {
+  color: var(--color-text);
+}
+
+.pixl-nav-link.is-live {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* ═══ THE CONTROL COLUMN ════════════════════════════════════════════════════
+
+   A real panel, rebuilt 2026-09-12. It was three unrelated blocks floating in a
+   column with no labels and no rhythm, which is most of why it read as ugly:
+   nothing said what anything was, and nothing said the three belonged together.
+
+   THREE SECTIONS, EACH WITH A PIXEL-FACE EYEBROW. §4 keeps Press Start 2P to
+   the wordmark, h1/h2 and the hex readout, and it records that the gallery's
+   section eyebrows USED to take it — "those were the OLD sidebar's headings;
+   nothing has rendered one since the board rebuild". There is a sidebar again,
+   it has three sections again, and this is the one thing on the page that can
+   say "arcade" in a single glance without spending a colour on it. Six-to-ten
+   character chrome labels, which is the exact exemption §4 grants.
+
+   12px, which is off the face's 8px design grid and deliberately so: it has to
+   stay smaller than the 14px controls it heads, and a label that outranks its
+   own content is the worse defect.
+   ═════════════════════════════════════════════════════════════════════════ */
+.pixl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pixl-eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-pixel), monospace;
+  /* NEVER BOLD. The face ships one weight, so `font-bold` synthesises one and
+     smears the very edges it exists for (§4). */
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+/* The live value beside the eyebrow, in the DATA face: it is a number you read,
+   not a legend moulded on the panel. */
+.pixl-eyebrow b {
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+/* ═══ THE COLOUR PICKER ══════════════════════════════════════════════════════
+
+   A saturation/lightness FIELD with a hue strip under it, replacing the three
+   knobs. The knobs are not deleted — they are reserved for the composer, which
+   keeps the chassis they were moulded into. See `design-plans/reserved/`.
+   ═════════════════════════════════════════════════════════════════════════ */
+/* THE GAPS ARE UNEVEN ON PURPOSE. The field and the hue strip are one
+   instrument — you point at a colour and then adjust its hue — so they sit a
+   cell apart. The readout is a different kind of thing: it REPORTS, and it is
+   also the way in for someone arriving with a hex. It gets real air, by
+   request, so the strip's handle has somewhere to overhang into and the two
+   halves stop reading as one stack of four bars. */
+.pixl-picker {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--px) * 3);
+}
+
+/* THE READOUT IS PUSHED CLEAR OF THE HUE STRIP, by request. Eight cells, and
+   the strip's handle already overhangs four of them — so the visible air is
+   twelve, against the three that separate the field from the strip. The uneven
+   gaps are the grouping: two parts of one instrument, then the thing that
+   reports it. */
+.pixl-hexrow {
+  margin-top: calc(var(--px) * 8);
+}
+
+.pixl-picker-field {
+  position: relative;
+  /* The reference's proportion. Tall enough that lightness has real travel —
+     at 1:1 the whole dark half of the ramp lands in about 60px. */
+  aspect-ratio: 3 / 2;
+  width: 100%;
+  cursor: crosshair;
+  /* THE GESTURE IS CLAIMED. This is a drag surface, and a press on one is a
+     text selection and then a native element drag before it is anything else. */
+  touch-action: none;
+  user-select: none;
+  border: var(--px) solid var(--color-text);
+  /* NO NOTCH AND NO BLOCK, and they are refused for different reasons.
+
+     The notch, because `clip-path` clips CHILDREN and the handle is centred on
+     its own point — at #000000, where the gallery starts, the corner bite took
+     three quarters of it.
+
+     The block, by request, and it is the right call at this size: an offset
+     shadow reads as a raised KEY, and at 240x160 that is a slab throwing a
+     shadow over the readout below it rather than a control you press. The
+     smaller raised parts keep theirs — a key, a readout, a stepper value. A
+     field is a surface you reach into, not a thing that stands on the page. */
+  /* TWO RAMPS, NOT A RASTER. White down to black over mid-grey out to the hue,
+     which is the field's DEFINITION rather than a picture of it — so it cannot
+     drift from the value it is reporting, and it costs no image on the public
+     route. */
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      rgb(255 255 255 / 0) 50%,
+      rgb(0 0 0 / 0) 50%,
+      #000000 100%
+    ),
+    linear-gradient(90deg, #808080 0%, var(--hue) 100%);
+}
+
+.pixl-picker-field:focus-visible {
+  outline: var(--px) solid var(--color-accent);
+  outline-offset: var(--px);
+}
+
+/* THE HANDLE IS A RETICLE (2026-09-13, by request), not a square.
+
+   Four arms around an OPEN CENTRE, drawn on the same 2px cell everything else
+   here is. The set has no crosshair to borrow — 24 icons and none of them is
+   one — so this is drawn from the cell rather than from the registry, which is
+   the same vocabulary by a different route.
+
+   THE CENTRE PRINTS NOTHING, and that is the better property rather than a
+   simplification. The square carried a copy of the live colour, which is a
+   SAMPLE of the thing it is standing on; an open reticle shows the colour that
+   is actually there, at the exact point being read. It is the size rail's
+   magnifier rule — nothing is drawn twice — on the one control where the pixel
+   under the pointer is otherwise the one pixel you cannot see.
+
+   EACH ARM IS WHITE INSIDE A DARK OUTLINE, because one ink cannot work at both
+   ends of this field: a dark arm vanishes in the black corner and a light one
+   vanishes in the white. The outline is a cell either side, so one of the two
+   always reads wherever the reticle lands.
+
+   `shape-rendering: crispEdges` and axis-aligned rects only. A stroked path at
+   this size antialiases its ends, which is the soft grey edge the whole
+   register exists to refuse. */
+.pixl-picker-thumb {
+  --half: calc(var(--px) * 5.5);
+  position: absolute;
+  width: calc(var(--px) * 11);
+  height: calc(var(--px) * 11);
+  left: calc(var(--half) + (100% - var(--half) * 2) * var(--s));
+  top: calc(var(--half) + (100% - var(--half) * 2) * var(--l));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.pixl-picker-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+
+/* ---- The hue strip -------------------------------------------------------
+   A real `<input type="range">` under a drawn track, which is the same split
+   the size meter makes: the native control keeps the keyboard and the
+   accessibility tree, and the appearance is ours. */
+.pixl-picker-hue {
+  position: relative;
+  /* ROOM FOR THE HANDLE TO OVERHANG. The strip is 5 cells and the handle is 9,
+     so it stands two cells proud top and bottom — which is the whole fix for
+     "the pointer cuts the bar". A handle the same height as its track reads as
+     a SLOT through it; one that overhangs reads as a part lying on it. */
+  height: calc(var(--px) * 5);
+  margin-block: var(--px);
+  border: var(--px) solid var(--color-text);
+  /* NO NOTCH, for the reason the field above refuses one: `clip-path` clips
+     CHILDREN, and the handle deliberately overhangs this box — notched, it was
+     shaved back to a sliver at hue 0, which is where the gallery starts. The
+     overhang is the whole fix for "the pointer cuts the bar", so the thing that
+     would undo it cannot be here. */
+  background: linear-gradient(
+    90deg,
+    hsl(0 100% 50%) 0%,
+    hsl(60 100% 50%) 17%,
+    hsl(120 100% 50%) 33%,
+    hsl(180 100% 50%) 50%,
+    hsl(240 100% 50%) 67%,
+    hsl(300 100% 50%) 83%,
+    hsl(360 100% 50%) 100%
+  );
+}
+
+.pixl-picker-hue input {
+  position: absolute;
+  /* The track is inset by half a handle so the handle's CENTRE reaches both
+     ends — a native range already does this, and the inset is what keeps the
+     overhang from being clipped by the strip's own box. */
+  inset: calc(var(--px) * -2) 0;
+  width: 100%;
+  height: calc(var(--px) * 9);
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: none;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* THE HANDLE IS A BLOCK LYING ON THE STRIP, not a bar cut through it. White
+   face, ink keyline, and the offset block under it — the same three moves every
+   other raised thing on this page makes. */
+.pixl-picker-hue input::-webkit-slider-thumb {
+  width: calc(var(--px) * 5);
+  height: calc(var(--px) * 9);
+  cursor: pointer;
+  border: var(--px) solid var(--color-text);
+  border-radius: 0;
+  background: var(--color-bg);
+  box-shadow: var(--px) var(--px) 0 var(--block);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pixl-picker-hue input::-moz-range-thumb {
+  width: calc(var(--px) * 5);
+  height: calc(var(--px) * 9);
+  cursor: pointer;
+  border: var(--px) solid var(--color-text);
+  border-radius: 0;
+  background: var(--color-bg);
+  box-shadow: var(--px) var(--px) 0 var(--block);
+}
+
+.pixl-picker-hue input:focus-visible {
+  outline: var(--px) solid var(--color-accent);
+  outline-offset: calc(var(--px) * 2);
+}
+
+/* ═══ THE SIZE METER (2026-09-12) ════════════════════════════════════════════
+
+   FOURTEEN BLOCKS, FILLED TO THE VALUE. It was a thin track with a ruler of
+   major and minor graduations, seven printed numbers and a magnifier riding
+   over them — a Braun tuning scale, which is a beautiful object and was built
+   for a 700px rail standing in a chassis. Lying down in a 264px column it was a
+   generic slider wearing decoration, and it is what the owner called weird.
+
+   A segment meter is the arcade answer and the more honest one: the control has
+   fourteen stops and this draws fourteen stops. Nothing is printed between them
+   because there is nothing between them, which is the thing the ruler's minor
+   graduations were always slightly lying about.
+
+   The native range still does the work underneath — keyboard, drag, click — and
+   the blocks are painted over it.
+   ═════════════════════════════════════════════════════════════════════════ */
+/* THE METER SITS BETWEEN TWO CARETS, so the same stepper grammar governs both
+   controls in this column: press either end, read the middle. The carets are
+   real buttons rather than a trick on the range, because a range's own arrow
+   keys are already the keyboard path — these exist for a pointer, which had no
+   way to move one stop at a time without aiming at a 16px block. */
+.pixl-meter-row {
+  display: flex;
+  /* STRETCH, so the carets are exactly as tall as the blocks between them.
+     They were taller for a pass, because the row also held the printed end
+     labels and the keys grew to cover them. */
+  align-items: stretch;
+  /* CENTRED, WHICH ONLY EVER SHOWS ON A PHONE. On the desktop bar the row is
+     sized to its contents exactly, so this is inert. In the filter sheet the
+     pad is 342px and the control needs 294 of it — the carets are content-sized
+     and do not grow — so without this the whole group sat left and left 48px of
+     dead pad at the right end, which reads as a control that did not finish. */
+  justify-content: center;
+  gap: calc(var(--px) * 3);
+}
+
+/* NOT `flex: 1`. The blocks are a fixed-width track now, so the meter is sized
+   by its own content and the row cannot stretch it into a different control on
+   a different surface.
+
+   IT CENTRES ITS BLOCKS, and without this they rode 8px high. The row is
+   `align-items: stretch` so the meter takes the CARETS' height (28px), while
+   the blocks are 12px of grid sitting at the top of it — so every other control
+   in the bar centred on one line and the meter's boxes centred on another.
+   Measured: block mid 928 against 936 everywhere else.
+
+   The stretch is kept rather than swapped for `center`, because the drag target
+   is the `<input>` filling this box: centring the row would collapse the meter
+   to the blocks' own 12px and take the pointer target down with it. The box
+   stays tall and the boxes centre inside it. */
+.pixl-meter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.pixl-meter input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ONE BLOCK SIZE, AND THE WIDTH IS STATIC (2026-09-13, by request).
+
+   THE TRACK IS FIXED COLUMNS, NOT `1fr`. A fractional track shares out whatever
+   width is going, so the meter would be a different size in the toolbar than in
+   the sheet and would reflow if anything beside it changed. Six cells per block
+   and one between them puts the whole scale at a computed width that depends
+   only on `SIZE_STOPS` — 14 stops is 194px, and it is 194px at 16 and at 120.
+
+   THE BLOCKS LIE DOWN: TEN CELLS WIDE BY SIX TALL (by request). They were 6
+   by 11, which is a portrait block — a row of fourteen of those reads as a
+   picket fence, and the eye follows the uprights rather than the run. Landscape
+   blocks read as a bar that fills, which is what the control does.
+
+   TEN WIDE RATHER THAN EIGHT, so the meter closes the gap the capped search
+   left between the two halves of the bar. Two more cells per block is 56px
+   across fourteen of them, which is almost exactly the slack that was sitting
+   there — and it buys the width in WHOLE CELLS, where stretching the track to
+   fit would have put most of the fourteen blocks on a fractional pixel.
+
+   THE KEYLINE SETS THE FLOOR ON BOTH AXES. Every block carries 2px on all four
+   sides, so a 3-cell dimension has two pixels of interior and an ON block is
+   almost indistinguishable from an OFF one. Six cells tall leaves eight pixels
+   of fill and ten wide leaves sixteen, so the state reads at every stop — which
+   is the whole thing the staircase could not do at its short end. */
+.pixl-meter-blocks {
+  display: grid;
+  /* One column per stop, so the meter cannot disagree with the scale — add a
+     size to `SIZE_STOPS` and a block appears. */
+  grid-template-columns: repeat(var(--stops), calc(var(--px) * 10));
+  gap: var(--px);
+  height: calc(var(--px) * 6);
+  pointer-events: none;
+}
+
+/* THE WEDGE IS GONE, and it is worth knowing what it cost rather than only that
+   it left. Each block was drawn `MIN_CELLS + i` cells tall, so the run climbed
+   a staircase and the control said "bigger" in its own shape — which is what a
+   power meter looks like and is the register this page is in.
+
+   It failed on the state. A three-cell block is two pixels of interior between
+   two keylines, so at the bottom of the scale ON and OFF differed by two
+   pixels: the meter reported a position beautifully and its own on/off not at
+   all. Height and length were also two encodings of one number, and only one of
+   them can carry a second thing. The run keeps the magnitude, the fill carries
+   the state, and every block is legible at both ends. */
+.pixl-meter-blocks i {
+  border: var(--px) solid var(--color-text);
+  background: var(--color-bg);
+  /* The state is the only thing that changes, so it is the only thing that
+     transitions — and on the house clock, since dragging the range walks a run
+     of these one after another. */
+  transition: background-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* FILLED IN INK. A run of solid blocks against empty ones is the oldest readout
+   there is, and it never needed a hue to say which half was which. */
+.pixl-meter-blocks i.is-on {
+  background: var(--color-text);
+}
+
+/* ═══ THE METER ON A PHONE ═══════════════════════════════════════════════════
+
+   TEN-CELL BLOCKS ARE A DESKTOP WIDTH. The toolbar has 399px for the size
+   control; the filter sheet has a 342px pad, and the blocks are FIXED — so the
+   whole 306px of them fitted and the two carets were left to split what was
+   over. Measured on an iPhone 13: **24 x 28px each**, against the 44px
+   coarse-pointer minimum §6 already holds the chips to.
+
+   The height was short before today and the width is what this change broke, so
+   both are fixed here rather than only the one that regressed.
+
+   SIX CELLS BELOW `lg`, which is the width the blocks had before the desktop
+   bar needed them wider. It is a whole-cell step like every other, so the
+   drawing stays on the grid — the alternative was a fractional track, and a
+   half-pixel edge is the one thing this register cannot have. */
+@media (width < 64rem) {
+  .pixl-meter-blocks {
+    grid-template-columns: repeat(var(--stops), calc(var(--px) * 6));
+  }
+}
+
+/* AND THE CARETS TAKE THE FLOOR ON TOUCH. `min-height` rather than `height`,
+   so the desktop row is untouched and a coarse pointer gets a real target
+   without the control changing shape. */
+@media (pointer: coarse) {
+  .pixl-meter-key {
+    min-width: calc(var(--px) * 22);
+    min-height: calc(var(--px) * 22);
+  }
+}
+
+.pixl-meter input:focus-visible + .pixl-meter-blocks {
+  outline: var(--px) solid var(--color-text);
+  outline-offset: calc(var(--px) * 2);
+}
+
+
+
 .pixl-lcd {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.625rem;
-  border-radius: var(--radius-sm);
   color: var(--lcd-ink);
   background:
     /* the glass over the panel, as a weak diagonal wash */
@@ -1439,15 +3490,14 @@ li:has(.pixl-card:focus-visible) {
       transparent 60%
     ),
     linear-gradient(180deg, var(--lcd-2) 0%, var(--lcd) 45%);
-  /* The same five moves as `.pixl-well`: the cut, the lip above, both side
-     walls, the lit lower wall, and the panel's own lip below the opening. */
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.42),
-    inset 0 3px 5px -2px rgb(0 0 0 / 0.55),
-    inset 5px 0 7px -6px rgb(0 0 0 / 0.35),
-    inset -5px 0 7px -6px rgb(0 0 0 / 0.45),
-    inset 0 -1px 0 rgb(255 255 255 / 0.16),
-    0 1px 0 rgb(255 255 255 / 0.28);
+  /* FRAMED, NOT DRILLED (2026-09-12). It carried `.pixl-well`'s five moves --
+     the cut, the lip above, both side walls, the lit lower wall, the panel's
+     lip below -- and all five describe a hole through plastic. The same rule
+     the mini screen just took: a display in pixel chrome is two lines on the
+     grid with the panel behind them. */
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
 }
 
 /* THE COLOUR'S OWN SCREEN, beside the readout rather than a chip inside it.
@@ -1463,15 +3513,17 @@ li:has(.pixl-card:focus-visible) {
   flex: none;
   width: 2.375rem;
   align-self: stretch;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.42),
-    inset 0 3px 5px -2px rgb(0 0 0 / 0.5),
-    inset 5px 0 7px -6px rgb(0 0 0 / 0.3),
-    inset -5px 0 7px -6px rgb(0 0 0 / 0.4),
-    inset 0 -1px 0 rgb(255 255 255 / 0.2),
-    0 1px 0 rgb(255 255 255 / 0.28);
+  /* A PREVIEW, NOT A CONTROL (2026-09-12). It carried a hidden
+     `<input type="color">`, so clicking it opened the OS picker — a second
+     colour control behind a swatch, on a panel whose whole top half is a colour
+     control. Two ways to do one thing, and the hidden one was the one nobody
+     could see was there. It reports; the field above it decides.
+
+     Framed to match the readout beside it, so the pair still reads as one
+     fitting at two widths, which is what stretching it to the readout's height
+     was always for. */
+  border: var(--px) solid var(--color-text);
+  clip-path: var(--px-notch);
 }
 
 /* The digits. THE PIXEL FACE, which DESIGN.md §4 otherwise keeps to the
@@ -1858,685 +3910,6 @@ li:has(.pixl-card:focus-visible) {
 }
 .pixl-toast-top.is-leaving {
   animation: pixl-toast-out-top var(--duration-quick) var(--ease-smooth-out) both;
-}
-
-/* ============================================================================
-   Refined range slider (gallery size control).
-
-   Native range pseudo-elements cannot be reached from utility classes, so the
-   track and thumb live here. The track is filled to the left of the thumb via
-   a --fill custom property the component sets, which is what makes the control
-   read as a real instrument rather than a default input.
-   ========================================================================= */
-
-/* A TUNING SCALE, not a bare slider. Rebuilt vertical 2026-08-29, and
-   rebuilt again the same day when the scale moved INTO the channel.
-
-   THREE PARTS ON THE RAIL, and only one of them is the control: a GROOVE cut
-   into the chassis, a SCALE printed on its floor — a number at every stop, a
-   graduation between each pair — and the MAGNIFIER riding in the channel over
-   them. The first pass was a groove with a fill and the ticks underneath, a
-   slider wearing hardware rather than the hardware itself. The second deleted
-   the groove and made the whole strip the channel, which lost the one part that
-   says where the marker can travel. The third put the numbers OUTBOARD of a
-   narrow groove, and that gutter is what forced the marker to be two mouldings
-   — a blade in the slot, a lens over the numbers, bridged across the gap.
-
-   WIDENING THE CHANNEL DELETES THE GAP AND EVERYTHING IT FORCED. The scale is
-   inside the groove, so the magnifier is simply on top of it: one moulding, no
-   bridge, no seam to match, and a narrower rail than the two columns needed.
-
-   THE NUMBER IS THE MAJOR GRADUATION, which is why there is one kind of tick
-   left. A mark at a stop would be printed across the number naming it.
-
-   TWO ORIENTATIONS, AND THE BAR IS THE ONE THAT DIVERGES. `.pixl-rail` stands
-   on the board's right edge; `.pixl-bar` is the mobile filter sheet's, where a
-   full-height rail cannot go. The bar keeps the outboard numbers and a slim
-   pointer, because a magnifier has to fit BETWEEN the numbers either side of
-   the one it reads and a 390px sheet does not have the room — it already prints
-   half the numbers for the same reason. See `.pixl-bar .pixl-marker`.
-
-   THE INPUT COVERS THE WHOLE CONTROL, not just the groove, and its thumb is
-   TRANSPARENT. Two things come out of that. The marker can be a real element
-   with a hole in it, which a `::-webkit-slider-thumb` can never be — and the
-   drag target is the whole rail, so the glass is grabbable and the printed
-   numbers are click targets again without being fourteen buttons in the tab
-   order. The thumb is still what defines the travel, so it keeps its size.
-
-   THE MARKER'S SIZE IS TWO TOKENS AND ITS TRAVEL IS A THIRD, scoped to the
-   container rather than `:root`. The ruler, the numbers and the marker all
-   inset themselves by half the travel, so the value has to resolve on an
-   ancestor of all of them — and the two orientations need different numbers,
-   which is exactly what a global would not give them. */
-
-.pixl-rail {
-  position: relative;
-  /* THE RAIL *IS* THE CHANNEL (2026-08-29). It was a two-column row — a narrow
-     groove against the screen and a column of engraved numbers outboard of it —
-     and that gutter between them is what forced the marker to be two mouldings
-     bridged across a gap. Widening the channel until the printed scale fits
-     INSIDE it removes the gap, and with it the bridge, the arm, and 14px of the
-     board's width. What is left is one part: a magnifier lying in a groove, on
-     top of the thing it magnifies. */
-  width: var(--groove-cross);
-  /* SHORTER THAN THE SCREEN, and centred against it. Run to the full height it
-     read as a second edge of the case rather than as an instrument mounted on
-     it — a scale on a real panel is inset from the ends, because the case has
-     to hold it.
-
-     ONLY INSET, THOUGH. 72% read as a stray control floating beside the screen
-     rather than as its companion, and 88% was still short of it. A hair's
-     breadth is enough: the case is visibly holding the scale, and the scale is
-     visibly the screen's neighbour. It also sets the pitch of the numbers — at
-     a 900px window this leaves ~49px between them. */
-  height: 96%;
-
-  /* THE CHANNEL IS SIZED BY THE MAGNIFIED NUMBER AND THE MARKS BESIDE IT, back
-     to front, and every number here is that arithmetic rather than a taste.
-     "120" is three tabular characters at 0.6em of 12px = 21.6px; at the glass's
-     1.45 that is 31.3px, so the graduations flanking it cannot begin closer in
-     than ±18px, which puts their outer ends at ±26 and the walls at ±30. The
-     opening then wants to clear the magnified number: 44px, inside a 52px
-     frame, leaving 4px of visible floor either side of it. */
-  --groove-cross: 3.75rem;
-  --marker-cross: 3.25rem;
-  --scale-travel: 2rem;
-  --scale-w: var(--groove-cross);
-  --scale-h: var(--scale-travel);
-}
-
-.pixl-bar {
-  position: relative;
-  display: flex;
-  /* Groove first, numbers under it — the source order the rail needs (the
-     scale is printed ON the floor, so it has to paint after it) read straight
-     down. It was `column-reverse` over the opposite order, which is the same
-     picture arrived at twice. */
-  flex-direction: column;
-  gap: 0.25rem;
-
-  --groove-cross: 2.375rem;
-  --scale-travel: 9px;
-  --scale-w: var(--scale-travel);
-  --scale-h: 100%;
-}
-
-/* THE NUMBERS, ENGRAVED INTO THE GROOVE'S FLOOR on the rail and into the panel
-   under it on the bar — `--engrave` is the same incision the composer's legend
-   and the category chips use, and it is already themed: a lit lip below the
-   glyph on pale plastic, a dark line above and a faint one below on dark.
-
-   The ink does not change with it. A true incision is nearly the surface's own
-   colour and reads at about 2:1, which is a legible effect and an illegible
-   label; the highlight sits OUTSIDE the glyph, so the engraving is free.
-
-   EVERY NUMBER LOOKS THE SAME — no colour, no weight. The glass covers the stop
-   it is on and shows that value magnified, so emphasising the printed one
-   underneath would be saying it twice, once behind the thing saying it.
-
-   POSITIONED, NOT DISTRIBUTED. `justify-between` would put the first mark's
-   edge at 0 and the last one's at 100%, so their CENTRES land inset by half a
-   label — and a number that does not line up with the graduation it names is
-   worse than no number. Absolute at the stop's own fraction, centred on itself,
-   in a box already inset by half a marker. */
-.pixl-scale-marks {
-  position: relative;
-  display: block;
-  flex: none;
-}
-
-/* OVER THE FLOOR IT IS PRINTED ON. Absolute in the rail rather than a column
-   beside the groove, and later in the source than the groove, so it paints on
-   the channel without needing a stacking order of its own. */
-.pixl-rail .pixl-scale-marks {
-  position: absolute;
-  inset: calc(var(--scale-travel) / 2) 0;
-}
-
-.pixl-bar .pixl-scale-marks {
-  height: 1.125rem;
-  margin: 0 calc(var(--scale-travel) / 2);
-}
-
-.pixl-scale-mark {
-  position: absolute;
-  font-family: var(--font-data), monospace;
-  font-size: var(--text-caption);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  text-shadow: var(--engrave);
-  white-space: nowrap;
-}
-
-/* Centred in the channel, so a number and the glass that magnifies it sit in
-   the same place rather than shifting sideways as the marker passes. */
-.pixl-rail .pixl-scale-mark {
-  left: 50%;
-  transform: translate(-50%, 50%);
-  transition: transform var(--duration-quick) var(--ease-smooth-out);
-}
-
-/* MAGNIFIED, BY THE GLASS OVER IT. The lens prints nothing of its own — a
-   magnifier that renders its own digits is a badge — so the effect has to come
-   from enlarging the number that is actually printed there. It scales about its
-   own centre, which is the point the stop names, so the number grows without
-   leaving the place it belongs to. */
-.pixl-rail .pixl-scale-mark.is-under {
-  transform: translate(-50%, 50%) scale(1.45);
-}
-
-.pixl-bar .pixl-scale-mark {
-  top: 0;
-  transform: translateX(-50%);
-}
-
-/* THE GROOVE — a cut in the chassis, and MILLED CHASSIS rather than a black
-   window. It was near-black in both themes for one pass, following the Shape
-   keys' rule that a separate part keeps its own material; on a silver board
-   that reads as a foreign object bolted to the panel rather than a channel cut
-   into it. A groove exposes the SAME plastic, one step down and in shadow.
-
-   ITS ENDS ARE A ROUTER'S ROUND-OVER, NOT A CAPSULE. `999px` on a 52px channel
-   is a 26px cap, and the marker rides all the way into it — at the extremes the
-   frame's corners would hang outside the slot they are supposed to be seated
-   in. 8px is the radius the marker's own corners nest inside with the 4px of
-   floor it leaves either side, which is the same thing said twice: an inner
-   offset of a rounded corner is that corner minus the offset. (The bar had the
-   defect too, invisibly: at 16 its lozenge's left half stood outside a capsule
-   that has no height at its own tip.)
-
-   THE RAMP IS SHORT AND THE FLOOR IS MOST OF IT, which is `.pixl-well`'s rule
-   applied here — whatever lies in a hole lies on its floor, and on the rail
-   that is now the printed scale. The wall reads from the shadows. */
-.pixl-groove {
-  position: relative;
-  display: block;
-  flex: none;
-  border-radius: 8px;
-  background: linear-gradient(
-    var(--groove-axis),
-    var(--strip-2) 0%,
-    var(--strip) 22%,
-    var(--strip) 100%
-  );
-  /* The cut, the shaded wall, the two side walls — uneven, because the key is
-     up and to the LEFT everywhere on this object — the lit lower wall, and the
-     panel's own lit lip below the hole. */
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.26),
-    inset 0 4px 6px -3px rgb(0 0 0 / 0.5),
-    inset 5px 0 7px -6px rgb(0 0 0 / 0.34),
-    inset -5px 0 7px -6px rgb(0 0 0 / 0.44),
-    inset 0 -1px 0 rgb(255 255 255 / 0.3),
-    0 1px 0 rgb(255 255 255 / 0.26);
-}
-
-/* THE SHADED WALL RUNS ACROSS THE GROOVE, NOT ALONG IT. On the horizontal bar
-   that is top to bottom; on a tall vertical groove the near wall is the LEFT
-   one, since the key is up and to the left. A vertical groove ramped top to
-   bottom would read as a tube lit from one end. */
-.pixl-rail .pixl-groove {
-  --groove-axis: 90deg;
-  position: absolute;
-  inset: 0;
-}
-
-.pixl-bar .pixl-groove {
-  --groove-axis: 180deg;
-  height: var(--groove-cross);
-}
-
-/* THE RULER — MAJOR AND MINOR GRADUATIONS, and on the rail they FLANK THE
-   NUMBER rather than sitting above or below it.
-
-   A graduation reaches in from the wall of the channel, and the number sits in
-   the break between the two: `—— 24 ——`. That is what a mark and its label are
-   on any printed scale, and it is what the numbers moving into the groove made
-   possible — with the scale outboard the marks had nothing to flank.
-
-   Stacking them instead was tried first, and read as rows rather than as a
-   scale: a rule lying between two numbers is a divider, and a channel full of
-   dividers is a list.
-
-   Every stop keeps a MAJOR pair and its number; a shorter MINOR pair sits at
-   each halfway point. The minors are a printed subdivision rather than
-   reachable values — the control steps in 8s — which is what a graduated scale
-   is: the marks between the numbers tell you how far along you are, the detents
-   decide where you land. Numbering every OTHER stop instead, so the minors
-   could be real stops, was tried and read as a scale with half its labels
-   missing.
-
-   THE BAR KEEPS THE OLD MARK — one stroke across the channel, since its numbers
-   are outboard and there is nothing in the groove to flank.
-
-   NOTHING IS SPECIAL-CASED. 48 — where the grid stops growing and the scale
-   starts setting the export size alone — wore a full-width graduation for one
-   pass, and a ruler with one mark unlike all the others reads as damage before
-   it reads as information. The region is still announced; it is no longer
-   drawn. */
-.pixl-groove-ruler {
-  position: absolute;
-  pointer-events: none;
-}
-
-.pixl-rail .pixl-groove-ruler {
-  inset: calc(var(--scale-travel) / 2) 0;
-}
-
-.pixl-bar .pixl-groove-ruler {
-  inset: 0 calc(var(--scale-travel) / 2);
-}
-
-.pixl-groove-tick {
-  position: absolute;
-  background: var(--ruler);
-}
-
-/* ON THE RAIL A GRADUATION IS A PAIR, one arm in from each wall, with the
-   number in the break between them. The tick itself is the span the pair is
-   measured across and paints nothing — the arms are real elements rather than
-   one gradient with a transparent middle, so the two lengths can be measured
-   and the pair stays a pair when the channel's width changes. */
-.pixl-rail .pixl-groove-tick {
-  left: 4px;
-  right: 4px;
-  display: flex;
-  justify-content: space-between;
-  background: none;
-  transform: translateY(50%);
-
-  --arm: 8px;
-}
-
-.pixl-rail .pixl-groove-tick.is-minor {
-  --arm: 4px;
-}
-
-.pixl-groove-arm {
-  width: var(--arm);
-  height: 1px;
-  background: var(--ruler);
-  box-shadow: 0 1px 0 var(--ruler-lip);
-}
-
-.pixl-bar .pixl-groove-tick {
-  bottom: 6px;
-  width: 1px;
-  height: 1rem;
-  transform: translateX(-50%);
-  box-shadow: 1px 0 0 var(--ruler-lip);
-}
-
-.pixl-bar .pixl-groove-tick.is-minor {
-  height: 0.5rem;
-}
-
-/* THE BOARD'S BADGE — the wordmark printed into the bottom-left corner of the
-   body's column, which is where most of the devices on the reference sheet
-   carry theirs.
-
-   It is what the slack is FOR. Nothing in the column stretches, so once the
-   controls sit under the screen there is a panel of empty plastic below them;
-   a panel with the product's name along its foot is a finished side, and the
-   same panel without one is an unfinished one.
-
-   ENGRAVED INTO THE CASE — settled 2026-09-03 against the owner's reference
-   photographs, which show the badge as a mark cut into the metal rather than
-   as anything lying on it. So the letters carry NO INK. They are the FLOOR OF
-   A CUT: one step down from the panel and taking less light for it, with the
-   cut's two walls doing the reading — SHADED at the top, LIT LIP at the
-   bottom, which is the same construction `.pixl-well`, `.pixl-mini` and the
-   Shape drum's windows all use (§5c).
-
-   FIVE CONSTRUCTIONS, AND IT TOOK ALL FIVE TO ARRIVE AT THE SIMPLE ONE:
-
-   1. A flat dark fill with a lit lip. Read as printed, which was the complaint.
-   2. A `background-clip: text` gradient inside each glyph — the cut's shaded
-      wall at the top, its lit floor at the bottom — with the lip as a
-      `drop-shadow` (a `text-shadow` paints ABOVE a background-clip fill, so the
-      near-white lip lands on top of the glyph and the letters come out light).
-   3. The same, held right back, because at full strength a near-white line
-      under every letter is a WHITE RULE rather than a lit wall.
-   4. Flat ink, no relief at all, on the reading that the reference case prints
-      its badge. It does not.
-   5. RAISED: the panel extruded, lit up-left and shaded down-right. Correct
-      physics, wrong direction — it read as protruding, which it was.
-
-   2 AND 3 WERE THE RIGHT IDEA AT THE WRONG COST. They put a gradient INSIDE
-   the letterform, which needs `background-clip` and forces the lip out into a
-   `drop-shadow`, and 3 is where that lip stopped reading as a wall. A cut does
-   not need a gradient in its floor: the floor is one tone, and the two walls
-   are what you see. Two `text-shadow` offsets buy the whole thing, and neither
-   of the mechanisms that made 2 fragile is in the file any more.
-
-   THE RELIEF DOES NOT INVERT WITH THE CASE, and that is the difference from
-   the flat-ink build at 4. Ink LIES ON a panel, so 4 had to be dark on silver
-   and light on charcoal; a cut is darker than its panel in BOTH themes because
-   it is a hole, with the light in its lower wall either way. `--cut-shade` and
-   `--cut-lip` are already the per-theme values of those two walls, so it comes
-   for free — and the badge no longer reads `--toy-ink`.
-
-   BOTH WALLS ARE HELD BACK, for the reason 3 records. At full strength the lit
-   one is a white line under a word; composited it lands ~1.29:1 against the
-   light panel and the shaded one ~1.35:1, so the cut is a pair of soft edges
-   rather than an outline. The floor sits 1.13:1 BELOW the panel, which is the
-   whole of how visible an engraving is meant to be.
-
-   AND IT IS NOT COLOURED — ARGUED, THEN BUILT, THEN TAKEN BACK OFF.
-   It ran as the marker's orange in light and a red in dark for one pass, on a
-   `--badge-ink` token that is gone with it. The argument against it was §7's:
-   the rail's marker is the body's ONE accent, and the reference sheet spends
-   that orange on the thing you TOUCH — a knob, a button, a slider — never once
-   on a label. Seeing it on the board is what settled it. Two things the
-   measurements say, for whoever reaches for this again:
-
-   - The badge takes weight OFF the marker. Five letters beat a 32px pointer,
-     and the accent stops meaning "this is the control you are moving".
-   - The colours are weak exactly where they need not to be. Orange on the
-     silver case is 1.71:1 against `--frame-2` — carried by hue, not value — and
-     red on the charcoal one is 3.10:1, DIMMER than the marker's own orange
-     there (3.76:1). A deeper red is worse still: `--danger`'s #dc2626 is
-     1.85:1.
-
-   NO MODEL NAME. The reference pairs the brand with one (`audio 1`, `tuner 1`),
-   and it was built that way for a pass. On a column that already carries the
-   mini screen's own legend two inches above, a second right-hand label is one
-   more thing to read on a face whose job is to be quiet.
-
-   THE FLOOR IS ABOUT 16px, and it is the STROKE that sets it rather than the
-   face's 8px design grid. 12px was tried and fails twice over: a 1-unit stroke
-   lands at 1.5px, so every edge is a half pixel, and the letterform goes soft.
-   Above ~16px the stroke is 2px and up, and being off the grid stops showing —
-   measured at 8x zoom, 17.6px is indistinguishable from 16 for sharpness.
-
-   IT DOES NOT SCROLL. It is a sibling of the column's scroll box rather than
-   its last child: printing on a case does not slide up over the controls when
-   the content behind it runs long. See Gallery.tsx. */
-.pixl-board-legend {
-  flex: none;
-  /* Air above it for the case where the controls DO fill the column, so the
-     badge never butts up against the last pad. */
-  padding-top: 0.75rem;
-  font-family: var(--font-pixel), monospace;
-  font-size: 1.1rem;
-  line-height: 1;
-  /* NO INK. The letters are the FLOOR of a cut: one step down from the panel
-     and taking less light for it. */
-  color: color-mix(in srgb, var(--frame-3) 55%, var(--frame-2));
-  /* The cut's two walls, under the key up and to the LEFT — and this is the
-     same construction every other recess on this board uses (§5c): SHADED at
-     the top, LIT LIP at the bottom. The pair is the entire badge; remove it
-     and the word flattens back into the case. */
-  text-shadow:
-    -1px -1px 0 color-mix(in srgb, var(--cut-shade) 42%, transparent),
-    1px 1px 0 color-mix(in srgb, var(--cut-lip) 62%, transparent);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* THE INPUT COVERS THE WHOLE CONTROL and paints nothing. See the block note:
-   this is what makes the marker a real element and the numbers click targets. */
-.pixl-range {
-  -webkit-appearance: none;
-  appearance: none;
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-/* VERTICAL, WITH MAX AT THE TOP. `writing-mode` is how a range is turned now —
-   `appearance: slider-vertical` was removed from Chrome in 121 — and the
-   `direction` is what decides which end is the maximum. `vertical-rl` alone
-   puts the minimum at the top, which is a thermometer running backwards. */
-.pixl-rail .pixl-range {
-  writing-mode: vertical-lr;
-  direction: rtl;
-}
-
-/* NO PAINTED TRACK. The groove the input lies over IS the track, so a second
-   one drawn inside it was a channel cut into a channel. */
-.pixl-range::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: transparent;
-}
-
-.pixl-range::-moz-range-track {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: transparent;
-}
-
-/* THE THUMB IS THE TRAVEL AND NOTHING ELSE — invisible, still the drag target,
-   and still what every other part insets itself by half of. */
-.pixl-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: var(--scale-w);
-  height: var(--scale-h);
-  border: 0;
-  background: transparent;
-}
-
-.pixl-range::-moz-range-thumb {
-  width: var(--scale-w);
-  height: var(--scale-h);
-  border: 0;
-  background: transparent;
-}
-
-/* ---- The marker ---------------------------------------------------------
-   Drawn over the input and DEAF TO THE POINTER: the input beneath is the drag
-   target, and a marker that swallowed the press would leave the control
-   ungrabbable at exactly the place you reach for it.
-
-   Its lane is inset by half the travel — the same box the ruler and the numbers
-   use — so all three are positioned by one piece of arithmetic and cannot drift
-   apart. */
-.pixl-marker-lane {
-  position: absolute;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.pixl-rail .pixl-marker-lane {
-  inset: calc(var(--scale-travel) / 2) 0;
-}
-
-.pixl-bar .pixl-marker-lane {
-  inset: 0 calc(var(--scale-travel) / 2);
-}
-
-/* THE SLIDE IS THE ONLY THING THAT MOVES, and it moves on a TRANSFORM.
-   `--fill` is the value's fraction, and `-100%` of this element's own height is
-   exactly the lane's — so the arithmetic lands on the same box the ruler and
-   the numbers are measured in, without any of them needing a pixel number.
-
-   A transform because the alternative is `bottom: X%`, which relayouts the
-   element on every frame of every drag; this one runs off the main thread. */
-.pixl-marker-slide {
-  position: absolute;
-  inset: 0;
-  transition: transform var(--duration-marker) var(--ease-smooth-out);
-  will-change: transform;
-}
-
-/* FOLLOWING A FINGER: A BRIDGE, NOT A CLOCK. While a drag is in progress the
-   marker is placed where the pointer is, so the target already moves in small
-   continuous increments and there is nothing for an easing curve to burst
-   across — which is what made every attempt to animate the DETENTS stutter.
-
-   What is left is sampling: a frame in which no pointer event happened to
-   arrive is a frame the marker does not move, and a stationary frame under a
-   moving finger is exactly the stutter being chased. Measured with the pointer
-   driven at frame rate, 17 frames in 121 got no event. A short LINEAR bridge
-   carries the marker across those gaps; it is short enough that the lag stays
-   under two frames, and linear because at these distances a curve would only
-   reintroduce the uneven velocity. */
-.pixl-marker-slide[data-following="true"] {
-  transition: transform var(--duration-follow) linear;
-}
-
-.pixl-rail .pixl-marker-slide {
-  transform: translateY(calc(var(--fill) * -100%));
-}
-
-.pixl-bar .pixl-marker-slide {
-  transform: translateX(calc(var(--fill) * 100%));
-}
-
-/* THE MAGNIFIER — the whole marker on the rail, riding IN the channel with the
-   scale it magnifies printed on the floor beneath it.
-
-   It was an ARM and a PLATE: a thin blade in a narrow slot, bridged sideways to
-   a lens over an outboard number column. Two mouldings that had to be lit as
-   one, and the seam between them was the standing complaint — a `180deg`
-   gradient runs over the box it is painted on, so an 8px arm ran the whole
-   crown-to-foot ramp inside 8px while the lens ran it over 32px, and the two met
-   at visibly different tone. The channel holds the scale now, so there is
-   nothing to bridge and nothing to match. */
-.pixl-rail .pixl-marker {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: var(--marker-cross);
-  height: var(--scale-travel);
-  padding: 4px;
-  border-radius: 8px;
-  transform: translate(-50%, 50%);
-  /* THE KEYLINE IS THE MARKER'S BOUNDARY, and on a silver board it is what
-     identifies the control: orange and mid-grey sit within 1.3:1 of each other
-     by luminance, so the fill cannot do it. It is also what is physically
-     there — a part seated in a groove has a shadow seam around it. */
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.45),
-    0 1px 2px rgb(0 0 0 / 0.45),
-    0 3px 6px -3px rgb(0 0 0 / 0.5);
-}
-
-/* THE FRAME IS A RING, AND THE RING IS WHERE THE PAINT GOES.
-
-   A background on the frame itself fills the opening too, which is what made
-   the first lens an orange blob with a sheen on it. Masking the CONTENT box out
-   of the frame's own paint leaves exactly the ring — the standard gradient-ring
-   move — and it lives on a pseudo-element rather than the frame so the frame
-   keeps its keyline and its drop shadows, which a mask would take with it. */
-.pixl-rail .pixl-marker::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: inherit;
-  border-radius: inherit;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--indicator) 88%, white) 0%,
-    var(--indicator) 55%,
-    color-mix(in srgb, var(--indicator) 88%, black) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-
-/* THE LENS ITSELF — A HOLE, NOT A PLATE.
-
-   It was a lit white face carrying a copy of the value, and both halves of that
-   were wrong. A magnifier that prints its own number is a badge; and a white
-   face is a part with its own colour, so it sat on the chassis as a foreign
-   object rather than as a window onto it. This one shows what is under it: the
-   groove's floor, and the number printed on the floor.
-
-   The only thing painted here is what glass does — the frame's shadow falling
-   into the opening, and a weak diagonal sheen. Weak deliberately: the point of
-   the window is to read the number through it, and a wash you cannot read
-   through is a worse window however convincing its glass. Same argument, and
-   the same restraint, as the mini screen's own glass in §6.
-
-   Its radius is the frame's minus the frame's padding, which is what the inside
-   of a rounded corner actually is. */
-.pixl-marker-lens {
-  /* A SPAN IS INLINE, and width/height do not apply to one. It was a flex item
-     inside the old plate, which blockified it for free; the plate is gone, so
-     the glass has to say so itself or it renders as an empty inline and the
-     window loses its sheen and its inner shadow — measured at 0x0. */
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(
-    118deg,
-    rgb(255 255 255 / 0.16) 0%,
-    rgb(255 255 255 / 0.04) 44%,
-    transparent 66%
-  );
-  box-shadow:
-    inset 0 1px 2px rgb(0 0 0 / 0.32),
-    inset 0 -1px 0 rgb(255 255 255 / 0.18);
-}
-
-/* THE BAR KEEPS THE SLIM LOZENGE, and that is a measurement rather than an
-   oversight. The magnifier needs its neighbours far enough apart to sit between
-   them: the rail's stops are ~49px apart against a 44px frame, and a 390px
-   sheet puts its printed stops ~40px apart against the same 44px — the glass
-   would land its ring across the numbers either side of the one it is reading.
-   So the phone keeps its numbers under the groove, its pointer in it, and the
-   exact value on the sheet's own section label. It was already the divergent
-   build for the same reason: fourteen numbers collide on a phone, so it prints
-   seven. */
-.pixl-bar .pixl-marker {
-  position: absolute;
-  left: 0;
-  top: calc(var(--groove-cross) / 2);
-  width: var(--scale-travel);
-  /* Short enough to stay inside the channel's round-over at both ends. At
-     1.5rem its corners stood outside the groove at 16 and at 120. */
-  height: 1.25rem;
-  transform: translate(-50%, -50%);
-  border-radius: 3px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--indicator) 86%, white) 0%,
-    var(--indicator) 55%,
-    color-mix(in srgb, var(--indicator) 86%, black) 100%
-  );
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.55),
-    inset 0 1px 0 rgb(255 255 255 / 0.4),
-    0 1px 2px rgb(0 0 0 / 0.45),
-    0 3px 6px -3px rgb(0 0 0 / 0.5);
-}
-
-/* GRABBED: THE SEATING DEEPENS, THE PART DOES NOT GROW. Same rule the knobs
-   are held to — a marker riding in a groove cannot get bigger because you took
-   hold of it, and the `scale()` that used to read as the control zooming was
-   removed from `.toy-knob` for exactly this reason. What a part pressed into
-   its socket actually does is sit deeper, so that is what this does. */
-.pixl-range:active ~ .pixl-marker-lane .pixl-marker {
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.55),
-    inset 0 1px 0 rgb(255 255 255 / 0.35),
-    0 1px 1px rgb(0 0 0 / 0.55),
-    0 2px 4px -2px rgb(0 0 0 / 0.6);
-}
-
-/* The ring lands on the MARKER, since the thumb it would otherwise outline is
-   an invisible box. No radius of its own: an outline follows the element's, and
-   the two markers are different shapes. */
-.pixl-range:focus-visible ~ .pixl-marker-lane .pixl-marker {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
 }
 
 /* Respect reduced motion globally; the composer's knobs and sweeps honor this
@@ -3226,7 +4599,10 @@ li:has(.pixl-card:focus-visible) {
   left: 0;
   width: 0;
   height: calc(100% - 4px);
-  border-radius: 999px;
+  border-radius: 0;
+  /* NOTCHED, NOT ROUNDED (2026-09-12). A capsule is a vector shape; this row
+     is printed on the same grid the icons are. One cell out of each corner. */
+  clip-path: var(--px-notch);
   background: var(--cat);
   transform: translateX(0);
   /* WIDTH, NOT `scaleX`, AND THAT IS A CORRECTION (2026-09-04).
@@ -3261,7 +4637,9 @@ li:has(.pixl-card:focus-visible) {
   flex: none;
   white-space: nowrap;
   padding: 0.3125rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 0;
+  /* No clip-path: the chip paints no background of its own, so there is
+     nothing here to bite. The travelling FILL carries the shape. */
   /* PRINTED ON THE GLASS, not set like a nav link. The drum's faces are
      uppercase, the rail's numbers take the data face; the chips were the site's
      generic 14px UI type. Smaller, uppercase and tracked reads as a legend
@@ -3393,7 +4771,10 @@ li:has(.pixl-card:focus-visible) {
   flex: none;
   max-width: 100%;
   padding: 0.125rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 0;
+  /* NOTCHED, NOT ROUNDED (2026-09-12). A capsule is a vector shape; this row
+     is printed on the same grid the icons are. One cell out of each corner. */
+  clip-path: var(--px-notch);
   /* ITS OWN TYPE, since it is a direct child of the identity column rather
      than a span inside a sized paragraph. A label that took the column's
      inherited size would be set in the NAME's 20px. */
@@ -3435,64 +4816,35 @@ li:has(.pixl-card:focus-visible) {
    IS the lit lip §5c calls the half that actually reads as depth; it is a
    visible wall here rather than a 1px line, because it has a wall's width. */
 .pixl-mini {
-  /* SHRINKABLE, FLOOR'D BY THE GLASS. On a short window the column cannot fit
-     a 254px screen plus the whole Display pad, and the board is sized to the
-     viewport by rule — so something has to give, and the right thing is the
-     picture rather than the controls.
+  /* A FRAMED DISPLAY, DRAWN ON THE GRID (rebuilt 2026-09-12).
 
-     The floor is the glass's own, plus the fixed furniture around it: 7px of
-     cut on each side and 10px of bezel on each side, which is 34px. Added up
-     here from one token so the module can never shrink past the point where
-     its contents paint through the bottom of it. Past that the COLUMN scrolls,
-     which is the correct next thing to give.
+     It was a HOLE: 7px of chassis running the `--cut-shade` -> `--cut-lip`
+     ramp, with a near-black module seated in it. That construction is correct
+     and it needs a case, and there is no longer one -- on a plain page the
+     module read as a photograph of a device pasted onto a webpage, which is
+     exactly what it looked like the moment the chassis came off.
 
-     It was 3.5rem while a 32px legend band sat under the glass; that band went
-     with the printing on it, so the arithmetic lost 32px and the bezel gained
-     an even bottom edge. */
+     A display in pixel chrome is FRAMED, not seated: two lines on the cell
+     grid with the panel behind them. Nothing is moulded, so nothing needs
+     material around it to be cut into.
+
+     THE FLOOR ARITHMETIC MOVED WITH THE FRAME. It was `+ 2.125rem` for 7px of
+     cut and 10px of bezel on each side; the frame is 2px of border and 4px of
+     surround a side, so it is 12px. Adding it up from the parts rather than
+     writing 12px is what stopped this drifting the last three times the bezel
+     changed. */
+  --mini-surround: calc(var(--px) * 2);
   --mini-glass-floor: 8rem;
   display: flex;
   flex-direction: column;
-  /* SHRINKS, NEVER GROWS. Its glass carries `aspect-ratio: 1` as a basis, so
-     growing it does not make a bigger picture — it makes a PORTRAIT screen with
-     a square lattice letterboxed in the middle, which is what happened the one
-     time this was given the column's spare height.
-
-     Nothing grows in this column now. Size left for the rail in the gutter, so
-     the Display pad no longer has enough in it to be worth stretching either,
-     and the leftover height sits between the screen and the pads as bare case.
-     That is what the middle of a panel looks like; §6's objection was to bare
-     plastic at the BOTTOM edge, under the last control, which reads as an
-     unfinished side rather than as a case. */
+  /* SHRINKS, NEVER GROWS -- unchanged, and the reason is unchanged with it.
+     Its glass carries `aspect-ratio: 1` as a basis, so growing it does not make
+     a bigger picture; it makes a PORTRAIT screen with a square lattice
+     letterboxed in the middle. */
   flex: 0 1 auto;
-  min-height: calc(var(--mini-glass-floor) + 2.125rem);
-  /* WIDER AND SOFTER (second tuning pass, against the reference). At 5px with
-     four hard stops the wall read as a painted border — a wall you can see the
-     stops in is a stripe. 7px gives the light somewhere to travel, and the
-     stops below are a ramp rather than four bands: dark at the cut, easing
-     through the chassis's own tone, then opening into the lit lower wall. */
-  padding: 7px;
-  border-radius: calc(var(--radius-md) + 9px);
-  background: linear-gradient(
-    180deg,
-    var(--cut-shade) 0%,
-    color-mix(in srgb, var(--cut-shade) 55%, var(--frame-3)) 14%,
-    var(--frame-3) 38%,
-    color-mix(in srgb, var(--frame-3) 40%, var(--frame)) 60%,
-    var(--frame) 82%,
-    color-mix(in srgb, var(--frame) 45%, var(--cut-lip)) 93%,
-    var(--cut-lip) 100%
+  min-height: calc(
+    var(--mini-glass-floor) + (var(--mini-surround) + var(--px)) * 2
   );
-  /* The seam at the panel's surface, and the shadow the chassis lip throws
-     down into the opening. No outer drop shadow: nothing here stands proud. */
-  box-shadow:
-    inset 0 4px 7px -3px rgb(0 0 0 / 0.6),
-    /* The side walls, which the vertical ramp alone cannot draw: it gives the
-       ring's left and right edges a mid tone, which is the right VALUE for a
-       surface facing sideways but carries no falloff into the corners. */
-    inset 6px 0 8px -7px rgb(0 0 0 / 0.45),
-    inset -6px 0 8px -7px rgb(0 0 0 / 0.55),
-    inset 0 -2px 3px -2px rgb(255 255 255 / 0.35),
-    inset 0 0 0 1px rgb(0 0 0 / 0.2);
 }
 
 /* The module seated in the cut: an even black bezel and the glass. */
@@ -3500,24 +4852,19 @@ li:has(.pixl-card:focus-visible) {
   display: flex;
   /* The shrink has to pass all the way DOWN to the glass, so every box between
      the column and it is a flex container that can give height up. A block in
-     the middle of the chain simply overflows its parent instead — which is what
-     it did on the first pass: the module's box got shorter and the glass sat
-     right through the bottom of it. */
+     the middle of the chain simply overflows its parent instead. */
   flex: 1 1 auto;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  /* EVEN ON ALL FOUR SIDES, since 2026-09-03. It was `0.625rem 0.625rem 0`
-     while the legend band supplied the bottom bezel out of its own height. */
-  padding: 0.625rem;
-  border-radius: calc(var(--radius-md) + 3px);
-  background: linear-gradient(180deg, var(--mini-bezel) 0%, var(--mini-bezel-2) 100%);
-  /* Only the dark line where it meets the wall, plus the wall's own shadow
-     falling across the top of it. It casts nothing outward, because it is down
-     inside the hole rather than standing on the panel. */
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.5),
-    inset 0 3px 6px -3px rgb(0 0 0 / 0.9);
+  /* A SURROUND, NOT A BEZEL. The near-black is kept -- it is what makes the
+     sage read as a lit panel rather than as a green rectangle -- but at two
+     cells it is a KEYLINE round the display instead of the 10px slab that made
+     the whole module read as an object rather than a drawing. */
+  padding: var(--mini-surround);
+  border: var(--px) solid var(--color-text);
+  background: var(--mini-bezel);
+  clip-path: var(--px-notch);
 }
 
 /* DESKTOP ONLY, and stated in CSS rather than as a `hidden lg:flex` utility on
@@ -3544,7 +4891,6 @@ li:has(.pixl-card:focus-visible) {
      slot — past that the column scrolls instead. */
   min-height: var(--mini-glass-floor);
   padding: 0.75rem;
-  border-radius: var(--radius-sm);
   /* AN LCD, NOT THE ICON GRID'S SCREEN. The big screen is a lit display and
      this is a small segment panel — the sage-grey every device with one has
      ever used. It is a different part of the object, so it takes a different
@@ -3565,9 +4911,10 @@ li:has(.pixl-card:focus-visible) {
       transparent 62%
     ),
     linear-gradient(180deg, var(--lcd-2) 0%, var(--lcd) 45%);
-  box-shadow:
-    inset 0 3px 7px -3px rgb(0 0 0 / 0.4),
-    inset 0 1px 0 rgb(0 0 0 / 0.28);
+  /* NO RECESS SHADOW. The panel is not down a hole any more, so the shading
+     that described the hole's walls is describing nothing. The wash stays --
+     that is the glass, and it is a property of the panel rather than of how the
+     panel is mounted. */
 }
 
 /* THE BEZEL PRINTS NOTHING — 2026-09-03, and it is the third answer to the
@@ -3615,18 +4962,41 @@ li:has(.pixl-card:focus-visible) {
    argument for the chips applies: what separates two groups on a display is
    space, not chrome.
    ========================================================================= */
+/* IT FLOATS AT THE FOOT OF THE SCREEN (2026-09-15, by request). It sat in flow
+   under the grid, which was on screen while the set was 24 icons and the page
+   ended near the fold. At 108 it was 1,500px down the page, so choosing an icon
+   opened a shelf nobody could see.
+
+   STICKY, NOT FIXED, and the difference is the last row. A fixed panel lies
+   over the bottom of the grid for good; a sticky one floats while the icons
+   scroll under it and settles into its own slot below them when you reach the
+   end, so every tile stays reachable. It is also confined to the gallery
+   region, so it never covers the hero or the footer.
+
+   CAPPED, with its own scroll, because a floating panel as tall as the CSS
+   tab's source (349px) would take most of a laptop screen. */
 .pixl-detailbar {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 4;
   display: flex;
   align-items: stretch;
   gap: 1rem;
   flex: none;
+  max-height: min(46svh, 26rem);
+  margin: 0 var(--pad-inline) 0.75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.875rem 1rem;
   /* FLUSH TO THE SCREEN'S BOTTOM EDGE, inside the glass. It reports what is on
      the screen, so it is on the screen — it was a strip of chassis under the
      display for one pass, which put the readout on the plastic and the picture
      it describes somewhere else. The bottom corners match the screen's. */
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-  border-top: 1px solid var(--screen-recess);
+  /* A floating panel draws its edge in the page's own ink and throws the same
+     two-cell block every raised control on this page throws, so it reads as
+     lifted off the grid rather than as a strip of it. */
+  border: var(--px) solid var(--color-text);
+  box-shadow: var(--drop) var(--drop) 0 var(--block);
   /* A shelf ON the glass, not a boss on the body: no gradient of the toy's, no
      token repointing. The board's own rule is that depth belongs to the
      plastic — anything drawn on a display is drawn. So this is a flat tint one
@@ -3667,6 +5037,38 @@ li:has(.pixl-card:focus-visible) {
    IT DOES NOT STRETCH. A readout column sized to its own longest line would
    change width every time the selection changed, and the source's left edge
    would walk left and right under a still cursor. A fixed basis holds it. */
+/* THE PICTURE'S SEAT ON THE SHELF (2026-09-12). The mini screen came here from
+   the head of the board's left column — a display standing first in a column of
+   controls, which was right while that column was a device's body.
+
+   IT IS A FIXED SEAT AND IT DOES NOT STRETCH, which is the rule the module
+   already carried upstairs: its glass takes `aspect-ratio: 1` as a basis, so
+   growing it does not make a bigger picture — it makes a PORTRAIT screen with
+   the square lattice letterboxed in the middle. The shelf's own height swings
+   from 155px on the SVG tab to 349px on the CSS one, so a seat that stretched
+   would redraw the display every time you changed format. */
+.pixl-detail-picture {
+  flex: none;
+  align-self: flex-start;
+  width: 8.5rem;
+}
+
+/* NO FLOOR IN THE SHELF, and the floor is what broke it. `--mini-glass-floor`
+   existed because the module lived in a column that had to give height back on
+   a short window: the picture shrank and the controls did not, and the floor
+   was where that stopped. A shelf seat is a fixed width with nothing squeezing
+   it, so a floor there is a MINIMUM HEIGHT fighting the glass's own
+   `aspect-ratio: 1` — set to 8.5rem it made the glass 124 wide and 136 tall,
+   which is the portrait screen with a letterboxed lattice that §6 records the
+   column producing the one time it was given spare height.
+
+   Zero, so the seat's width is the size and the ratio makes it square. */
+.pixl-detail-picture .pixl-mini {
+  --mini-glass-floor: 0px;
+  min-height: 0;
+}
+
+
 .pixl-detail-read {
   display: flex;
   flex: 0 0 13rem;
@@ -3927,7 +5329,13 @@ li:has(.pixl-card:focus-visible) {
      4px radius everything else on the glass uses reads as a field — which is
      why the Close, which is not an action on the icon, takes that radius
      instead. */
-  border-radius: 999px;
+  border-radius: 0;
+  /* NOTCHED (2026-09-12). The note above argued a capsule reads as an action
+     and a 4px radius reads as a field; with every radius on this page at 0 the
+     distinction has to be carried by something else, and it is -- an action is
+     the thing with a FILL or a keyline, and the Close still differs by being
+     the one glyph-only control a whole column away. */
+  clip-path: var(--px-notch);
   border: 1px solid var(--color-border);
   font-family: var(--font-data), monospace;
   font-size: var(--text-caption);
@@ -3964,13 +5372,15 @@ li:has(.pixl-card:focus-visible) {
 /* ONE BUTTON WITH A SEAM, not two buttons side by side: the chevron opens more
    ways to do what the main half already does, so they are one control. */
 .pixl-split-main {
-  border-radius: 999px 0 0 999px;
+  border-radius: 0;
+  clip-path: var(--px-notch-l);
   padding-right: 0.625rem;
 }
 
 .pixl-split-more {
   padding-inline: 0.625rem 0.75rem;
-  border-radius: 0 999px 999px 0;
+  border-radius: 0;
+  clip-path: var(--px-notch-r);
   border-left: 1px solid color-mix(in srgb, var(--color-bg) 35%, transparent);
 }
 
@@ -4128,431 +5538,6 @@ li:has(.pixl-card:focus-visible) {
     max-height: 8rem;
     overflow: auto;
   }
-}
-
-/* ============================================================================
-   SHAPE — A THUMBWHEEL WITH THE VALUES PRINTED ON IT (2026-08-30).
-
-   ONE OBJECT, not two. It was a mode list beside a ribbed wheel for a pass, and
-   that is a control and a picture of a control sitting next to each other: the
-   wheel turned, the list did not, and nothing about the pair said they were the
-   same part. The names are ON the drum now and rolling it scrolls them past a
-   window — a thumbwheel switch, which is what a three-position selector with
-   its values written on it has always been.
-
-   CSS 3D RATHER THAN R3F, and that is a rule rather than a stage: a mesh
-   renders form and never state, and the DOM keeps the text and the whole
-   accessibility tree (TECH-STACK.md). A drum whose surface IS its text would
-   have to bake the radio group's own labels into a texture. So the faces are
-   real buttons on a `rotateX` cylinder. See ShapeWheel.tsx.
-
-   THREE PARTS ACROSS THE PANEL, and they are three different KINDS of thing:
-   the INDEX printed on the case, the WINDOW cut through it, and the GRIP in a
-   second cut beside it. The index was inside the window until 2026-08-30 — an
-   accent mark lying on the paper, travelling under the glass with it — which is
-   the one place it cannot be, because the case is what an index is fixed TO.
-   ========================================================================= */
-
-/* THE HOUSING. Pure layout and one gesture: the two cuts and the mark between
-   the panel's own plastic, with the pointer claimed for the drum. */
-.pixl-thumb {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  /* AIR BETWEEN THE OPENINGS. They were butted together with a seam drawn down
-     the join, which reads as one slot with a line in it rather than as two
-     cut-outs in a panel. A strip of the case between them is what a thumbwheel
-     switch actually has — and it widened on 2026-08-30, because once each
-     opening grew its own 4px of wall the old 6px left the two walls nearly
-     touching, so the case between them read as a third wall rather than as
-     panel. */
-  gap: 0.625rem;
-  /* Two faces of surface either side of the live one — enough to see that the
-     values are on a curve, and not so much that a three-position drum spends
-     most of its window on blank plastic. */
-  height: 3.5rem;
-  cursor: ns-resize;
-
-  /* THE CHASSIS'S ACCENT, CARRIED BY THE CONTROL ITSELF. It rode in on
-     `.pixl-pad` until the pad came off on 2026-08-30, and losing it would have
-     put the SHELL's blue on the focus ring of a control standing on plastic —
-     the one thing §6 says nothing on the body may be. On the chassis the accent
-     is ink: near-black on silver, white on charcoal. */
-  --color-accent: var(--toy-ink);
-
-  /* THE GESTURE IS THE DRUM'S, AND IT HAS TO SAY SO IN THREE PLACES.
-     `touch-action` is the one that was here: without it the browser claims the
-     vertical axis for a scroll before the handler ever runs.
-
-     The other two were missing, and they are what a drag on a control with TEXT
-     under the pointer needs. `user-select` left at `auto` means pressing on the
-     printed word and pulling is a text selection first and a turn second, and a
-     selection under the finger is what the browser will then offer to DRAG —
-     the element appears to come away from the panel instead of rolling. The
-     composer's slide-to-clear groove has carried the same two declarations
-     since it was built; this control simply did not inherit the lesson, and it
-     is the only drag surface on the board with a word printed on it. */
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-
-  /* THE CYLINDER, in three numbers that agree by construction. A face is a flat
-     panel of height `--drum-face` and the step between two of them is
-     `--drum-step`, so the radius is not a taste — it is
-     `face / (2 * tan(step/2))`, the apothem of the polygon they lie on.
-     Spelling it out is what stops the faces overlapping or gapping when either
-     of the other two moves. */
-  /* THE SPACING BETWEEN THE PRINTED VALUES, and it is a real geometric knob
-     rather than a margin: the face height IS the gap between one name and the
-     next on the surface, since nothing sits between them.
-
-     It also decides how much of the neighbours you see, which is what settles
-     the number. The visible offset of the next value works out at about 0.93x
-     the face height, so at 28px it lands past the 24px half-window and both
-     neighbours fall out of the opening — the drum reads as one value with
-     nothing either side of it. At 26px the next value's edge kisses the
-     opening, which is what says there is more surface to turn to. */
-  --drum-face: 1.625rem;
-  --drum-step: 30deg;
-  --drum-r: calc(var(--drum-face) / 2 / 0.26795);
-
-  /* The grip's ribs are the same arithmetic at a finer pitch — 30 of them at
-     12 degrees is one full turn, so the barrel never runs out of surface. */
-  --rib-face: 0.375rem;
-  --rib-step: 12deg;
-  --rib-r: calc(var(--rib-face) / 2 / 0.1051);
-}
-
-/* Held. The cursor is the only thing that changes: a drum you have hold of does
-   not grow, for the same reason the knobs and the size rail's marker do not. */
-.pixl-thumb[data-turning="true"] {
-  cursor: grabbing;
-}
-
-/* NO INDEX MARK AT ALL (2026-08-30). It went from the paper to the case and
-   then off the control, and the reason is that it was never carrying the
-   selection: WHAT IS LIVE IS WHAT IS TURNED TO THE FRONT — square on, centred,
-   in the lit middle of the window, with its neighbours clipped and curving out
-   of the opening either side. A drum says which value is chosen by which value
-   you can read, and a mark beside it is a second thing saying the first thing.
-
-   It also takes the last accent off the body's controls, which is §7 tightened
-   rather than broken: the size rail's marker is the ONE accent on the chassis,
-   and a second orange two pads above it was competing with the thing that mark
-   exists to mean. */
-
-/* THE TWO CUTS. Each opening is a hole through the panel with WALLS, not a
-   rectangle with a shadow on it — the `.pixl-mini` construction at a control's
-   scale (§5c). Under a light from above the upper wall faces down and falls
-   into shadow, the lower faces up and catches the room, and the ramp between
-   them passes through the chassis's own tone because that is what the wall is
-   made of.
-
-   That ring is why the paper reads as sunken. Four px is a small number and it
-   is doing the work an inset shadow alone never did: a shadow painted onto the
-   drum darkens the drum, and a recess is read from the material AROUND the
-   opening. The mini screen was got wrong in exactly this way twice. */
-.pixl-thumb-window,
-.pixl-thumb-grip {
-  position: relative;
-  padding: 4px;
-  border-radius: 0.55rem;
-  background: linear-gradient(
-    180deg,
-    var(--cut-shade) 0%,
-    color-mix(in srgb, var(--cut-shade) 55%, var(--frame-3)) 16%,
-    var(--frame-3) 42%,
-    color-mix(in srgb, var(--frame-3) 40%, var(--frame)) 66%,
-    var(--frame) 88%,
-    var(--cut-lip) 100%
-  );
-  /* The seam at the panel's surface, the lip's shadow falling into the
-     opening, a wall on each side — uneven, because the key is up and to the
-     LEFT — and the panel's own lit lip below the hole. */
-  box-shadow:
-    inset 0 3px 5px -2px rgb(0 0 0 / 0.55),
-    inset 5px 0 7px -6px rgb(0 0 0 / 0.4),
-    inset -5px 0 7px -6px rgb(0 0 0 / 0.5),
-    inset 0 -1px 2px -1px rgb(255 255 255 / 0.34),
-    inset 0 0 0 1px rgb(0 0 0 / 0.22),
-    0 1px 0 rgb(255 255 255 / 0.24);
-}
-
-/* THE OPENINGS THEMSELVES — what you see through the hole, one wall-width
-   below the panel's surface.
-
-   PERSPECTIVE PER OPENING, not on the housing. One `perspective` on the housing
-   puts its vanishing point at the housing's centre, so the grip — which sits
-   off to one side — would be seen from an angle and read as a cone. Each end of
-   the barrel is looked at straight on. */
-.pixl-thumb-paper,
-.pixl-thumb-slot {
-  position: relative;
-  display: block;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 0.3rem;
-  /* Sitting at the bottom of a cut, so the walls above it throw down onto it
-     and its own edge is a hard dark line rather than a border. */
-  box-shadow:
-    inset 0 2px 4px -2px rgb(0 0 0 / 0.5),
-    inset 0 0 0 1px rgb(0 0 0 / 0.34);
-}
-
-/* THE PAPER, AND IT IS THE OPENING'S rather than the faces'. One smooth
-   cylinder across the whole window: bright where the surface turns toward the
-   light, falling away at both ends. Nothing on it is textured, which is the
-   point — real paper on a real drum gives you nothing to see, so the only thing
-   that can tell you it is moving is the printing. */
-.pixl-thumb-paper {
-  perspective: 15rem;
-  /* THE BARREL'S OWN PLASTIC, AND IT FOLLOWS THE CASE. Silver on the silver
-     board, charcoal on the charcoal one — a thumbwheel is moulded in the same
-     shot as the chassis, which is the rule the knobs follow (§2). It was a
-     constant pale drum in both themes for a pass, filed with `.pixl-key`'s
-     soft-touch cap as "a separate part in its own material", and that is the
-     wrong shelf: a key IS a separate part and a barrel through the case is not.
-
-     Three tokens and four mixes rather than six literals, so a theme cannot
-     define five of the six stops and leave the sixth reading light grey on a
-     charcoal drum. */
-  background: linear-gradient(
-    180deg,
-    var(--drum-lo) 0%,
-    var(--drum-mid) 16%,
-    color-mix(in srgb, var(--drum-hi) 82%, var(--drum-mid)) 42%,
-    var(--drum-hi) 52%,
-    color-mix(in srgb, var(--drum-mid) 62%, var(--drum-hi)) 72%,
-    color-mix(in srgb, var(--drum-lo) 78%, var(--drum-mid)) 100%
-  );
-}
-
-.pixl-thumb-window {
-  flex: 1;
-  min-width: 0;
-}
-
-.pixl-drum-reel {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  /* Pushed back by the radius so the face at the front sits in the plane of the
-     window rather than a radius nearer the eye — without it the live value is
-     drawn larger than the drum it is printed on. */
-  transform: translateZ(calc(-1 * var(--drum-r))) rotateX(var(--turn));
-  transition: transform var(--duration-quick) var(--ease-smooth-out);
-  will-change: transform;
-}
-
-/* FOLLOWING A FINGER. While a drag runs the drum is turned to where the pointer
-   is, so there is no clock in between to be wrong about — the same rule, and
-   the same measured reason, as the size rail's marker. */
-.pixl-drum-reel[data-turning="true"] {
-  /* THE 45ms BRIDGE, which this comment's own reference actually has and this
-     rule did not. `transition: none` is not "follow the finger", it is "move
-     only on frames that carry a pointer event" — and the rail's note measured
-     17 frames in 121 receiving none. A stationary frame under a moving finger
-     is the stutter the bridge exists to remove. */
-  transition: transform var(--duration-follow) linear;
-}
-
-/* A FACE OF THE DRUM: the printed name, and nothing else. */
-.pixl-drum-face {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: var(--drum-face);
-  margin-top: calc(var(--drum-face) / -2);
-  display: flex;
-  align-items: center;
-  /* CENTRED IN THE WINDOW. It was indented — 1.75rem to clear the index mark
-     lying on the paper, then 0.6rem when the mark moved out onto the case — and
-     with the mark gone there is nothing left for the word to make room for. A
-     value printed across the middle of the opening is also what says the live
-     one is the one turned square to you: off to one side it reads as a list
-     item that happens to be visible. */
-  justify-content: center;
-  border: 0;
-  cursor: inherit;
-  /* NEGATED, so index order runs DOWN the drum: the next value sits below the
-     live one and pushing the surface up brings it in. Positive put index 1
-     above index 0, which made dragging up pull the content down — a reel that
-     scrolls backwards under your finger. */
-  transform: rotateX(calc(var(--i) * var(--drum-step) * -1))
-    translateZ(var(--drum-r));
-  backface-visibility: hidden;
-
-  /* PRINTED, NOT DISPLAYED. The reference's mode list is a lit segment panel
-     inside a screen; this is ink on a moulded drum, so it takes the data face
-     and `--engrave` like every other legend on this board. The pixel face here
-     would be a display drawn on plastic.
-
-     UPPERCASE BY `text-transform`, so the accessible name stays "Square". */
-  font-family: var(--font-data), monospace;
-  font-size: var(--text-ui);
-  letter-spacing: 0.1em;
-  line-height: 1;
-  text-transform: uppercase;
-  text-shadow: var(--engrave);
-
-  /* A FACE PAINTS NOTHING. It carried the plastic itself for two passes — first
-     ribbed, then smooth — and both are the same mistake: three panels each
-     running the same crown-to-foot ramp put a BUMP at every join, so the drum
-     read as a stack of facets. The paper is one surface on the opening, and the
-     word is all a face has ever needed to carry. */
-  background: none;
-
-  /* ONE INK FOR EVERY FACE, and that is the physical answer as well as the
-     legible one. Printing does not get fainter as a drum turns; the SURFACE
-     goes into shadow and takes the printing with it, which is what the glass
-     over the opening already does. It ran as two inks — a held-back one for the
-     values turning away — and that could not be made to work: at the paper's
-     shaded end even a FULLY opaque held-back ink came to 4.47:1, so there was
-     no alpha that cleared AA. The bar was telling the truth about the design.
-
-     AND IT INVERTS WITH THE BARREL (2026-08-30). Printing lies ON a surface, so
-     when that surface goes from silver to charcoal the ink has to go the other
-     way — §2's rule for `--toy-ink`, applied to the one part it had been left
-     off. It was a constant near-black on a constant pale drum, which was the
-     `.pixl-key` rule borrowed by a part it does not fit.
-
-     THE DARK VALUE IS SOLVED, NOT PICKED. The crown is the brightest thing this
-     ink has to clear, and at the #6a6f79 first tried a near-white came to
-     4.21:1 — under AA. Held by e2e/contrast.spec.ts in both themes, since axe
-     judges neither a gradient nor a 3D transform.
-
-     WHAT CARRIES SELECTION IS POSITION: the live value is the one turned to the
-     front of the drum, centred across the lit middle of the window. */
-  color: var(--drum-ink);
-}
-
-.pixl-drum-face:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-
-/* THE GRIP — the knurled end of the same barrel, on the same angle.
-
-   ITS RIBS ARE REAL PANELS ON A CYLINDER, which is the whole of why it reads as
-   round. A `repeating-linear-gradient` spaces its stops evenly however many you
-   write, and an evenly-banded rectangle is what a cylinder is NOT: the bands
-   have to crowd together as the surface turns away. Perspective does that on
-   its own, and nothing else does it at all. */
-.pixl-thumb-grip {
-  flex: none;
-  width: 2.5rem;
-}
-
-.pixl-thumb-slot {
-  perspective: 9rem;
-  /* The barrel showing between the ribs — the same plastic, turned furthest
-     away, so it follows the case with everything else on this control. */
-  background: var(--drum-lo);
-}
-
-/* The grip's own curvature, over its ribs: the barrel turns away into the top
-   and bottom of its opening exactly as it does in the window. */
-.pixl-thumb-slot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgb(0 0 0 / 0.5) 0%,
-    rgb(0 0 0 / 0.12) 26%,
-    transparent 46%,
-    transparent 58%,
-    rgb(0 0 0 / 0.14) 76%,
-    rgb(0 0 0 / 0.45) 100%
-  );
-}
-
-.pixl-thumb-barrel {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  transform: translateZ(calc(-1 * var(--rib-r))) rotateX(var(--turn));
-  transition: transform var(--duration-quick) var(--ease-smooth-out);
-  will-change: transform;
-}
-
-.pixl-thumb-barrel[data-turning="true"] {
-  /* Same bridge as the reel above: the grip and the window turn together, so
-     they cannot be on two different clocks. */
-  transition: transform var(--duration-follow) linear;
-}
-
-/* One rib: a flat panel of the drum's own plastic, lit along its crown and
-   falling away at its foot — the same three-part fall the reference's wheel
-   shows on every band. */
-.pixl-thumb-rib {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: var(--rib-face);
-  margin-top: calc(var(--rib-face) / -2);
-  transform: rotateX(calc(var(--i) * var(--rib-step))) translateZ(var(--rib-r));
-  backface-visibility: hidden;
-  background: linear-gradient(
-    180deg,
-    var(--drum-hi) 0%,
-    color-mix(in srgb, var(--drum-hi) 70%, var(--drum-mid)) 34%,
-    var(--drum-mid) 74%,
-    var(--drum-lo) 100%
-  );
-  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.22);
-}
-
-/* THE GLASS OVER THE WINDOW, painted last so it falls ACROSS the printing
-   rather than under it. Two things in one layer, and they belong to two
-   different parts:
-
-   THE DRUM'S CURVATURE — dark at both ends of the opening, which is what tells
-   you the two values you can half-read are on a curve and not on a list. Weak
-   through the middle, because the point of a window is to read the value
-   through it, and those stops are what the ink's measured contrast rests on.
-
-   THE GLASS ITSELF — a specular band with a HARD edge across the upper left.
-   Soft is what a wash looks like; a sheet of glass reflects the room in a shape
-   with a boundary, and that boundary is the only thing in this control that
-   says there is a cover over the opening at all. It runs on the same 104-degree
-   diagonal as the mini screen's, so the two screens on this board are lit by
-   one room.
-
-   And a lit line along the top inside edge: the glass's own thickness, catching
-   the light the lip above it is blocking from everything else. */
-.pixl-drum-glass {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      rgb(255 255 255 / 0.5) 0%,
-      rgb(255 255 255 / 0) 2px
-    ),
-    linear-gradient(
-      166deg,
-      rgb(255 255 255 / 0.3) 0%,
-      rgb(255 255 255 / 0.3) 26%,
-      rgb(255 255 255 / 0.09) 26.4%,
-      rgb(255 255 255 / 0.09) 38%,
-      rgb(255 255 255 / 0) 38.4%
-    ),
-    linear-gradient(
-      180deg,
-      rgb(0 0 0 / 0.5) 0%,
-      rgb(0 0 0 / 0.12) 26%,
-      transparent 44%,
-      transparent 58%,
-      rgb(0 0 0 / 0.14) 76%,
-      rgb(0 0 0 / 0.45) 100%
-    );
 }
 
 /* ============================================================================

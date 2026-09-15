@@ -84,3 +84,23 @@ export async function tapCell(
   const point = await cellPoint(board, row, col);
   await page.mouse.click(point.x, point.y);
 }
+
+/**
+ * Open the gallery's colour popover and return its panel.
+ *
+ * THE INSTRUMENT MOVED BEHIND A KEY on 2026-09-13, when the 264px control
+ * column became a row in the gallery's sticky toolbar. A saturation square
+ * cannot stand in a 64px bar, so the swatch is a button and the field is behind
+ * it — which means every test that reaches for the hue strip, the hex readout
+ * or the field has to open it first.
+ *
+ * Idempotent: it reads `aria-expanded` rather than toggling blind, so calling
+ * it twice does not close what the first call opened.
+ */
+export async function openColor(page: Page): Promise<Locator> {
+  const key = page.getByRole("button", { name: /Choose a color/ });
+  if ((await key.getAttribute("aria-expanded")) !== "true") await key.click();
+  const panel = page.getByRole("group", { name: "COLOR" });
+  await expect(panel).toBeVisible();
+  return panel;
+}

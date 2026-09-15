@@ -55,8 +55,11 @@ afterEach(() => {
   vi.mocked(downloadSvg).mockClear();
 });
 
-/** The screen is part of the board: always present, loaded or not. */
+/** The screen is part of the SHELF as of 2026-09-12: present only when an icon
+ *  is loaded, exactly like everything else on it. */
 const miniScreen = () => screen.getByRole("region", { name: "Preview screen" });
+const noMiniScreen = () =>
+  screen.queryByRole("region", { name: "Preview screen" });
 /** The bar exists only while something is selected. */
 const detailBar = () => screen.getByRole("region", { name: "Selected icon" });
 const noBar = () => screen.queryByRole("region", { name: "Selected icon" });
@@ -70,50 +73,87 @@ const loadIcon = async (
   return detailBar();
 };
 
-/** Cell shape is the key rack, not the Display section. */
-const shapeKey = (name: string) => screen.getByRole("radio", { name });
+/**
+ * Choose a cell shape by name.
+ *
+ * ONE PRESS AGAIN, as of 2026-09-13. This helper has tracked three builds of
+ * the same control: a radiogroup (one click, straight to the value), a caret
+ * stepper (step until it arrives, which is what the loop here used to do), and
+ * now a dropdown, which restores the direct reach the stepper gave up. The
+ * helper exists so these tests stay about CELL SHAPE rather than about how it
+ * happens to be chosen this month — see ShapeDropdown.tsx for the five earlier
+ * builds and what each got right.
+ *
+ * The menu item's accessible name carries its hint as well as its name
+ * ("Round Cells inset and round"), so the match is anchored to the start.
+ */
+async function chooseShape(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  const key = screen.getByRole("button", { name: /^Shape,/ });
+  if (key.getAttribute("aria-expanded") !== "true") await user.click(key);
+  const menu = screen.getByRole("menu", { name: "Shape" });
+  await user.click(
+    within(menu).getByRole("menuitemradio", { name: RegExp(`^${name}`) }),
+  );
+}
 
 describe("the mini screen", () => {
-  it("is a screen and only a screen — no name, no tags, no actions", () => {
+  it("is a screen and only a screen — no name, no tags, no actions", async () => {
+    const user = userEvent.setup();
     render(<Gallery icons={icons} />);
+    await loadIcon(user);
     const panel = miniScreen();
 
     // Everything that used to live in here is on the bar now. If any of it
-    // comes back the left column goes fat again, which is what the split fixed.
+    // comes back the panel goes fat again, which is what the split fixed —
+    // and it now shares a shelf with the readout, so it would be saying the
+    // same things twice a column apart.
     expect(within(panel).queryByRole("button")).toBeNull();
     expect(within(panel).queryByRole("heading")).toBeNull();
     expect(panel.textContent).not.toContain(icons[0].tags[0]);
   });
 
-  it("is idle-but-lit before anything is chosen: the bare grid, no art", () => {
-    render(<Gallery icons={icons} />);
-    const svg = miniScreen().querySelector("svg")!;
-
-    /* A pixel display that is on with nothing on it: every cell unlit, and no
-       art. IT IS A DOT MATRIX, not the lattice of lines it was until
-       2026-08-30 — the reveal needed somewhere for a cell to arrive FROM, and
-       an unlit cell the same shape as a lit one is what a pixel display shows.
-       See PixelReveal.tsx. */
-    expect(svg.querySelectorAll(".pixl-reveal-dots circle")).toHaveLength(
-      GRID_SIZE * GRID_SIZE,
-    );
-    expect(svg.querySelectorAll("rect")).toHaveLength(0);
-    expect(noBar()).toBeNull();
-  });
-
-  it("announces both directions from one live region", async () => {
+  it("does not exist until an icon is chosen", async () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
-    const status = () => miniScreen().querySelector("[aria-live]")!;
+
+    /* THIS INVERTS A RULE, deliberately (2026-09-12). The panel was mounted at
+       all times and drew its idle state — every cell unlit, no art, "a pixel
+       display that is on with nothing on it" — because it was the head of the
+       board's left column and a device's screen does not come and go.
+
+       It is in the detail shelf now, so it appears and leaves with everything
+       else that describes the selected icon. The idle state is therefore
+       UNREACHABLE on this route: `PixelReveal` still handles a null `cells`,
+       and nothing on the gallery asks it to. */
+    expect(noMiniScreen()).toBeNull();
+    expect(noBar()).toBeNull();
+
+    await loadIcon(user);
+    expect(noMiniScreen()).not.toBeNull();
+  });
+
+  it("announces both directions from a region that outlives the shelf", async () => {
+    const user = userEvent.setup();
+    render(<Gallery icons={icons} />);
+    /* ON THE ICON PANEL, NOT ON THE SCREEN. It was on the mini screen while
+       that was mounted at all times; the screen moved into the shelf, and the
+       shelf is gone by the time clearing needs announcing — so an announcer
+       inside it cannot report its own removal. This asserts the region is
+       OUTSIDE the shelf, which is the property that actually matters and the
+       one a future move would break again. */
+    const panel = screen.getByRole("tabpanel");
+    const status = () => panel.parentElement!.querySelector("[aria-live]")!;
 
     expect(status().getAttribute("aria-live")).toBe("polite");
     expect(status().textContent).toBe("No icon selected");
 
     await loadIcon(user);
     expect(status().textContent).toBe(`${icons[0].name} loaded`);
+    expect(detailBar().contains(status())).toBe(false);
 
-    // CLEARING has to be audible too — which is exactly why the status is on
-    // the screen rather than on the bar: the bar is gone by then.
     await user.click(
       within(detailBar()).getByRole("button", { name: "Close" }),
     );
@@ -321,7 +361,7 @@ describe("cell shape", () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
 
-    await user.click(shapeKey("Inset"));
+    await chooseShape(user, "Inset");
 
     const { rects } = artNodes();
     expect(rects.length).toBeGreaterThan(0);
@@ -343,7 +383,7 @@ describe("cell shape", () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
 
-    await user.click(shapeKey("Round"));
+    await chooseShape(user, "Round");
 
     const { rects, circles } = artNodes();
     expect(circles.length).toBeGreaterThan(0);
@@ -363,7 +403,7 @@ describe("cell shape", () => {
       const user = userEvent.setup();
       render(<Gallery icons={icons} />);
 
-      await user.click(shapeKey(style));
+      await chooseShape(user, style);
       const bar = await loadIcon(user);
       await user.click(await downloadButton(user, bar));
 
@@ -390,7 +430,7 @@ describe("cell shape", () => {
     const user = userEvent.setup();
     render(<Gallery icons={icons} />);
 
-    await user.click(shapeKey("Round"));
+    await chooseShape(user, "Round");
     expect(artNodes().circles.length).toBeGreaterThan(0);
 
     // THIS ASSERTION IS THE REVERSE of what it was, deliberately. Shape sat on

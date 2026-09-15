@@ -88,11 +88,16 @@ export function MiniScreen({
         </div>
       </div>
 
-      {/* Announced politely, because the thing that changed is not where you
-          clicked. Both directions: clearing has to be audible too. */}
-      <span className="sr-only" aria-live="polite">
-        {icon ? `${icon.name} loaded` : "No icon selected"}
-      </span>
+      {/* THE LIVE REGION IS NOT HERE ANY MORE (2026-09-12). It was, and the
+          reason was explicit: it has to announce CLEARING as well as loading,
+          and the detail bar does not exist to announce its own removal — so it
+          went on the screen, which was mounted at all times.
+
+          This module moved INTO the bar, which put the announcer inside the
+          thing that unmounts: the exact defect that rule was written to
+          prevent, reintroduced by relocating the element it protected rather
+          than by editing it. It is on the icon panel now, which is the surface
+          that is genuinely always there. See Gallery.tsx. */}
     </section>
   );
 }

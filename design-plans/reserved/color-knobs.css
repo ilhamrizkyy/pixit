@@ -1,0 +1,282 @@
+/* RESERVED FOR THE COMPOSER BOARD - saved 2026-09-12, by request.
+   ============================================================================
+
+   THE KNOB COLOUR SETTER, EXACTLY AS IT STOOD before the gallery was rebuilt in
+   pixel chrome. Taken verbatim from `src/app/globals.css` at commit HEAD
+   (3a8ace2), not retyped, so the construction is the one that shipped rather
+   than a description of it.
+
+   WHY IT IS HERE. The gallery's colour control became a 2D picker -- a
+   saturation/value field with a hue strip under it -- and the three knobs left
+   with the chassis they were moulded into. The composer KEEPS the chassis: it
+   is the board now, so it is the surface these belong on, and DESIGN.md S6
+   already says the gallery's knobs were "built from the same component" the
+   composer's two are.
+
+   This file is NOT in the build. It is a snapshot with a destination, which is
+   the only honest form for code whose consumer does not exist yet -- DESIGN.md
+   S2's rule about a token kept for a reader that does not exist applies to
+   rules as much as to tokens.
+
+   WHAT TRAVELS WITH IT:
+     - src/components/gallery/ColorKnobs.tsx      (the three-knob instrument)
+     - src/components/gallery/ColorKnobs.interaction.test.tsx
+     - GalleryControls.tsx lines ~195-280         (the readout + swatch + knobs)
+     - the --lcd-*, --knob-* token sets in globals.css :root (still live: the
+       composer's own knobs and screen read them)
+
+   The segment readout's refresh behaviour, its throttle and the reason for
+   both are in DESIGN.md S6 under "THE SEGMENTS REFRESH"; the knob's two builds
+   (CSS and R3F) and why they must describe one object are in the same section.
+   Neither is repeated here.
+   ============================================================================ */
+
+.pixl-lcd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  color: var(--lcd-ink);
+  background:
+    /* the glass over the panel, as a weak diagonal wash */
+    /* WEAKER THAN THE MINI SCREEN'S WASH, and measured rather than judged.
+       Glass lightens what is under it, and this panel carries TEXT where the
+       mini screen carries art: at 0.16 the sheen lifted the dark theme's ground
+       to rgb(105,111,98) in the corner and took the segment ink to 3.47:1. The
+       art on the mini screen is not held to that, which is why the same value
+       is fine there and not here. */
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.1) 0%,
+      rgb(255 255 255 / 0.03) 36%,
+      transparent 60%
+    ),
+    linear-gradient(180deg, var(--lcd-2) 0%, var(--lcd) 45%);
+  /* The same five moves as `.pixl-well`: the cut, the lip above, both side
+     walls, the lit lower wall, and the panel's own lip below the opening. */
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.42),
+    inset 0 3px 5px -2px rgb(0 0 0 / 0.55),
+    inset 5px 0 7px -6px rgb(0 0 0 / 0.35),
+    inset -5px 0 7px -6px rgb(0 0 0 / 0.45),
+    inset 0 -1px 0 rgb(255 255 255 / 0.16),
+    0 1px 0 rgb(255 255 255 / 0.28);
+}
+
+.pixl-swatch {
+  flex: none;
+  width: 2.375rem;
+  align-self: stretch;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.42),
+    inset 0 3px 5px -2px rgb(0 0 0 / 0.5),
+    inset 5px 0 7px -6px rgb(0 0 0 / 0.3),
+    inset -5px 0 7px -6px rgb(0 0 0 / 0.4),
+    inset 0 -1px 0 rgb(255 255 255 / 0.2),
+    0 1px 0 rgb(255 255 255 / 0.28);
+}
+
+.pixl-lcd-value {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-pixel), monospace;
+  font-size: 16px;
+  line-height: 1;
+  /* Never bold: the face ships one weight, so `font-bold` synthesises one and
+     smears the very edges it exists for (§4). */
+  font-weight: 400;
+}
+
+/* The slot the two layers share. */
+.pixl-lcd-slot {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.pixl-lcd-digits {
+  position: absolute;
+  inset: 0;
+  white-space: pre;
+  pointer-events: none;
+  color: var(--lcd-ink);
+  /* UPPERCASE, AND IT HAS TO BE ON THIS LAYER. The rule was on `.pixl-lcd-input`
+     — which paints nothing but a caret — so it uppercased text nobody could
+     see, and the readout showed `#ffffff` for a week while a declaration that
+     said otherwise sat two rules below. It stays on the input as well, so the
+     caret steps over the same glyphs the overlay draws.
+
+     A hex is case-insensitive to parse and conventionally written in capitals;
+     the stored value keeps whatever was typed, which is what
+     ColorKnobs.interaction.test.tsx pins. This is display only. */
+  text-transform: uppercase;
+}
+
+.pixl-lcd-digit {
+  display: inline-block;
+}
+
+.pixl-lcd-input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  /* TRANSPARENT, because the layer above draws the glyphs. The caret is not:
+     it is the one thing the overlay cannot render, and it has to stay where the
+     input puts it. */
+  color: transparent;
+  caret-color: var(--lcd-ink);
+  text-transform: uppercase;
+}
+
+.pixl-lcd-input:focus {
+  outline: none;
+}
+
+.pixl-lcd:focus-within {
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.42),
+    inset 0 3px 5px -2px rgb(0 0 0 / 0.55),
+    inset 5px 0 7px -6px rgb(0 0 0 / 0.35),
+    inset -5px 0 7px -6px rgb(0 0 0 / 0.45),
+    inset 0 -1px 0 rgb(255 255 255 / 0.16),
+    0 0 0 2px var(--color-accent);
+}
+
+.pixl-lcd-clear {
+  flex: none;
+  cursor: pointer;
+  padding: 0 1px;
+  font-family: var(--font-pixel), monospace;
+  font-size: 9px;
+  color: var(--lcd-ink);
+}
+
+.toy-knob {
+  position: relative;
+  /* DARK, so the gap between dial and ring reads as the hole the dial turns in.
+     At the plain `--well-2` tone the 12% gap came back as a light grey COLLAR
+     around the knob — a band of panel, not a recess — which is the opposite of
+     what the reference shows there. A groove is dark. */
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--well) 62%, black) 0 88%,
+    transparent 88%
+  );
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  /* Seated on the frame, thrown down-right like everything else on the toy.
+     BOX-shadow, never `filter: drop-shadow()`: a filter has to rasterise the
+     element to derive its alpha mask, and rasterising a WebGL canvas whose
+     drawing buffer was already composited away yields nothing — so the whole
+     knob disappears. Never put a filter on an ancestor of a demand-rendered
+     canvas. */
+  box-shadow:
+    0 8px 16px -6px rgb(0 0 0 / 0.6),
+    1px 3px 5px rgb(0 0 0 / 0.4),
+    /* The socket's own lip: light along the bottom, shadow along the top, which
+       is the signature of a hole rather than a disc. */
+    inset 0 2px 3px rgb(0 0 0 / 0.55),
+    inset 0 -1px 2px rgb(255 255 255 / 0.18),
+    inset 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+.toy-knob[data-grabbed="true"] {
+  box-shadow:
+    0 12px 22px -6px rgb(0 0 0 / 0.65),
+    0 3px 6px rgb(0 0 0 / 0.4),
+    inset 0 2px 4px rgb(0 0 0 / 0.6),
+    inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+
+.toy-knob-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  /* THE RING STANDS OFF THE DIAL, mirroring the reference: a thin arc with
+     clear air between it and the knob, not a collar around it. Inner edge at
+     90% of the housing radius against a dial reaching 78% — a 12% gap and a
+     10% band.
+
+     It was tightened to a 2% seam for one pass on a misread of the reference,
+     which welded the scale to the knob and made the coloured band look like a
+     painted edge of the dial rather than something the dial turns against. */
+  -webkit-mask: radial-gradient(closest-side, transparent 0 90%, #000 90%);
+  mask: radial-gradient(closest-side, transparent 0 90%, #000 90%);
+}
+
+.toy-knob-dial {
+  position: absolute;
+  /* 11%, so the dial reaches 78% of the housing against a ring starting at 90%.
+     `inset: X%` leaves a dial of radius (50 - X)/50 of the housing's, which is
+     the arithmetic to redo if either number moves — and the mesh canvas in
+     Knob.tsx carries the SAME inset, or the two builds draw the knob at two
+     sizes (they did). */
+  inset: 11%;
+  border-radius: 999px;
+  /* Tokens, because the knob FOLLOWS the chassis: it is moulded in the case's
+     own plastic, so it is silver on the silver body and charcoal on the
+     charcoal one (§2). Kept in the same tonal band as the mesh — the two builds
+     have drifted before, and tone is part of that. */
+  background: linear-gradient(
+    176deg,
+    var(--knob-hi) 0%,
+    color-mix(in srgb, var(--knob-hi) 55%, var(--knob-mid)) 34%,
+    var(--knob-mid) 68%,
+    var(--knob-lo) 100%
+  );
+  box-shadow:
+    /* the moulding seam where the dial meets its socket */
+    inset 0 0 0 1px rgb(0 0 0 / 0.45),
+    /* a dome: lit along the crown, turning away at the foot */
+    inset 0 2px 2px rgb(255 255 255 / 0.3),
+    inset 0 -4px 6px -2px rgb(0 0 0 / 0.32),
+    0 2px 4px rgb(0 0 0 / 0.45);
+}
+
+.toy-knob-spin {
+  position: absolute;
+  inset: 11%;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.toy-knob-cap {
+  position: absolute;
+  inset: 12%;
+  border-radius: 999px;
+  background: linear-gradient(
+    178deg,
+    var(--knob-face-hi) 0%,
+    color-mix(in srgb, var(--knob-face-hi) 55%, var(--knob-face-lo)) 55%,
+    var(--knob-face-lo) 100%
+  );
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.35),
+    inset 0 -2px 4px -1px rgb(0 0 0 / 0.28),
+    0 0 0 1px rgb(0 0 0 / 0.16);
+}
+
+.toy-knob-mark {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: 13%;
+  height: 13%;
+  border-radius: 999px;
+  background: var(--knob-mark);
+  box-shadow:
+    inset 0 1px 1px rgb(0 0 0 / 0.3),
+    0 1px 1px rgb(255 255 255 / 0.12);
+  transform: translateX(-50%);
+  z-index: 1;
+}
