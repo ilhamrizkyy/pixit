@@ -212,7 +212,7 @@ export function Gallery({ icons: registry }: GalleryProps) {
           the one piece of web page a board could not carry, so the product's
           name was hidden from everyone who could see. The hero is where it
           goes. */}
-      <GalleryHero count={icons.length} />
+      <GalleryHero />
 
       {/* ---- THE GALLERY REGION -----------------------------------------
           `data-ground` repoints the WHOLE palette inside this element and

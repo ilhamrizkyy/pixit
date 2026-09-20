@@ -15,6 +15,24 @@ export async function openComposer(page: Page): Promise<Locator> {
   await page.goto("/create");
   const board = page.getByRole("application", { name: /Drawing grid/ });
   await expect(board).toBeVisible();
+
+  /* AND WAIT FOR THE TOY TO LAND. `.toy-frame` enters on `toy-in`, so for the
+     first ~400ms the board is still travelling — and `cellPoint` takes ONE
+     bounding box and hands the coordinates to a tap that happens later. Measure
+     during the flight and the tap lands on whatever has moved under it.
+     Measured: the board settled from y=56.2 to y=49.3, and on a phone, where a
+     cell is a few pixels, seven pixels is more than a whole row. The test then
+     reports the wrong cell painted, which reads as a drawing bug anywhere but
+     here.
+     It was visible only as an intermittent failure while the board was large.
+     Waiting on the animations rather than a timeout keeps it exact, and
+     reduced-motion runs simply have nothing to wait for. */
+  await page.evaluate(() =>
+    Promise.race([
+      Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+    ]),
+  );
   return board;
 }
 

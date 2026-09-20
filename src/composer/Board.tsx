@@ -31,7 +31,21 @@ import { useComposer, useComposerStore } from "./ComposerProvider";
  * turning pointer and key input into cell indices.
  */
 
-/** Faint gridlines across the whole canvas. */
+/**
+ * THE GRATICULE — the screen grid (2026-09-19).
+ *
+ * ONE WEIGHT, NO CENTRE CROSS (by request). It carried the two centre axes
+ * heavier, with fine calibration ticks along them, which is what a scope's face
+ * has — and on this screen it was a crosshair sitting on the drawing. A
+ * targeting reticle is what that shape means, and this grid is a canvas rather
+ * than something being aimed at: every stroke got composed against a cross it
+ * had nothing to do with. The mesh is the drawing aid; it is now the only thing
+ * on the glass.
+ *
+ * ELEVEN STAYS ELEVEN. A 465B's screen is a 10x8 graticule and this is not
+ * that: the grid is the icon's canvas (CLAUDE.md rule 4) and it is ODD on
+ * purpose, so mirror mode has an exact centre column to reflect about.
+ */
 const GUIDE_PATH = (() => {
   const segments: string[] = [];
   for (let i = 0; i <= GRID_SIZE; i++) {
@@ -47,7 +61,6 @@ const CARET_IDLE_MS = 4000;
 export function Board() {
   const store = useComposerStore();
   const cells = useComposer((s) => s.cells);
-  const gridGuide = useComposer((s) => s.gridGuide);
   const currentColor = useComposer((s) => s.currentColor);
   const armed = useComposer((s) => s.eyedropperArmed);
   const mirror = useComposer((s) => s.mirror);
@@ -235,10 +248,26 @@ export function Board() {
             that describe the art. Anything that comments on the drawing has to
             sit above it — a guide underneath the cells is hidden precisely
             where cells cover it, which is where you needed to see it. */}
-        {gridGuide && (
-          <path d={GUIDE_PATH} stroke="var(--board-line)" strokeWidth={0.25} fill="none" />
-        )}
+        {/* ALWAYS DRAWN (2026-09-19, by request). It was behind a Grid toggle,
+            which is a control for turning off the thing that tells you where a
+            cell is — on an 11x11 canvas the mesh IS the unit, and a pixel
+            editor that can hide its own grid is offering to make itself harder
+            to use. The toggle, its store flag and its action are all deleted
+            rather than defaulted on.
 
+            ETCHED, NOT EMITTED — no bloom filter on this group. The mesh is
+            ruling ON the screen; only the trace glows. Running it through the
+            phosphor filter is what made the first build's grid louder than the
+            drawing it was there to measure. */}
+        <g fill="none">
+          <path d={GUIDE_PATH} stroke="var(--board-line)" strokeWidth={0.16} />
+        </g>
+
+        {/* THE ART, HARD-EDGED. It carried a Gaussian bloom for one pass, on the
+            argument that a phosphor trace glows. It does — and this is a PIXEL
+            editor, where the exact boundary of a cell is the thing being drawn.
+            A soft edge on a 4-unit square is the one effect that fights what
+            the tool is for. The lit face is what carries the screen now. */}
         {rects}
 
         {/* Hover preview of the paint about to land (INTERACTION.md §1). */}
@@ -304,7 +333,7 @@ export function Board() {
             width={CELL_UNITS - 0.5}
             height={CELL_UNITS - 0.5}
             fill="none"
-            stroke="var(--color-accent)"
+            stroke="var(--crt-caret)"
             strokeWidth={0.5}
             strokeDasharray="1 1"
             opacity={0.6}
@@ -322,7 +351,7 @@ export function Board() {
           width={CELL_UNITS - 0.5}
           height={CELL_UNITS - 0.5}
           fill="none"
-          stroke="var(--color-accent)"
+          stroke="var(--crt-caret)"
           strokeWidth={0.5}
           pointerEvents="none"
         />

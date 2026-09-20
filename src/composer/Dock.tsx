@@ -7,7 +7,7 @@ import { useComposer, useComposerStore } from "./ComposerProvider";
 import { CategoryField, NameField, TagsField } from "./DockFields";
 import { DockSheet } from "./DockSheet";
 import { ImportPicker } from "./ImportPicker";
-import { ColorSwatch, HexField } from "./HexField";
+import { ColorSwatch } from "./ColorSwatch";
 import { useDock, type Dock as DockApi } from "./useDock";
 
 /**
@@ -94,8 +94,6 @@ function WideDock({ dock, onImport }: { dock: DockApi; onImport: () => void }) {
         <NameField className="w-36 shrink-0" />
         <CategoryField className="w-28 shrink-0" />
         <TagsField className="w-40 shrink-0" text={dock.tagText} onText={dock.setTagText} />
-        <Divider />
-        <HexField />
         <Divider />
         {/* Lives in the dock, not on the toy: the toy has eight buttons and a
             ninth would break the four-a-side symmetry that tells you the two

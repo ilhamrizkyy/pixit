@@ -3,12 +3,11 @@
 import { useCallback, useState } from "react";
 import { Toast, type ToastTone } from "@/components/Toast";
 import { Screen } from "./Screen";
-import { ColorPanel } from "./ColorPanel";
-import { HueKnob, LightnessKnob } from "./ColorKnobs";
+import { ColorColumn } from "./ColorColumn";
 import { ComposerProvider } from "./ComposerProvider";
 import { Dock } from "./Dock";
 import { SlideToClear } from "./SlideToClear";
-import { ToolColumn } from "./ToolRail";
+import { ToolColumn, ToolPill } from "./ToolRail";
 import { ToolStrip } from "./ToolStrip";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useComposerShortcuts } from "./useComposerShortcuts";
@@ -54,48 +53,71 @@ function ComposerBody() {
   useDraft();
 
   return (
-    <div className="composer-scope flex h-[calc(100dvh-var(--nav-h))] flex-col items-center justify-center overflow-hidden px-3 pt-3 pb-20 sm:px-6">
+    /* THE CASE DOES NOT SCROLL — ABOVE `sm` (2026-09-20). An object that runs
+       off the bottom of the window stops reading as one, which is why
+       `--board-size` gives height back instead of letting the page grow, and
+       that rule is intact on every screen the composer is actually authored on.
+
+       BELOW `sm` IT SCROLLS, because down there the rule was costing something
+       worse than a tall page. The colour rail lies down as a ROW under the
+       screen at phone widths, so the chrome's height depends on how that row
+       wraps — which means no single `--toy-chrome` fits 320 through 430:
+       measured, the value that brings 412x839 inside the window leaves an 18px
+       board at 320x568. With `overflow: hidden` the excess was not a smaller
+       board, it was a CLIPPED one, and what it clipped was the bottom of the
+       case: the clear slider, unreachable. A scrollbar on a phone is a worse
+       object and a working tool; the other way round is neither. */
+    <div className="composer-scope flex h-[calc(100dvh-var(--nav-h))] flex-col items-center justify-start overflow-y-auto px-3 pt-3 pb-20 sm:justify-center sm:overflow-hidden sm:px-6">
       {/* NOT flex-1. Letting the frame grow to fill the viewport is what left
           the toy stretched with dead air in it — an object has its own size and
           sits centred in the space, it does not inflate to fill the room. */}
-      <div /* pb far larger than pt: the knobs are the last thing in the frame, and
-             with only a few pixels under them they read as falling off its
-             edge rather than mounted on its face. */
-          className="toy-frame flex w-fit max-w-full flex-col gap-3 px-3 pt-3 pb-6 sm:gap-4 sm:px-5 sm:pt-3 sm:pb-8">
-        {/* Screen, flanked by the two groups of four. */}
-        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-          {!compact && <ToolColumn side="left" />}
+      <div className="toy-frame scope-frame">
+        {/* THE NAMEPLATE, CENTRED ON THE CASE (2026-09-19, by request), which
+            is what a handheld does — a benchtop instrument badges its top-left
+            corner, and this stopped being one.
+
+            THERE IS NO WAY BACK TO THE GALLERY ON THIS CASE, and that is
+            parked rather than missed: a `/` link sat in this corner for one
+            pass and came off by request while its place is decided. The site
+            footer is also suppressed on this route (see `globals.css`), so
+            `/create` currently has no in-page exit at all. Worth knowing
+            before this ships. */}
+        <div className="scope-head">
+          <span aria-hidden="true" className="scope-plate-name">
+            Pixit
+          </span>
+        </div>
+
+        {/* THE BAY: the screen with a rail either side — the colour instrument
+            on the left, the four tool keys on the right. Two rails of four, the
+            same width and the same construction, because the layout this
+            replaced was lopsided by design and read as a mistake.
+
+            The colour rail is rendered at EVERY width and restacks to a row
+            under the screen on a phone; the tool rail has a scrolling strip as
+            its compact form, so it is swapped rather than restacked. */}
+        <div className="scope-bay">
+          <ColorColumn />
 
           <div className="toy-stack min-w-0 self-center">
             <div className="toy-bezel w-full">
-              {/* Moulded into the brow, the way the toy this is modelled on
-                  carries its own name. Decorative: the page's real wordmark is
-                  in the nav, and a screen reader meeting "Pixit" twice on one
-                  page learns nothing the second time. */}
-              <span className="toy-legend" aria-hidden="true">
-                Pixit
-              </span>
-              {/* The SCREEN is the square, not the bezel — so the bezel can
-                  carry a deeper brow without the board going oblong. */}
               <Screen />
             </div>
-            <SlideToClear />
           </div>
 
-          {!compact && <ToolColumn side="right" />}
+          {!compact && <ToolColumn />}
         </div>
 
         {compact && <ToolStrip />}
 
-        {/* The colour controls span exactly the drawing area, so the toy reads
-            as one column rather than three things of three widths. The knobs
-            sit at the lane's ends, in the frame, not hung off its corners. */}
-        <div className="toy-lane flex items-center gap-3">
-          <HueKnob />
-          <div className="min-w-0 flex-1">
-            <ColorPanel />
-          </div>
-          <LightnessKnob />
+        {/* THE BOTTOM ROW: Undo, the clear slider, Redo — the console's own
+            Start/Select pills either side of a long channel. Undo and Redo were
+            shoulder mouldings on the top corners for a day; see
+            `ScopeControls.tsx` for why a front elevation cannot draw those. */}
+        <div className="scope-sill">
+          {!compact && <ToolPill side="left" />}
+          <SlideToClear />
+          {!compact && <ToolPill side="right" />}
         </div>
       </div>
 

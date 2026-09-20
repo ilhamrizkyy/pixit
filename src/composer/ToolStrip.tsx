@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { ToolGlyph } from "./ToolGlyph";
-import { ToyButton } from "./ToyButton";
-import { useTools } from "./ToolRail";
-import { useComposer } from "./ComposerProvider";
+import { ToolControl, useTools } from "./ToolRail";
 
 /**
- * The eight tools on a narrow screen: one strip under the board showing FOUR at
- * a time, paged by dragging or by the arrows at either end.
+ * The tools on a narrow screen: one strip under the board showing FOUR at a
+ * time, paged by dragging or by the arrows at either end.
  *
- * Stacking all eight above and below the board is what a column layout wants,
- * but on a phone it eats the height the board needs — and the board is the
- * thing you came for. Four at a time keeps every tool one gesture away while
- * costing a single row.
+ * Stacking them above and below the board is what a column layout wants, but on
+ * a phone it eats the height the board needs — and the board is the thing you
+ * came for. Four at a time keeps every tool one gesture away while costing a
+ * single row.
+ *
+ * THE ARROWS ONLY EXIST WHEN THERE IS SOMEWHERE TO GO. The set is four tools
+ * since Grid was deleted and the eyedropper moved to the colour rail, so the
+ * strip fits its whole contents at every width it is used at and both arrows
+ * sit permanently disabled — a control that can never activate. They are
+ * measured rather than counted, so a fifth tool brings them straight back.
  *
  * It is a real scroller, not a transform: dragging is native, momentum is
  * native, and it stays operable if scripting is having a bad day. Scroll
@@ -22,7 +25,6 @@ import { useComposer } from "./ComposerProvider";
  */
 export function ToolStrip() {
   const tools = useTools();
-  const annotations = useComposer((s) => s.annotations);
   const scroller = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -45,9 +47,14 @@ export function ToolStrip() {
     });
   }, []);
 
+  /* `atStart && atEnd` is "the whole strip is visible", read off the scroller
+     itself rather than off the tool count — which is what keeps this true if a
+     narrower phone or a bigger cap ever makes four not fit. */
+  const pages = !(atStart && atEnd);
+
   return (
-    <div className="flex w-full items-center gap-1 sm:hidden">
-      <Arrow direction="left" disabled={atStart} onClick={() => page(-1)} />
+    <div className="scope-strip flex w-full items-center gap-1 sm:hidden">
+      {pages && <Arrow direction="left" disabled={atStart} onClick={() => page(-1)} />}
 
       <div
         ref={scroller}
@@ -60,29 +67,23 @@ export function ToolStrip() {
             /* Exactly four across, gaps included, so a page lands cleanly. */
             className="shrink-0 basis-[calc((100%-2.25rem)/4)] snap-start"
           >
-            <ToyButton
-              label={tool.label}
-              title={tool.title}
-              pressed={tool.pressed}
-              disabled={tool.disabled}
-              onClick={tool.onClick}
-              caption={annotations ? tool.caption : undefined}
-            >
-              <ToolGlyph name={tool.name} />
-            </ToyButton>
+            {/* The SAME control the columns render. A tool that latched on a
+                desktop and did not on a phone would be two different claims
+                about what it is. */}
+            <ToolControl tool={tool} />
           </div>
         ))}
       </div>
 
-      <Arrow direction="right" disabled={atEnd} onClick={() => page(1)} />
+      {pages && <Arrow direction="right" disabled={atEnd} onClick={() => page(1)} />}
     </div>
   );
 }
 
 /**
  * Paging control. Deliberately NOT a toy button — it moves the shelf, it is not
- * a tool, and dressing it as one would put nine buttons on a toy that has
- * eight.
+ * a tool, and dressing it as one would put an extra button on a toy that has a
+ * fixed set.
  */
 function Arrow({
   direction,

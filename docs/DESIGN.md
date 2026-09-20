@@ -100,7 +100,10 @@ under it. A little over two seconds. The clock is one table, `introTimeline.ts`.
 - **The cyan-and-magenta RGB split on the name**, and magenta everywhere. It
   read as a social app's logo, not a cabinet.
 - **The corner HUD** (PLAYER 1, a load bar, CREDIT 01, an icon counter) and the
-  four corner brackets. The count moved into the tag above the name.
+  four corner brackets. The count moved into a tag above the name, and that tag
+  is gone too (2026-09-18, by request) — so the count is printed nowhere in the
+  hero, deliberately. The Guide and Resources both still state it, from
+  `icons.length`, where it is a fact in a sentence rather than a HUD readout.
 - **The skeleton blocks**: dithered rectangles with `BLK 02 TITLE` tabs that
   filled column by column before each piece of content. The tabs went first,
   then the blocks.
@@ -109,8 +112,87 @@ under it. A little over two seconds. The clock is one table, `introTimeline.ts`.
 
 **Exceptions this section makes, stated:** the grid background (earned: the
 subject is a lattice), four colours on one surface (scoped, and §7's single
-accent still holds everywhere else), and a small tag above the heading (it
-carries the set's real count rather than a slogan).
+accent still holds everywhere else). **It used to make a third — an eyebrow over
+the heading — and that one is withdrawn rather than re-argued (2026-09-18).** A
+kicker above a heading is banned outright, and the only thing earning the
+exception was that this one carried a real count instead of a slogan. Asked to
+change the words, the honest move was to delete it: any replacement phrase keeps
+the exception and throws away the reason for it. The name is now the first thing
+on the screen, which is what a title card is.
+
+### The marquee: the same machine above the reading pages (2026-09-18)
+
+**Guide, Resources and Contribute were white documents with a hairline bar on
+top, one click from a full-screen neon CRT.** Two products in one site. The seam
+is closed by carrying the WORLD across and not the LAYOUT: each of the three now
+opens on a **masthead** cut from the hero's own glass, and the reading below it
+stays on paper.
+
+| Part | Is |
+|---|---|
+| Ground | the hero's `--crt`, and its cell grid at the **same 24px pitch and the same 264px major**, so a visitor arriving from the home page lands on a continuation rather than on a second grid |
+| Shape | a **band**, about a third of the window. The hero is `100svh` because the hero IS the front door; a reading page that makes you scroll before you read has spent the visit on itself |
+| Light | scanlines and a shade along the two long edges. **No flicker, no rolling band, no boot** — a marquee is backlit plastic, and ambient motion over the first paragraph is a defect however well it is authored |
+| Motion | one thing: the **block cursor** after the title. It is what says the same machine drew this page and the home page |
+| Type | the title in Press Start 2P (24 / 36 / 48px) in near-white with a cyan glow; the rail and the strapline in VT323 |
+| Colour | **the wordmark is yellow, the title is not.** Yellow is the product's name and nothing else ever wears it; a page title in yellow would spend the brand colour on the word "Resources" |
+| Edge | a hard 2px lit line. Nothing in this world has a soft boundary |
+
+**THE NAV BAR IS GONE FROM EVERY ROUTE.** The rule was "a page with a hero does
+not need a bar", which was true of the home page and left three pages carrying
+one. It is now **every page says its own name**: the four destinations are
+printed in the rail at the top of each masthead, in the same place the hero
+prints them, and the live one is marked by the ink at full strength over a
+two-cell rule — the rail's own hover, stuck. **The hamburger went with it**, and
+that is a deletion rather than a port: the bar collapsed four links behind a
+button because they shared a row with a wordmark, and the rail simply wraps.
+
+**The body stays paper, and that is the home page's own decision applied twice.**
+`/` is a near-black hero over a light gallery; these are a near-black marquee
+over a light article. Long-form prose on a tube, in neon, is a worse page
+however well it matches — §1's two registers survive here as marquee and manual.
+
+**What changed below the fold, and why each was a defect rather than a taste:**
+
+- **Cards became ROWS.** Every item on Resources and Contribute was an identical
+  bordered box, which is the lazy container, and it was measured: at 1440 the
+  whole of Resources lived in 736px with 704px of white beside it. Rows separate
+  on a rule **made of cells** — 2px on, 2px off — because a solid line across
+  fifteen rows is a fence and a 1px hairline is the generic list every site has.
+  Resources then runs in **two CSS columns** (not a grid: the sections are
+  unequal and columns balance them without anyone hard-coding which sits where).
+- **The status pill became printing.** A tinted capsule was the one rounded
+  object left on a site whose every radius is a named zero, and a badge that
+  loud beside a label reads as a state you can change. It is the pixel face at
+  10px now, the hero's own tag treatment.
+- **The row's mark is the set's own icon** — `arrow-right`, or `external-link`
+  when it leaves the site, remapped to `currentColor` the way the search field
+  and the category chips already draw theirs. An icon set that borrows somebody
+  else's chevron for its own pages has an argument to answer.
+- **Section titles became `h2`, which puts them in the pixel face.** They were
+  `h3` under a page `h1` — a skipped level, and the one register on the page
+  that said nothing about what product this is. §4 scopes Press Start 2P to the
+  wordmark, h1 and h2, and a rule's name is the largest thing in its section.
+- **Both article pages use one layout**: the argument on the left, the thing
+  itself on the right, in two BOUNDED columns. A `1fr` aside gave a 240px
+  diagram a 656px column to sit in, which is the page leaving a hole rather than
+  using the width.
+- **The Guide's grid diagram stopped being blue.** Its safe area was filled with
+  `--color-accent-subtle`, left over from the era when the shell had a blue
+  accent — repointed to the ink everywhere on 2026-09-12 except here, so this
+  one diagram was the last blue object on the site. It also gained an optional
+  `cells` prop: the safe-area rule now shows a real icon sitting inside the
+  region with its one cell of margin, which is a better argument than a second
+  empty square. **The keyline is dropped in that variant**, because art running
+  to the region's edge is drawn over it and a keyline you cannot see is worse
+  than none.
+
+**VT323 IS PRELOADED NOW.** It was not, because it was the home page's face
+alone and preloading charged four routes for something they never drew. It is in
+every masthead's rail — the first thing at the top of the page, not a sentence
+three seconds into a boot — so a late-discovered face is a visible swap in the
+navigation on every load. Four of five routes draw it; the fifth is the
+owner-only composer.
 
 ### What moved, on 2026-09-12
 
@@ -122,9 +204,26 @@ carries the set's real count rather than a slogan).
 | a mini screen at the head of the left column | inside the **detail shelf**, at the foot of the picture |
 | the board sized to the viewport, grid scrolling inside | the **page scrolls**, as a page does |
 
-The knob colour setter is not deleted. It is saved verbatim in
-`design-plans/reserved/` for the composer, which keeps the chassis and is the
-surface those dials were always moulded into.
+**THIS TABLE IS ONE STEP BEHIND, AND IT SAYS SO NOW (2026-09-18).** Two of its
+right-hand answers were themselves replaced the next day: the "three cells in a
+row" became a **dropdown**, and the horizontal rail became a **fourteen-block
+meter**. The control column went with them — everything is in one **sticky bar**
+now. §6 carries the current state and the full chain; this table is kept because
+what it records is the *move off the chassis*, which is the decision that
+mattered and is still the reason the rest of the file reads the way it does.
+
+**The lesson is the one this file keeps relearning.** A "what moved" table is a
+snapshot, and a snapshot in a document loaded as instructions goes stale
+silently. Where a control's argument lives in the file that draws it, §6 now
+names that file instead of restating it.
+
+The knob colour setter was not deleted. It was saved verbatim in
+`design-plans/reserved/` for the composer, and on 2026-09-19 it was **mounted
+there** — three knobs and a readout on one pad, which is the surface those dials
+were always moulded into. The snapshot is spent; §6 carries the build, and the
+README carries what a reserved snapshot cannot protect you from: it photographs
+the PARTS, so a faithful restore can still assemble the wrong object, which is
+what happened on the first attempt a day earlier.
 
 ### Why the page stopped being a device
 
@@ -214,8 +313,6 @@ The chassis — **space grey, not arcade blue (2026-08-29)**
     --well:#B0B5BD  --well-2:#9AA0AA #2C2F35 / #1F2126   button wells
     --cut-shade:#6C727C              #0C0D10    a cut's upper wall, in shadow
     --cut-lip:#F4F5F8                #7D818A    its lower wall, catching light
-    --drum-hi/-mid/-lo               the Shape barrel, crown to the ends
-    --drum-ink                       the value printed on it
     --knob-hi/-mid/-lo               the dial's shoulder, crown to rim
     --knob-face-hi/-lo               its domed face, crown to foot
     --knob-mark                      the pointer pip
@@ -224,9 +321,30 @@ The chassis — **space grey, not arcade blue (2026-08-29)**
     --lcd/--lcd-2/--lcd-line         the segment panel, on BOTH boards
     --lcd-ink                        its lit segments
     --grid-bg/--grid-card            the icon grid's ground, and its tile
-    --indicator                      the size scale's marker; the body's accent
-    --strip/--strip-2                its groove's floor and shaded wall
-    --ruler/--ruler-lip              the graduations engraved across it
+
+**SEVEN TOKENS LEFT THIS TABLE WITH THE PARTS THEY PAINTED (audited
+2026-09-18), AND ALL SEVEN ARE STILL GONE (re-audited 2026-09-19).** They were
+listed here for six days after the controls were replaced, which is the same
+defect as a token kept for a consumer that does not exist, one level up.
+
+**Four of them came back for a day and left again, which is the part worth
+recording.** `--drum-hi/-mid/-lo` and `--drum-ink` returned on 2026-09-18 with
+a category thumbwheel and went with it on 2026-09-19 when category moved back to
+the dock. `--indicator` and `--strip/--strip-2` did the same round trip a day
+earlier, for a milled saturation groove that three knobs replaced.
+`--ruler/--ruler-lip` never came back at all.
+
+**`--engrave` went too, and it had been dead longer than any of them.** It was
+declared in all four theme blocks with no reader at `3b41020` — the drum briefly
+gave it one, and removing the drum exposed it. A sweep that only looks at what a
+change touched will not find a token like that; what finds it is checking every
+name in both directions after every removal.
+
+Every remaining name in this table was checked against `globals.css` in both
+directions: declared, and actually read.
+
+The `--knob-*` set stays, and it is the one worth knowing about: the gallery
+stopped turning knobs, the **composer** did not.
 
 `--cut-shade` / `--cut-lip` are the two walls of a **hole in the panel**, and
 they are literal per theme rather than one `color-mix()` off `--frame`: a silver
@@ -314,7 +432,9 @@ states are measured on the composer's own route by `e2e/contrast.spec.ts`; the
 one-route contrast sweep is what let it hide.
     --screen: near-white gradient (#e5e7de -> #f6f7f2), a trace of green so it
              still reads as a physical surface rather than a blank page
-    --toy-grain: tileable fractal-noise data URI; moulded-plastic texture
+    --grain: tileable fractal-noise data URI; moulded-plastic texture.
+             It was `--toy-grain` and scoped to the composer; §7 records it
+             moving to `:root` on 2026-08-28, and the name went with it.
 
 **These are now the product's palette, at `:root`.** They were composer-only
 while §1 kept two registers apart; that rule is retired. The constraint that
@@ -406,28 +526,40 @@ Line-height: 1.5 body, 1.2 headings/labels.
     above because it still governs authoring — what changed is that rendering
     and storage are now allowed to disagree, which is CLAUDE.md rule 3 working
     as intended rather than an exception to it.
-- Sidebar 264px fixed, and it is now the board's **left column**: the mini
-  screen, the Display pad, then the Shape keys mounted through the pad's bottom
-  edge. The board is inset from the window (`0.75rem`; `1.5rem` at `lg`) so it
-  reads as an object on a page rather than as a background colour.
-- **ONE GUTTER, `--board-gutter`, used four times**: the board's own padding and
-  the gaps between every part in its row — body, screen, size rail, edge. They
-  were separate numbers, so the mini screen had 20px of air to the board's edge
-  and none at all to the screen beside it — which reads as a missing gap rather
-  than as two values. A token makes them the same thing, and a test walks the
-  whole row, because a new part slotted into it is exactly how that got in.
-- **THE BOARD IS SIZED TO THE VIEWPORT, and the icon grid is the only scroll on
-  the page.** `height`, not `min-height`: the device is a fixed object you see
-  all of at once, and the picture moves inside the glass rather than the whole
-  thing sliding up the page. The grid can only claim leftover space if there is
-  a fixed amount to leave over, which is also why every flex ancestor between
-  the board and the panel carries `min-h-0` — a flex child refuses to shrink
-  below its content without it, and the board silently grows past the window.
-  - **Those insets are LITERAL LENGTHS, not `var(--spacing-N)`.** Tailwind v4
-    emits a `--spacing-N` variable only when some utility in the build happens
-    to need that step, so `var(--spacing-5)` resolved to nothing and the
-    board's whole internal gutter silently became 0. Second time this exact
-    class of bug has been paid for — see the caution in §5c.
+- **THERE IS NO SIDEBAR, AND NO BOARD** (corrected 2026-09-18). This entry
+  specified a 264px left column holding the mini screen, a Display pad and the
+  Shape keys, on a board `height`-locked to the viewport with the icon grid as
+  the only scrolling thing on the page. All three are gone: the controls are in
+  a sticky bar (§6), the mini screen is in the detail shelf, and **the page
+  scrolls as a page does**. `--board-gutter` went with the board — four
+  consumers, all of them parts of it.
+- **ONE INSET, `--pad-inline`, used by every section.** It is what replaced the
+  board's gutter, and it is a different kind of thing: a **padding** rather than
+  a centred max-width wrapper, so a region's ground can run edge to edge while
+  its contents stay on `--measure` (76rem). The hero's first character, the
+  masthead's, the search field's left edge and the grid's first tile all start
+  at the same x on every route because of it.
+- **Two cautions from the board are worth more than the board was**, and both
+  are about values that silently never arrive:
+  - **Insets are LITERAL LENGTHS, not `var(--spacing-N)`.** Tailwind v4 emits a
+    `--spacing-N` variable only when some utility in the build happens to need
+    that step, so `var(--spacing-5)` resolved to nothing and a whole internal
+    gutter became 0.
+  - **A height set on a `display: contents` element is the same class of no-op.**
+    The bar's controls are named individually rather than selected as
+    `.pixl-bar > *`, because the display controls are wrapped in a
+    `hidden lg:contents` div whose box does not exist. This stylesheet has now
+    paid for that family of bug four times; see §5c.
+  - **AND A THIRD, FOUND 2026-09-19: A RESERVATION FOR A DELETED PART.**
+    `--nav-h` was 73px, the height of the top nav — and the nav came off every
+    route on 2026-09-18. It is read by `--board-size`, by the composer's own
+    container height and by the top toast's offset, so all three went on
+    reserving a band for something not in the tree. This one is the opposite
+    failure from the two above: nothing silently resolves to nothing, a real
+    number silently describes a part that is gone, which no computed-style check
+    finds because the value is exactly what it says. What catches it is
+    measuring the thing it claims to clear — the composer's scope reports
+    `top: 0`. It is a **named zero** now, like the three radii.
 - Icon grid: auto-fill, **8px gap**, and a **FIXED 64px track**. It followed the
   size slider for a while — `max(56px, size + 28px)` — and that is the entry
   this corrects: a grid whose cells resize as you drag reflows the whole page
@@ -596,31 +728,42 @@ than left at browser defaults, and data (counts, hex, sizes) uses
 
 ## 6. Component specs
 
-> **STALE IN PLACES, 2026-09-12.** This section was written when the gallery was
-> the board, and large parts of it describe controls that have been replaced:
-> the size rail's vertical channel and magnifier, the Shape thumbwheel, the
-> three colour knobs and their segment readout, the mini screen's bezel and cut,
-> and the board's engraved badge. The **behaviour** in those entries is mostly
-> still live — what a control does, what it refuses, what it announces — and the
-> **construction** is not. Each replacement carries its own argument in the file
-> that draws it; §1 lists what moved. Everything about the COMPOSER here is
-> current, since the composer keeps the chassis.
+> **The banner that stood here is discharged, 2026-09-18.** It read "STALE IN
+> PLACES" from 2026-09-12 and listed what had been replaced — the size rail, the
+> Shape thumbwheel, the three colour knobs, the board's badge — without
+> replacing any of it. That is the worst state for this file to be in, because
+> CLAUDE.md loads it as **instructions** at the start of every session: a
+> warning tells a reader that some unnamed share of what follows is false, which
+> is no more useful than the false text alone. The seven hundred lines it was
+> warning about are gone; see *The sticky bar* below.
+>
+> **The rule this file now holds itself to.** Where a control's full argument
+> lives in the file that draws it, this section states the DECISION and names
+> that file rather than restating the argument. A second description of one rule
+> is a second thing to keep in step, which is exactly how the section got into
+> the state the banner was apologising for.
+>
+> Everything about the COMPOSER here is current, since the composer keeps the
+> chassis and every part described in it is still built.
 
 
-**Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
-owner-only actions. **Plain shell: a flat `--bg` fill and a `--border`
-hairline**, with the active item in the shell's own `--accent`.
+**~~Top nav~~ — DELETED 2026-09-18, on every route.** `SiteNav.tsx` and
+`.pixl-nav-link` are gone with it. Every destination is printed in the home
+page's hero and in each other page's **masthead rail** (§1), and again in the
+footer, so there is nothing left for a bar to carry.
 
-**The wordmark is ONE colour.** Its `le` was in `--accent`, which put a second
-thing claiming *this one* in a bar that already marks the active route with the
-same colour, three centimetres away. Below `lg` the
-links collapse behind a **hamburger**; the theme toggle stays in the bar, since
-burying a one-tap control behind two taps costs more than the space it saves.
+Three things it was, kept because each was learned rather than assumed:
 
-It was a moulded chassis brow between 2026-08-28 and 2026-08-29 — see §1 for
-why that came back off. The one thing worth keeping from the experiment is the
-diagnosis: a surface that repoints the toy's tokens must be a surface the toy's
-controls actually stand on, and the nav is not.
+- It was a **moulded chassis brow** between 2026-08-28 and 2026-08-29. The
+  diagnosis outlived it: a surface that repoints the toy's tokens must be a
+  surface the toy's controls actually stand on, and a nav is not.
+- Its **wordmark was one colour**, because the `le` in `--accent` put a second
+  thing claiming *this one* in a bar that already marked the active route with
+  the same colour, three centimetres away. The masthead's rail keeps that rule:
+  the wordmark is the brand's yellow and the live link is cyan.
+- Its **active item was underscored, not coloured** — a solid two-cell rule
+  under the word, which is the same block every control on this site throws.
+  That mechanism moved to the rail intact.
 
 **The screen's header** — two lines inside the screen: **Search** (+reset and
 the count) on the first, the **category chips** on the second. Both answer the
@@ -674,709 +817,212 @@ operates the screen, and the colour every icon renders in is the most
 screen-changing thing there is. Search stays because it changes *which* icons
 are there, not how they are drawn.
 
-**Gallery sidebar** — the body, and Display only, in **THREE SECTIONS**: the
-mini screen, then a pad for **Colour**, then the **Shape** switch mounted
-straight through the case. Size left for the rail in the gutter on 2026-08-29.
+**THE STICKY BAR — where every control lives (2026-09-13, rewritten here
+2026-09-18).** One row, one height: **Shape, search, Size, Colour**, with the
+category chips on their own row below it, on the icons they filter.
 
-**One pad on the board, and it is Colour's — settled in two steps.** The first
-(2026-08-29) split one pad into two: Colour is one instrument — a readout and
-the three knobs that drive it — while Shape is a separate setting that merely
-sits next to it, and a pad is what says *these belong together* (§5c).
+**It replaced a 264px sidebar, which replaced a moulded body.** Everything
+between this paragraph and *Category chips* used to describe the body: a pad for
+Colour, three H/S/L knobs over a segment readout, a Shape thumbwheel mounted
+through the case, a vertical Braun tuning rail in the right gutter with a
+magnifier riding on it, a mini screen at the head of the column, and the
+wordmark engraved into the bottom-left corner. **None of those exist.** About
+seven hundred lines of this file described them until 2026-09-18, and since
+CLAUDE.md loads this file as instructions at the start of every session, that
+was not stale documentation, it was wrong instructions. It is replaced rather
+than annotated.
 
-**Followed through, the same rule takes the second pad away (2026-08-30).** With
-Size gone to the rail, that panel was drawn around a *single* control, grouping
-it with nothing — and its own 16px of padding held the switch inset from the
-screen and the colour pad both, which reads as a control that did not quite fit
-rather than one mounted through the panel. The drum spans the column's full
-width now, with no tray under it. The sheet is the one surface where Size is
-really mounted, so it is the one surface that still has two pads.
+**IT STICKS, which is the one thing the board could not do.** A layout locked to
+the viewport has nothing to stick to. The page scrolls now, so the controls stay
+with the icons they govern. `top: -1px`, because at `top: 0` a fractional
+device-pixel gap opens above the bar at some zoom levels and the grid flickers
+through it.
 
-The mini screen was always the third section: it is a separate part of the
-moulding, not a region of one.
+**The split that outlived three chassis:** search and category change *which*
+icons are there; colour, size and shape change *how* they are drawn. It was
+argued from surfaces, glass against plastic, and it turns out to have been about
+information all along, which is why it survived the board, the sidebar and the
+bar. Both halves are in one bar now because there is no second surface to put
+either on, and the bar keeps them on separate rows.
 
-**NOTHING IN THE COLUMN STRETCHES**, and **the slack falls at the BOTTOM** —
-two separate decisions that keep being confused for one.
+**ONE HEIGHT FOR EVERYTHING: 44px**, twenty-two cells, which is also the coarse
+pointer minimum — so one number serves the touch target and the rhythm. They
+were three different heights, each sized to its own contents under its own
+caption, and the row read as four unrelated widgets that happened to be
+adjacent.
 
-The last pad used to grow so the column finished level with the screen; with
-Size gone to the rail, stretching a panel around three keys just draws a slab of
-bare plastic with a control in its corner. So the pad hugs its contents, and the
-switch below it is the height of the switch.
+**THE CAPTIONS ARE GONE** (2026-09-13, by request). COLOR / SIZE / SHAPE in the
+pixel face over each control cost 18px of bar height to label three things that
+say what they are by being what they are: a hex panel, a run of blocks, a word.
+The one word that stayed is Size's **value**, because a number is the one thing
+on that control you cannot infer by looking.
 
-**Where the slack then goes took two tries (2026-08-30).** It went to the TOP
-first — pads pinned to the foot of the column, screen at the head — on the
-objection that bare plastic *under the last control* reads as an unfinished
-side. That objection is real and the answer was wrong: what pinning produced was
-a **152px hole between the screen and the first control** at a 900px window, and
-302px at 1050. That does not read as case; it reads as two groups that have come
-apart. The controls operate the screen, so they sit under it, evenly spaced —
-one gap, used twice.
+**THE SEARCH TAKES WHAT IS LEFT.** Every fixed width in the row comes out of it,
+which is the right way round: a search field is legible at any width above a few
+words, and a six-character readout is not legible below six characters. What
+caps it is `--measure`, so the field is 1216px-bounded at 1440 and still at 1920.
 
-**The unfinished side is answered by the LEGEND instead** — see below. A panel
-of bare plastic with a name cut into it is a finished side; the same panel
-without one is not. That is what the space is for.
+**Shape is leftmost, and the seat is earned:** it is the only one of the three
+whose chosen value is a **drawing**, so it reads as a mode the row is in rather
+than a number the row carries.
 
-**On a short window it is still the MINI SCREEN that gives height back**, never
-the controls: a shorter case has a shorter screen, not squashed controls.
+### Shape — a dropdown (`ShapeDropdown.tsx`)
 
-**And the spare height does NOT go to the mini screen either**, which was tried
-first and is worth recording because it looks like the obvious answer. Its glass
-carries `aspect-ratio: 1` as a basis, so growing it does not make a bigger
-picture — it makes a PORTRAIT screen with the 11×11 lattice letterboxed in the
-middle. A display that stretches is not a bigger display.
+**The sixth build, and the first that is the same shape of control as the thing
+beside it.** The five before it, each right about something:
 
-**No heading and no section Reset (2026-08-29).** The pad is the only thing on
-the body and every control on it is labelled, so "DISPLAY" was a heading over a
-panel with nothing to distinguish itself from. The Reset went with it: it
-duplicated wholesale what the colour field's ✕ and the size scale already do one
-control at a time, and the mobile sheet's footer is where a reset-everything
-still lives.
+1. **Three transport keys.** Mute: a row of caps says nothing about which is on
+   until you compare the depth of their faces.
+2. **A mode list beside a ribbed wheel.** A control next to a *picture* of a
+   control — the wheel turned and the list did not.
+3. **A thumbwheel with the values printed on the barrel.** One object at last,
+   and it needed a chassis to be mounted through. This is the build this file
+   spent four hundred lines on.
+4. **Three cells in a row.** The right vocabulary; three equal boxes is a
+   toolbar rather than a selector.
+5. **`◀ SQUARE ▶`, a character select.** Familiar, and it puts the far value two
+   presses away while showing you neither of the others.
 
-**Colour is THREE KNOBS — the composer's own control (2026-08-29).** Hue,
-Saturation, Lightness, legended **H / S / L** on the plastic under each dial,
-with the hex field kept underneath as a well drilled through the panel. The board is the toy
-and the body is what operates the screen; the most screen-changing control there
-is has no business being a text field on a device that already has an instrument
-for it.
+A dropdown shows all three at once and reaches any of them in one press. It also
+has room for both the name and a description, which is what builds 4 and 5 were
+trading against each other.
 
-- **Three of them, not two and a slider.** The composer runs H and L on knobs
-  and S on a rail because the rail spans the lane between them and has a whole
-  board's width to live in. A 264px column has no lane, and a slider dropped
-  between two knobs reads as the one control that did not get to be hardware.
-  Three of the same object is also the truer reading: H, S and L are three axes
-  of one thing.
-- **The hex field stayed, as a SEGMENT PANEL above the knobs** — the Braun
-  tuner's frequency display, at readout scale. Knobs are how you FIND a colour;
-  a field is how you enter one you already know, and an icon set whose users
-  arrive with a brand hex needs both. That is the composer's split too — knobs
-  on the board, hex in the dock.
+**No glyph beside the name (by request), and the cost is worth stating because
+it is the one this control keeps paying.** Each row carried a 2×2 patch drawn by
+the engine's own `cellNode`, and a drawing cannot go stale against a geometry
+change where a word can. `SHAPE_HINTS` now carries the behaviour alone with
+nothing checking it against the engine. What it buys: at 16px a 2×2 patch of an
+11×11 grid is four marks two pixels across, too small to tell Inset from Fill —
+a decoration claiming to be information.
 
-  It was a `.pixl-well`: a hole with text lying in it. The reference device does
-  not put its readout in a hole, it puts a DISPLAY in the case, so this is the
-  same `--lcd` panel the mini screen is, recessed with the same five moves every
-  other cut on the board uses. **It sits ABOVE the knobs**, because the display
-  is what the case shows you and the controls go under it; it was below them,
-  which put the answer beneath the question.
+**A menu, so the arrows move the FOCUS rather than the value.** That is the
+difference from every earlier build: a stepper and a radiogroup both change the
+setting as you move through it, and a menu lets you look before you choose.
 
-  **THE COLOUR HAS ITS OWN SCREEN beside the readout (2026-08-29)**, square and
-  stretched to the readout's height so the two read as one fitting at two
-  widths. It was a swatch chip sitting ON the readout, which is a single display
-  showing two unrelated things — a colour and a number — and a readout is for
-  the number. The colour is the panel's own background, so the recess shadows
-  fall on it and it reads as a lit surface at the bottom of a hole rather than a
-  sample card taped over one.
+### Size — a fourteen-block meter (`SizeMeter.tsx`, `SizeControl.tsx`)
 
-  **There is no unit label.** The tuner prints "MHz" because a bare number could
-  be anything; `#` already says hex, and a panel with one value on it does not
-  need to be told what kind of value it is. The ✕ has the seat to itself.
+**16–120 in 8s, default 24**, printed as the value then the run of blocks.
 
-  **THE SEGMENTS REFRESH when the value changes** — transitions.dev's number
-  pop-in, with every number pulled down, because the trigger is different in
-  kind. A counter ticks once and can afford 500ms, an 8px rise and a 70ms
-  stagger per digit; a knob streams a new value for as long as you hold it, and
-  that recipe at drag rate replays from zero sixty times a second and finishes
-  nothing. Three changes make it read as motion rather than flicker:
+**It replaced the Braun tuning scale, and the scale was not badly built:** a
+milled channel with the whole scale printed on its floor, major and minor
+graduations flanking every number, a magnifier riding over them enlarging the
+real printing rather than drawing a second copy of it. All of it was designed
+for a 700px rail standing vertically in a chassis. Lying down in a 264px column
+it became a thin track wearing decoration.
 
-  - **Per character, not per group** — only the digits that actually changed
-    move, so turning Lightness on a grey does not shake all six.
-  - **No stagger** — the stock delay on the last two digits makes a decimal feel
-    alive; here one turn changes them all at once, and a stagger would ripple
-    the number left to right on every sample.
-  - **Short, and throttled per character**: 180ms against a 200ms floor between
-    retriggers, so an animation can never restart mid-flight. Measured: 40
-    changes produce 6 animations against a production build and 15 against a
-    dev one — unthrottled, the same runs produce 24 and 60.
+**A meter is the honest shape and the arcade one.** The control has fourteen
+stops so it draws fourteen stops, and nothing is printed between them because
+there is nothing between them — which is what the minor graduations were always
+slightly lying about. A run of filled blocks is readable at a glance in a way a
+pointer on a scale is not.
 
-  The glyphs are an overlay over the input, which paints nothing but the caret:
-  an `<input>` has no per-character boxes to animate. The test derives its
-  ceiling from the elapsed time rather than hard-coding a count, because the
-  same 40 presses take 160ms in production and 600ms in dev, and a bound picked
-  from either passes the unthrottled version of the other.
+**THE BLOCKS ARE ALL ONE SIZE**, and that took three shapes in two days. It was
+a **wedge**, block `i` drawn one cell taller than the last, so the run climbed
+and the control said "bigger" in its own shape. Two things were wrong: a
+three-cell block carries a 2px keyline top and bottom, leaving two pixels of
+interior, so at the bottom of the scale an on block and an off block differ by
+two pixels; and the wedge said what the run already says, since height and
+length were two encodings of one number and only one of them can also carry
+on/off.
 
-  **IT CARRIED A GHOST for one pass and it had to go.** A real LCD shows its
-  unlit segments faintly whatever it is displaying — the `8.8.8.8` behind the
-  `8.0` — so a `#888888` went under the live value. It is a true detail of the
-  object and it was wrong in this medium: on real hardware the unlit segments
-  are the SAME shapes as the lit ones, so the ghost sits inside them and
-  disappears. A full-glyph face draws two different letterforms on top of each
-  other instead, and the eye reads that as flicker rather than as depth.
-  Authentic is not the same as legible.
+**THE NATIVE RANGE STILL DOES THE WORK** — transparent, covering the whole
+meter, with the blocks painted under it. Drag, click, every key a range answers,
+and the whole accessibility tree come free. Same split the rail made, for the
+same reason: `::-webkit-slider-thumb` cannot be an arbitrary shape and a div
+cannot be a slider.
 
-  **The digits are the PIXEL FACE**, which §4 otherwise keeps to the wordmark,
-  the headings and the section eyebrows. This earns a fourth scope: a segment
-  readout is not running text, it is a display, and Press Start 2P is a display
-  face. At 16px, its own design grid.
+**WHAT WENT WITH THE RAIL, so it is not rebuilt:** the 45ms follow bridge, the
+travel clock that scaled with distance, the settle-on-release, and "the marker
+is placed where the pointer is". All of them existed because a **pointer**
+travels between detents and has to look like it does. A meter has no pointer. A
+block is on or off, so there is nothing to animate between two stops.
 
-  **The glass wash is weaker here than on the mini screen, and that is measured
-  rather than judged.** Glass lightens what is under it, and this panel carries
-  TEXT where the mini screen carries art: at the mini screen's 0.16 the sheen
-  lifted the dark theme's ground to rgb(105,111,98) in the corner and took the
-  segment ink to 3.47:1.
+**THE SCALE STILL OUTRUNS THE PICTURE.** The grid's seat is a fixed 64px, so
+**48 is the largest art it can draw**, and every stop above it sets the size of
+the **exported file** instead. Both halves of the travel do something; they do
+different things. The region is announced (`aria-valuetext`), never drawn — one
+mark unlike all the others reads as damage before it reads as information.
 
-  **There is no "Colour" heading.** The panel reads the colour out and the three
-  knobs are legended H / S / L on the plastic; a label over that is a caption
-  for something already saying its own name. The input still takes the whole
-  panel's width — it was sized to its content at `7ch`, which left most of a
-  264px field looking clickable and doing nothing when clicked.
+**The ends are not printed.** `16` and `120` sat under the meter for one pass
+and were the third thing on a row that already had two: the value prints the
+exact number and the run shows how far along it is, so the labels named two
+stops out of fourteen and collided with the carets.
 
+### Colour — an LCD key that opens the instrument (`ColorControl.tsx`, `ColorInstrument.tsx`)
+
+**THE KEY IS THE SEGMENT PANEL** (2026-09-13, by request). It was a plain
+outlined pill with a swatch and a number for half a day, which is what the
+reference uses — and it threw away the one control on this page that already had
+an established form: the sage `--lcd` panel the hex has been read out on since
+2026-08-29, and which the mini screen is made of.
+
+**It is a button that looks like a panel**, which is a real tension and the right
+side of it. A display is not normally pressable; the alternative is a panel with
+a separate affordance beside it, which is two objects for one control, and the
+whole argument for the LCD was that a colour and its number belong to one
+instrument.
+
+**IT IS THE ONLY CONTROL IN THE BAR THAT OPENS.** A saturation field is 264px
+square and the bar is 44px tall. Size is fourteen blocks and Shape is a word, so
+both stand at full size; this one cannot, and that is the whole reason a popover
+exists here and nowhere else.
+
+**BEHIND IT: the field, the hue strip, the hex readout and the swatch, as one
+part** — mounted in a popover on the desktop bar and **inline in a column** in
+the mobile filter sheet, which is a tall narrow surface with room to spare. One
+implementation, two layouts, only ever one mounted. That is what stops the two
+surfaces becoming two answers to the same question.
+
+**It replaced three knobs.** Hue, Saturation and Lightness as dials, legended H
+/ S / L on the plastic, were the right control for a body that no longer exists;
+a field and a strip are what a colour picker is on a page. The knob component
+survives and is still built — the composer mounts it, which is the surface those
+dials were always moulded into.
+
+**Rules the readout keeps, all of them still live:**
+
+- **No unit label.** `#` already says hex, and a display with one value on it
+  does not need to be told what kind of value it is.
+- **NO GHOST.** A `#888888` ran behind the live value for one pass, the way a
+  real LCD shows its unlit segments. On real hardware the unlit segments are the
+  *same shapes* as the lit ones, so the ghost sits inside them and disappears; a
+  full-glyph face draws two different letterforms on top of each other and the
+  eye reads that as flicker. Authentic is not the same as legible.
+- **THE SEGMENTS REFRESH per character, not per group**, so turning lightness on
+  a grey does not shake all six digits. **No stagger** — one change moves them
+  all at once, and a ripple left to right on every sample is noise. **Short and
+  throttled**: 180ms against a 200ms floor between retriggers, so an animation
+  can never restart mid-flight. Measured: 40 changes produce 6 animations in a
+  production build and 15 in a dev one; unthrottled, the same runs produce 24
+  and 60.
+- **The glyphs are an overlay over the input**, which paints nothing but the
+  caret: an `<input>` has no per-character boxes to animate.
 - **THE KNOB POSITION IS HELD, NOT DERIVED**, and this is the part a refactor
-  will get wrong. The default colour is #000000, and every hue and every
-  saturation of black is the same six characters — so a knob reading its
-  position back off the hex loses both axes at the exact value the gallery
-  *starts* on. `GallerySettings` carries an `hsl` alongside `colorText` for
-  that reason. It is unused while the field is empty, when the knobs read the
-  theme's colour instead so they always show what is on screen.
-- **No mesh.** The dials are the CSS build: three.js is ~600KB and the gallery
-  is the public route almost all traffic lands on (measured — `/` loads 539KB
-  of JS, `/create` 1419KB of which 861KB is three). The rule that the WebGL and
-  CSS builds must describe ONE object is what makes that a choice rather than a
-  degradation.
+  gets wrong. The default is #000000, and every hue and every saturation of
+  black is the same six characters — so a control reading its position back off
+  the hex loses both axes at the exact value the gallery *starts* on.
+  `GallerySettings` carries an `hsl` alongside `colorText` for that reason.
+
+### What went with the sidebar, and is not to be rebuilt
+
+- **The pads.** `.pixl-pad` was a panel set into the body, and the argument for
+  it — *these belong together* — needs a body to be set into.
+- **The board's engraved badge**, the wordmark cut into the bottom-left corner
+  of the case. Five constructions were tried and the fifth was right; none of
+  them survive a case. §2's fourth shelf, *a mark cut into the case has no
+  colour to place at all*, is the part worth keeping and is recorded there.
+- **The chassis token repointing.** `.pixl-pad` set `--color-text`,
+  `--color-border` and `--color-accent` to the chassis's own ink because the
+  shell's blue was unreadable on plastic. There is no plastic, the palette is
+  monochrome, and the controls take the page's own tokens.
+- **The mini screen's place in the column.** The screen itself is very much
+  alive — see *Icon detail* below — it simply lives in the detail shelf now.
+
+**Padding and Transform stay removed** (2026-08-28). Neither had a surface whose
+job it shared. The engine keeps `applyOrientation` and `cellsToSvg`'s `padding`,
+both written and tested and neither called, so restoring either control is a UI
+decision rather than a rewrite. See BACKLOG §D.
 
-**The CONTROLS SIT UNDER THE MINI SCREEN**, one gap between all three parts,
-with the slack below them — see the sidebar note above for why they were pinned
-to the column's FOOT for a day and what that actually produced.
-
-**The board's BADGE — the wordmark cut into the bottom-left corner of the case
-(2026-08-30)**, which is where most of the devices on the reference sheet carry
-theirs. It is what the slack under the controls is for — a panel with the
-product's name along its foot is a finished side, and the same panel without one
-is not.
-
-- **ENGRAVED INTO THE CASE — settled 2026-09-03 against the reference
-  photographs**, which show the badge as a mark *cut into* the metal rather than
-  as anything lying on it. So the letters carry **no ink at all**. They are the
-  **floor of a cut**: one step down from the panel and taking less light for it,
-  with the cut's two **walls** doing the reading — shaded above, lit lip below,
-  which is the construction `.pixl-well`, `.pixl-mini` and the Shape drum's
-  windows all already use (§5c).
-
-- **FIVE CONSTRUCTIONS, AND IT TOOK ALL FIVE TO ARRIVE AT THE SIMPLE ONE.**
-  Worth keeping all five, because each was right about something:
-
-  1. A flat dark fill with a lit lip under it. Read as *printed*, which was the
-     complaint that started this.
-  2. A **real cut**: a `background-clip: text` gradient inside each glyph — the
-     shaded wall at the top, the lit floor at the bottom — with the lip as a
-     `drop-shadow`. A `text-shadow` cannot do it: it paints ABOVE a
-     background-clip fill, so the near-white lip lands on top of the glyph and
-     the letters come out light.
-  3. The same, held right back, because at full strength a near-white line under
-     every letter is a **white rule**, not a lit wall.
-  4. Flat ink, no relief at all, on the reading that the reference case *prints*
-     its badge. It does not.
-  5. **RAISED**: the panel extruded, lit up-left and shaded down-right. Right
-     physics, wrong direction — the word stood off the case, which is what an
-     emboss is and not what was wanted.
-
-  **2 and 3 were the right idea at the wrong cost.** They put a gradient *inside*
-  the letterform, which needs `background-clip` and forces the lip out into a
-  `drop-shadow`, and 3 is where that lip stopped reading as a wall. A cut does
-  not need a gradient in its floor: the floor is one tone, and the two walls are
-  what you see. Two `text-shadow` offsets buy the whole thing, and neither of
-  the mechanisms that made 2 fragile is in the file any more.
-
-- **THE RELIEF DOES NOT INVERT WITH THE CASE**, and that is the difference from
-  the flat-ink build at 4. Ink LIES ON a panel, so 4 had to be dark on silver
-  and light on charcoal; a cut is darker than its panel in **both** themes
-  because it is a hole, with the light in its lower wall either way.
-  `--cut-shade` and `--cut-lip` are already the per-theme values of those two
-  walls, so it comes for free, and the badge no longer reads `--toy-ink`.
-
-  The test asserts each direction separately, in both themes. The flat-ink build
-  fails the floor check on silver and fails it enormously on charcoal, where the
-  ink was white; the raised build fails every direction check at once.
-
-- **BOTH WALLS ARE HELD BACK, for the reason 3 records.** At full strength the
-  lit one is a white line under a word rather than a wall. Composited, the lit
-  wall lands **1.29:1** against the light panel and the shaded one **1.35:1**,
-  and the floor sits **1.13:1** below it — which is the whole of how visible an
-  engraving is meant to be. The pair *is* the badge, so there is a floor as well
-  as a ceiling: held back until the walls stop reading, it is a blank corner of
-  plastic. Both bounds are tested.
-
-- **AND IT IS NOT COLOURED — argued, then BUILT, then taken back off.** It ran
-  as the marker's orange in light and a red in dark for one pass, on a
-  `--badge-ink` token that is gone with it. The engraving settles it a second
-  time and from a different direction: there is no ink left to colour, and a
-  tinted cut would be a *painted* letter claiming to be a hole. §7 is the argument: the rail's
-  marker is the body's ONE accent, and the reference sheet spends that orange on
-  the thing you TOUCH — a knob, a button, a slider — never once on a label.
-  Seeing it on the board settled it. Two things the measurements say, for
-  whoever reaches for this again:
-
-  - **The badge takes weight OFF the marker.** They land diagonally across from
-    each other on one grey chassis and five letters beat a 32px pointer, so the
-    accent stops meaning *this is the control you are moving*.
-  - **The colours are weak exactly where they need not to be.** Orange on the
-    silver case is **1.71:1** against `--frame-2` — carried by hue, not value,
-    the same thing §6 records about the marker on its groove. Red on the
-    charcoal one is **3.10:1**, *dimmer* than the marker's own orange there
-    (3.76:1), and a deeper red is worse still: `--danger`'s `#dc2626` collapses
-    to 1.85:1. (Not that `--danger` was ever a candidate — that token means a
-    failure, and a brand badge wearing it would be the one red on the page that
-    is not an error.)
-
-- **NO MODEL NAME.** The reference pairs the brand with one — `audio 1`,
-  `tuner 1`, `photo 1` — and it was built that way for a pass. On a column that
-  already carries the mini screen's own legend two inches above, a second
-  right-hand label is one more thing to read on a face whose whole job is to be
-  quiet.
-
-- **IT DOES NOT SCROLL.** It is a SIBLING of the column's scroll box, not its
-  last child. The screen and the pads scroll on a short window — the mini screen
-  gives up height first, and only past its floor does anything move — but a mark
-  moulded into a case does not slide up over the controls when the content
-  behind it runs long. Held by a test that actually scrolls the column, since
-  an `overflow` three ancestors up is exactly what a refactor moves.
-
-- **The pixel face, and the floor is about 16px** — set by the STROKE rather
-  than by the face's 8px design grid. 12px fails twice over: a 1-unit stroke
-  lands at 1.5px, so every edge is a half pixel, and the letterform goes soft.
-  Above ~16px the stroke is 2px and up and being off the grid stops showing —
-  measured at 8x zoom, 17.6px is indistinguishable from 16. **The cut needs that
-  floor more than the printing did**: the walls are 1px each, so on a 1.5px
-  stroke the relief would be wider than the letter it is describing.
-
-- **A corner mark, not a banner.** The letters were spread across the whole
-  column for one pass, at 40px, on a literal reading of "fill the width".
-  Filling 264px with five glyphs means the GAPS do the filling, and a word held
-  apart by 16px of plastic reads as five marks in a row.
-
-- It is `aria-hidden` — the page's real wordmark is in the nav.
-
-**Size is a TUNING RAIL ON THE BOARD'S RIGHT EDGE (2026-08-29)** — the Braun
-audio 1's dial strip, stood on end. It runs the screen's full height in the
-chassis **past the screen**, which was the one side of the board carrying
-nothing; the screen used to run to the board's own padding there. It is on the
-CHASSIS rather than on the glass: size changes how an icon is DRAWN, which is
-the body's job, and a slider printed on a display would be the one control
-claiming to be hardware sitting on top of the picture. It left the Display pad
-because a scale wants LENGTH — fourteen stops need the screen's height to print,
-and the pad is 264px wide.
-
-**THE WHOLE SCALE IS IN THE CHANNEL (2026-08-29).** A wide GROOVE cut into the
-chassis, the SCALE printed on its floor — a number at every stop with a
-graduation flanking it — and the MAGNIFIER riding in the groove over them.
-**16–120 in 8s, default 24.**
-
-It took four passes, and the last one deleted a part rather than adding one. The
-first was a groove with a fill and the ticks underneath — a slider wearing
-hardware rather than the hardware itself. The second made the whole strip the
-channel and deleted the groove, which lost the one part that says where the
-marker can travel. The third put the numbers OUTBOARD of a narrow groove, and
-that gutter is what forced the marker to be **two mouldings**: a thin blade to
-sit in the slot, bridged sideways to a lens over the number column.
-
-**Widening the channel until the scale fits inside it removes the gap, and with
-it everything the gap forced.** No bridge, no arm, no seam between two parts lit
-by one light — and a narrower rail than two columns needed (60px against 66).
-The magnifier is simply lying on the scale, which is what a magnifier on a scale
-is. Everything the old build spent on making two parts read as one is recorded
-below under the arm, because the fix that finally worked was not lighting them
-better.
-
-**Its numbers therefore read IN the channel**, not beside it, and the channel
-sits against the screen — the marker is beside the thing it governs, with
-nothing between them to read past.
-
-- **THE SCALE OUTRUNS THE PICTURE.** The grid's seat is a fixed 64px, so **48
-  is the largest art it can draw** — but the rail runs to 120, and every stop
-  past the cap sets the size of the **exported file** instead. Both halves of
-  the travel do something; they do different things.
-
-  **It is no longer marked on the ruler.** 48 wore a full-width graduation for
-  one pass, and a ruler with one mark unlike all the others reads as damage
-  before it reads as information — the scale's own uniformity is worth more than
-  the annotation. The region is still announced (`aria-valuetext`); it is not
-  drawn.
-
-- **MAJOR AND MINOR GRADUATIONS, AND THEY FLANK THE NUMBER.** A mark reaches in
-  from each wall of the channel and the number sits in the break between them:
-  `—— 24 ——`. That is what a graduation and its label are on any printed scale,
-  and it is what the numbers moving into the groove made possible — with the
-  scale outboard the marks had nothing to flank.
-
-  Stacking them was tried first — one rule at each halfway point, between the
-  numbers rather than beside them — and read as **rows**: a line lying between
-  two numbers is a divider, and a channel full of dividers is a list.
-
-  Every stop keeps a major pair and its number; a shorter minor pair sits at each
-  **halfway point**. The minors are a printed subdivision rather than reachable
-  values — the control steps in 8s — which is what a graduated scale is: the
-  marks between the numbers tell you how far along you are, the detents decide
-  where you land. Numbering every *other* stop instead, so the minors could be
-  real stops, was tried and read as a scale with half its labels missing.
-
-- **THE MARKER IS A MAGNIFIER, AND THE GLASS IS A REAL HOLE.** One moulding: a
-  **lens frame** in the body's orange, riding in the channel directly over the
-  scale, with 4px of floor showing either side of it.
-  - **The lens prints nothing of its own.** It carried a copy of the value on a
-    lit white face for a pass, and both halves of that were wrong: a magnifier
-    that renders its own digits is a *badge*, and a white face is a part with
-    its own colour sitting **on** the chassis rather than a window **onto** it.
-    The frame is a masked ring, so the opening is genuinely empty and the panel
-    — and the number printed on it — shows through.
-  - **The magnification is of the real number.** The printed mark under the
-    glass scales about its own centre, so the effect comes from enlarging what
-    is actually there rather than from drawing a second copy of it. That is also
-    why the printed numbers carry no colour or weight of their own: the glass is
-    the emphasis, and mid-travel between two stops the window correctly shows
-    the bare panel that is there.
-  - **THE ARM IS GONE, AND THAT IS THE REAL FIX.** It was a slim blade crossing
-    the groove to reach a lens over the number column, and it never stopped
-    looking like two parts. Two passes were spent on the seam: it stopped 12px
-    short of the plate (invisible while the plate was solid, a stub lying across
-    the number the moment the lens became a hole), and its gradient was rescaled
-    to the whole marker — a `180deg` ramp runs over the box it is painted on, so
-    an 8px arm ran the full crown-to-foot fall inside 8px while the lens ran the
-    same fall over 32px, and the two met at visibly different tone.
-
-    Both were correct and neither was the answer. **A join you keep having to
-    disguise is usually a join that should not exist** — the arm existed only to
-    span a gutter, and widening the channel deleted the gutter.
-
-  - **Its corner radius is nested, not chosen.** The marker travels flush into
-    the groove's ends, so at the extremes the groove is only `half-width minus
-its radius` wide while the frame is `half-width minus its own` — the frame
-    hangs out of the slot unless `grooveRadius ≤ markerRadius + the floor either
-side`. The groove was a **capsule** (`999px`, used as 30 against 12 of
-    slack), which is invisible mid-scale and wrong at both ends, and the phone's
-    bar had the same defect: at 16 its lozenge stood outside a capsule that has
-    no height at its own tip. A bounding box cannot see any of this, so the test
-    measures the radii.
-  - **The rail is inset from the screen, and only inset.** Run to full height it
-    reads as a second edge of the case; at 72% it read as a stray control beside
-    the screen. Both shipped by accident, the second because an edit to the
-    number silently matched nothing and nothing measured it. A test does now.
-  - **It is a real element, not the native thumb**, because a
-    `::-webkit-slider-thumb` cannot be a frame with a hole in it. The thumb is
-    kept — sized,
-    transparent, still the drag target — and the marker is drawn over it. They
-    cannot drift: the marker's lane is inset by exactly half a thumb, the same
-    box the ruler and the numbers use, so all three are positioned by one piece
-    of arithmetic.
-  - **The input covers the whole rail**, not just the groove. That is what makes
-    the plate grabbable and the printed numbers click targets again, without
-    their being fourteen buttons in the tab order.
-  - **IT FOLLOWS THE POINTER; IT IS NOT ANIMATED TOWARD IT.** The value steps in
-    8s, so a marker positioned straight from the value jumps the whole gap
-    between two stops — measured, **fourteen jumps of 55px across a 660ms drag
-    with not one frame in between**. The stepping is right and stays; what was
-    missing is that a pointer travels.
-
-    **Two passes were spent trying to animate that, and both failed for reasons
-    worth keeping.** Easing each detent with `--ease-smooth-out` stutters: that
-    curve covers ~80% of its distance in the first third, which is ideal once
-    and a burst-then-crawl when it restarts every 45ms — velocity swinging
-    **±80% of its own mean, with peaks 3× the average**. Going linear and
-    matching the duration to the incoming pace fixed the spikes (0.80 → 0.36)
-    and left something worse: **15 frames of dead stop inside one drag**, about
-    one per detent, because a duration chosen from the previous gap is a lagging
-    guess at the next and every guess that comes in short is a standstill under
-    a moving finger.
-
-    So during a drag the marker is simply **placed where the pointer is**, with
-    no clock in between to be wrong about — which is also what the object does,
-    since a pointer on a detented scale sits under your finger and drops into
-    the notch when you let go. What remains is a **45ms linear bridge**, and it
-    is for sampling, not for travel: a frame in which no pointer event arrived
-    is a frame the marker would not move, and 17 frames in 121 got none.
-    Measured across that bridge's length, 45ms is the floor of the curve — peak
-    velocity **1.46× the mean, against 6.8× with no bridge at all**.
-
-  - **The position rides a `translate` on a wrapper the size of the lane**,
-    where `--fill` is the value's fraction and `-100%` of the wrapper's own
-    height is exactly the lane's. The arithmetic therefore lands in the same box
-    the ruler and the numbers are measured in, without any of them needing a
-    pixel number — and it stays a transform, animatable off the main thread,
-    where `bottom: X%` would relayout the element on every frame of every drag.
-  - **FOR THE MOVES IT MAKES ON ITS OWN** — a key, a click, the drop into the
-    detent when a drag ends — **the duration follows the distance**, which is
-    §5b's rule rather than a new one. A detent gets ~112ms and a full sweep
-    ~325ms; at one fixed clock, 260ms left a long throw fine and a short move
-    sluggish, and 90ms made a click across the rail snap instead of travel.
-    **The settle applies only if a drag actually happened**: a click is a press
-    and a release, and the press already started a long glide — stamping the
-    settle clock on the release rewrote that transition mid-flight and cut the
-    travel short.
-  - **Grabbed, the seating deepens and the part does not grow** — the same rule
-    the knobs are held to. A marker riding in a groove cannot get bigger because
-    you took hold of it; what a part pressed into its socket does is sit deeper.
-  - **It carries no ink at all**, which is what an empty window means. The
-    plate that preceded it printed the value, and its face therefore had to be a
-    constant in both themes with a literal dark ink — a token there could have
-    flipped out from under it, the exact bug §2 records `.toy-button` carrying
-    for a week. A hole cannot have that bug.
-- **THE GROOVE IS MILLED CHASSIS, NOT A BLACK WINDOW.** It was near-black in
-  both themes for one pass — the rule the Shape keys follow, a separate part in
-  its own material — and on a silver board that reads as a foreign object bolted
-  to the panel rather than a channel cut into it. A groove exposes the SAME
-  plastic, one step down and in shadow, so it stays in the chassis's family and
-  inverts with it.
-
-  **THE MARKER IS THEN IDENTIFIED BY ITS KEYLINE, NOT ITS FILL**, and that is
-  what the near-black floor was buying. Orange and mid-grey sit within about
-  1.3:1 of each other by luminance: measured across the range, every orange
-  tried lands between 1.0:1 and 2.6:1 on a mid-grey floor, and the only thing
-  clearing 3:1 is a brown-black `#9a3412`, which is not a marker colour. So the
-  boundary carries it — which is what 1.4.11 asks for, and what a part seated in
-  a groove physically has. The seam clears **4.22:1** on the light floor; in
-  dark mode the groove is dark enough that the fill carries it at **4.58:1** and
-  the seam is decoration. Each theme has one of the two, which is the
-  requirement, and the test reports both numbers so a regression says which half
-  went.
-
-  The ruler inverts with the floor — a black hairline is nothing on a dark
-  groove — and both alphas are **solved for 3:1** rather than eyeballed: 0.3
-  came to 1.94:1 on the pale floor.
-
-- **THE MARKER IS THE BODY'S ONE ACCENT, and it is orange.** The whole board is
-  a Braun homage and that is the family's marker colour, used on the references
-  for exactly this job. It REPLACES the ink the body had been using rather than
-  joining it, so §7's single-accent rule still holds: the shell's blue never
-  appears on the chassis and nothing else on it is coloured. **The current
-  number is not marked at all** — every printed number is the same weight and
-  the same ink, and the glass over one of them is the whole emphasis. It lifted
-  to full ink for one pass, which is saying it twice: once behind the thing
-  already saying it.
-
-- **The lip is short and the floor is most of the ramp.** §5c's rule from
-  `.pixl-well` applies here too: whatever lies in a hole lies on its floor, and
-  on this rail that is now the printed scale itself — so the fill reaches the
-  floor tone by 22% and the shadows carry the depth. Stretched over the full
-  width, the ground under the widest magnified number is a step darker and costs
-  about 0.7 of its contrast. It was 30% while the floor was bare.
-- **THE ALIGNMENT IS THE WHOLE JOB.** A native thumb's centre travels
-  `trackLength - thumbLength`, so the graduations and the numbers are both inset
-  by half a marker. It came apart twice in one sitting: the handle shrank from
-  26px to 14px and the token was left behind, and the input carried the strip's
-  inset a second time on top of the strip's own. Both are invisible mid-scale
-  and wrong at the ends.
-- **The marker's size is two tokens and its travel is a third, scoped to the
-  RAIL rather than `:root`.** The ruler and the numbers are the input's
-  SIBLINGS and inset themselves by half of it, so the value has to resolve on an
-  ancestor of all three — and the two orientations need different numbers, which
-  is exactly what a global would not give them. The test asserts the tokens are
-  what the marker is actually drawn at: a pseudo-element has no box to query, so
-  comparing the ruler against a travel computed from the token would move both
-  together and see nothing.
-
-- **UP IS MORE, and that takes two declarations.** `appearance:
-slider-vertical` was removed from Chrome in 121, so a vertical range is turned
-  with `writing-mode` — and `writing-mode` alone puts the MINIMUM at the top.
-  `direction: rtl` is what makes it a thermometer rather than one running
-  backwards.
-- **The ruler marks the fourteen real stops**, not a decorative pitch: the scale
-  is stepped, and an even dense ruler would claim continuous values the control
-  does not have.
-- **The stacking order is declared, not inherited from the source.** The input
-  is absolute at `z-index: 1` and the marker's lane at `2`, over a groove that
-  paints in normal flow — so the scale printed on the floor is under the glass
-  that magnifies it and the whole rail is grabbable, whatever order the elements
-  happen to be written in.
-- **On the phone it lies down, and it is the build that DIVERGES.** The filter
-  sheet has no gutter to stand a rail in, so the same control is built
-  horizontally there, and only one of the two is ever mounted. It already
-  printed **every other number** — fourteen fit up 600px of rail and collide on
-  300px of phone, where `104112120` ran together as one word.
-
-  **It also keeps the outboard numbers and the slim pointer**, which is a
-  measurement rather than an oversight: a magnifier has to sit BETWEEN the
-  numbers either side of the one it reads, and the frame is ~44px against
-  printed stops ~40px apart on a 390px sheet — the ring would land across its
-  own neighbours. The rail's stops are ~49px apart, which is where the whole
-  construction becomes possible. The sheet's section label carries the exact
-  value instead, which is the readout the rail does not need.
-
-**Padding and Transform were removed with the rebuild.** Neither had a surface
-whose job it shared: they change how an icon is drawn, so they belonged on the
-body, and the body had already earned back its space by giving colour a home
-and handing Shape a row of caps in the same pad. The engine keeps both operations — the
-composer still flips, rotates and pads — so restoring them is a UI decision,
-not a rewrite. See @docs/BACKLOG.md §D.
-
-**NOTHING ON THE BODY IS BLUE.** The chassis repoints the shell's tokens so its
-ink reads on plastic, and for one iteration that included repointing `--accent`
-to a second blue — which put a different blue on the size slider, the active
-tick and the focus rings from the one every other page uses. **On the chassis
-the accent is INK**: near-black on silver, white on charcoal. It is the rule the
-composer's own saturation slider has always followed as `accent-white`.
-
-The repointing lives on `.pixl-pad`, not on an ancestor, because the same
-controls are mounted twice — the board's left column and the mobile filter sheet
-— and only one of those has a chassis ancestor. Repointing at the board is not
-an option either: the screens are descendants of it, and that paints the icon
-grid's own text white on near-white, in the one place the product is read.
-
-**Shape — A THUMBWHEEL SWITCH, MOUNTED THROUGH THE CASE (2026-08-30).** A barrel
-with the three values printed on it, read through a WINDOW at one end and turned
-by the knurled GRIP at the other, in two cut-outs with a strip of case between
-them. It spans the column's full width, in no pad of its own — see the sidebar
-note above. Selection is simply what the window is showing.
-
-**It took three tries to become one object.** Three transport caps said nothing
-about which was on until you compared the depth of their faces. A mode list
-beside a separate ribbed wheel was a control next to a *picture* of a control —
-the wheel turned and the list did not. Printing the values on the drum makes the
-thing you turn and the thing you read the same part, which is what a
-three-position selector with its values written on it has always been.
-
-**SQUARE IS PRINTED IN THE MIDDLE — Inset, Square, Round (2026-08-30).** Not the
-engine's order: `CELL_STYLES` is `solid` / `gap` / `dots` because that is the
-data, and this is where a value sits on a **drum**. A three-position wheel
-resting at one end can only be turned one way, and the value you start on is the
-one with nothing above it; in the middle both neighbours are half in the window
-before you touch it, which is also what says there is more surface to turn to.
-
-The DOM order is the printed order, so ArrowDown reaches the value printed
-**below** the live one — a group whose reading order and moving order disagree
-is one where the arrow skips past what you can see. The mapping is checked at
-module load, the way the registry checks its names: add a fourth cell style and
-the drum would otherwise simply never print it, with every test that walks the
-wheel still passing on the three it knows about.
-
-**THE MARK STOPPED MOVING, AND THEN IT WENT.** On a list the accent dash travels
-to whichever row is live; on a drum it cannot, which is the difference between
-reading a list and reading a dial. It was fixed to the paper, then printed on
-the case, and then removed altogether — because it was never what carried the
-selection. **What is live is what is turned to the FRONT:** square on, centred
-across the opening, in the lit middle of the window, with its neighbours clipped
-and curving out of it either side. A mark beside that is a second thing saying
-the first thing.
-
-That also leaves the size rail's marker as the **one** accent on the chassis,
-which is §7 tightened rather than broken — a second orange two pads above it was
-competing with exactly what that mark exists to mean.
-
-**And the value is centred because the mark is gone.** It was indented 1.75rem
-to clear a mark lying on the paper, then 0.6rem when the mark moved out onto the
-case. Across the middle of the opening is also what says the live value is the
-one turned square to you; off to one side it reads as a list item that happens
-to be visible.
-
-**THE PAPER LIES AT THE BOTTOM OF A HOLE, UNDER GLASS (2026-08-30).** Each
-opening is a cut through the panel with real WALLS — 4px of chassis running the
-`--cut-shade` → `--cut-lip` ramp, the `.pixl-mini` construction at a control's
-scale — and the drum's surface sits a wall's width below the case. That ring is
-what makes it read as sunken: it was a rectangle with inset shadows on it for a
-pass, and **a shadow painted onto the drum darkens the drum**. A recess is read
-from the material AROUND the opening, which is the lesson the mini screen paid
-for twice.
-
-**The cover's reflection has a HARD EDGE**, and that is the whole of what says
-there is glass over the opening. A soft wash is a wash; a sheet of glass
-reflects the room in a shape with a boundary. It runs the upper-left diagonal
-and stops clear of the live value, since the point of a window is to read
-through it. A test walks the layers **one at a time** — flattening the whole
-background stack found a "hard edge" between the last stop of one gradient and
-the first of the next, and passed with the cover mutated to a plain ramp.
-
-**The strip of case between the two cuts out-measures the walls either side of
-it.** That is the rule rather than a pixel count: once each opening grew its own
-wall, a gap no wider than those walls reads as a third wall — which is the "one
-slot with a line down it" the gap exists to prevent.
-
-**THE PAPER IS SMOOTH, AND IT BELONGS TO THE WINDOW.** Each face carried its own
-shaded plastic for two passes — ribbed, then smooth — and both are the same
-mistake: three panels each running the same crown-to-foot ramp put a **bump at
-every join**, so the drum read as a stack of facets. Real paper on a real drum
-gives you nothing to see, so the only thing that can tell you it is moving is
-the printing. The window paints one cylinder; a face carries its word and
-nothing else. (That also retired the blank filler faces, which existed to cover
-the barrel where no value was printed.)
-
-**ONE INK FOR EVERY FACE, and the contrast bar is what proved it.** It ran as
-two — a held-back ink for the values turning away — and that could not be made
-to work: at the paper's shaded end even a **fully opaque** held-back ink came to
-4.47:1, so no alpha cleared AA. The bar was telling the truth about the design.
-Printing does not get fainter as a drum turns; the **surface** goes into shadow
-and takes the printing with it, which is what the glass over the opening already
-does. One near-black ink measures 7.1:1 at the paper's darkest and 16.5:1 at its
-brightest in light mode.
-
-**AND BOTH TURN OVER WITH THE CASE (2026-08-30).** The barrel was a pale silver
-drum in both themes, filed under §2's *separate parts keep their own material*
-beside `.pixl-key`'s soft-touch cap. That is the wrong shelf: a key IS a
-separate part, and a thumbwheel is moulded through the case in the same shot a
-knob is. So the plastic follows the chassis — silver on the silver board,
-charcoal on the charcoal one — and the printing goes the other way, because ink
-lies ON a surface.
-
-**The dark ink's ceiling is solved, not picked.** The crown is the brightest
-thing the printing has to clear, and against the `#6a6f79` first tried a
-near-white came to **4.21:1**. `--drum-hi` is `#61666e` for that reason.
-
-**The contrast suite cannot catch this on its own**, which is why a separate
-test walks both themes: a constant pale drum with a constant dark ink clears AA
-in both and is still wrong. What that test holds is the *relationship* — in each
-theme the ink sits on the far side of the mid point from the plastic under it.
-
-**DRAG UP GOES FORWARD.** The values are on the surface, so pushing it up brings
-the one BELOW into the window — which means index order runs DOWN the drum. It
-shipped inverted for a pass, with index 1 above index 0, and the reel scrolled
-backwards under the finger. The drag does not wrap: a drum with three detents has
-two ends and you can feel them. Arrow keys keep the APG's wrapping, because there
-the affordance is a radio group.
-
-**Only the faces the window is showing can be clicked**, and the rest are round
-the back. That is the control working rather than a limitation to route around:
-you reach a far value by turning to it, or with the keyboard.
-
-**Its faces follow the finger.** The value steps in three detents, but the barrel
-is turned to where the pointer is while you drag, with no clock in between to be
-wrong about, and settles onto the detent when you let go. Same rule, and the same
-measured reason, as the size rail's marker.
-
-**AND THE GESTURE HAS TO BE CLAIMED, IN THREE PLACES.** This is the only drag
-surface on the board with a WORD under the pointer, and a press on text is a
-**text selection** before it is anything else — after which the browser offers
-to drag the selection, so the control appears to come away from the panel
-instead of rolling. `touch-action: none` was here; `user-select: none` and the
-native element drag were not, and the composer's slide-to-clear groove has
-carried both since it was built. The third guard is in the component: a `click`
-arriving at the end of a real drag is not a choice, so it is swallowed.
-
-**The property is what a test can hold, and it is read off the FACE.** The
-rendered symptom needs a real pointer — synthetic input selects nothing in
-either engine, so "did it select" passes with the fix removed. Reading the face
-rather than the housing is what makes the assertion bite, since a rule landing
-on the wrong element is the failure this stylesheet has now shipped three times
-(§5c).
-
-**THE GRIP'S RIBS ARE REAL PANELS ON A CYLINDER**, not a repeating gradient, and
-that is the whole of why it reads as round: a gradient spaces its stops evenly
-however many you write, and an evenly banded rectangle is exactly what a cylinder
-is not — the bands have to crowd together as the surface turns away. Perspective
-does that on its own and nothing else does it at all. Thirty ribs at 12° is one
-full turn, so the barrel never runs out of surface.
-
-**CSS 3D RATHER THAN R3F, and there are two reasons — the second decisive.**
-The first is the window: a mesh renders form and never state, and the DOM keeps
-the text and the whole accessibility tree (@docs/TECH-STACK.md). A drum whose
-surface IS its text would have to bake the radio group's own labels into a
-texture. The grip carries nothing, so that argument alone would leave it open.
-
-The second closes it: **the gallery deliberately does not ship three.** §6
-measured it — `/` loads 539KB of JS and `/create` 1419KB, of which 861KB is
-three — and that is exactly why the body's colour knobs are the CSS build on this
-route. Adding ~600KB to the public page for a thumbwheel's shading is the trade
-that note exists to refuse. The CSS build is not an approximation here anyway:
-the foreshortening is true perspective, which is the cue that was missing when
-the grip was a gradient.
-
-**The words reversed the rule the keys were held to.** That rule — *a shape
-control whose values are shapes has no business spelling them out* — was written
-about a KEY: a play button does not say "play", and a cap has one glyph's worth
-of room to say anything at all. A drum is a printed scale, and a scale names its
-values. **The cost is real:** the 2×2 glyph patches were drawn by the engine's
-own `cellNode`, so they could never go stale against a geometry change, and a
-word can. The tooltip carries the shape's behaviour now, and nothing checks it
-against the engine.
-
-**Printed, not displayed.** The reference's mode panel is a lit segment readout
-inside a screen; this is ink on a moulded barrel, so it takes the DATA face and
-`--engrave` like every other legend on this board. The pixel face here would be
-a display drawn on plastic. The capitals are `text-transform`, so the accessible
-name stays "Square".
 
 **Category chips — COLOUR IS AN INDEX, NOT AN ACCENT.** The fourteen `--cat-*` /
 `--cat-*-ink` pairs followed the taxonomy to the chips. Each chip wears its own
@@ -1930,9 +1576,12 @@ gallery's colour and cell shape.
 - *Buttons*: 8 total, 4 flanking each side — Game Boy A/B style (soft light
   domed cap seated in a recessed well). Left: Mirror, Grid, Eyedropper, Undo.
   Right: Flip-H, Flip-V, Rotate, Redo. Press sinks ~1px only.
-- *Knobs*: two knobs at the ends of the colour lane — and, since 2026-08-29,
-  three more on the gallery's body, built from the same component. **Smooth
-  moulded control knobs**, not the Etch A Sketch's ridged dials: a wide rounded
+- *Knobs*: **three, in a row on the colour pad** — H, S and L, since
+  2026-09-19. They were two at the ends of a lane with saturation on a rail
+  between them, and the gallery's body carried a three-knob set of its own from
+  2026-08-29 until that body became a page. There is one set now, on the one
+  surface with a chassis, and `@/components/Knob` is what is genuinely shared.
+  **Smooth moulded control knobs**, not the Etch A Sketch's ridged dials: a wide rounded
   shoulder falling to the rim, a shallow **domed** face inside it, a crisp
   moulding seam, and a small round **pip** on the shoulder for the pointer. The
   milled flutes were dropped on 2026-08-19 against a supplied reference.
@@ -2051,9 +1700,85 @@ gallery's colour and cell shape.
   rather than two. They had drifted on that too — the canvas was at 6% while
   the CSS dial was at 10%.
 
-- *Color panel* (between the knobs): current-color swatch, editable hex, a
-  readout (hue name · L% · S%), and a saturation slider. **No preset swatches** —
-  they duplicated controls the knobs already cover.
+- *The colour instrument* — **ONE PAD, A READOUT AND THREE KNOBS** (2026-09-19).
+  A `.pixl-pad` set into the case, spanning the drawing area: across the top a
+  **swatch** and a **segment readout** printing the live hex, and under them
+  **H, S and L on three identical dials**, legended on the plastic. **No preset
+  swatches** — they duplicate controls the knobs already cover.
+  - **IT TOOK TWO GOES, AND THE FIRST ONE IS THE LESSON.** On 2026-09-18 the
+    same salvage was rebuilt as a LANE: a knob hung off each end, with the
+    readout and a milled saturation groove between them. Every part of that was
+    faithfully recovered and the assembly was wrong — four fittings at four
+    widths on three constructions, which is exactly what a pad exists to
+    prevent. `design-plans/reserved/` had photographed the parts and not the
+    object, and a reserved snapshot cannot warn you about the thing it does not
+    contain.
+  - **THREE KNOBS, NOT TWO AND A SLIDER.** The old board ran saturation on a
+    rail because the rail spanned the whole lane and had a board's width to live
+    in. On one pad there is no lane to span, so a slider between two dials is
+    the single control that did not get to be hardware, and it reads as exactly
+    that. Three of the same object is also the truer reading of the colour: H, S
+    and L are three axes of ONE thing, not two gestures and a setting.
+  - **The pad is the claim that they are one instrument.** A pad says *these
+    belong together* (§5c), and it is worth saying once on this board: the tool
+    columns are sets of peers and the drum is a single control. Without it the
+    hex reads as a field that happens to sit above some dials.
+    `.pixl-pad` had been stripped to a bare radius when the gallery went pixel
+    chrome — correctly, since a pad needs a case to be set into — so the recess
+    comes back **scoped under `.composer-scope`**, where the case exists.
+  - **So `.pixl-lcd`, `.pixl-swatch` and `.pixl-pad` are each drawn twice on
+    this site, and that is the two registers working.** The gallery's colour key
+    is FLAT — a 2px keyline, a bitten corner, a hard offset block — because it
+    is drawn on a page. The composer's is MOULDED — a rounded recess with a cut,
+    a lit lip and two uneven side walls — because it is a hole in plastic. The
+    scoping is load-bearing rather than tidy: unscoped, these would repaint the
+    gallery's key, which is a collision in a flat global stylesheet.
+  - **Radii are explicit, not `--radius-sm` / `--radius-md`.** Both tokens
+    became named zeros when the gallery went pixel chrome, so inheriting them
+    gave the toy square panels on a board whose every other part is rounded.
+    Zero corners are a decision about a PAGE.
+  - **Each ring previews its own AXIS, built from the CURRENT colour**, so a
+    ring never shows a colour you cannot reach from where you are. Saturation's
+    is the one exception worth knowing: it is drawn at a FIXED 50% lightness,
+    because a ring built at the live lightness is black on black and white on
+    white — honest and useless, since the board starts on #000000 and the knob
+    would ship with a dead scale. That rule is what the milled groove's printed
+    floor was also keeping, and it is the half of the groove that survives.
+  - **`--knob-size` IS DECLARED BESIDE `--toy-chrome`, and must stay there.**
+    A dial on this route is not only a size, it is height taken off the drawing
+    surface: `--board-size` subtracts `--toy-chrome` from the viewport, and the
+    instrument is the tallest thing in that budget. Every tier restates both.
+    Move one alone and the board either overflows the window or leaves a band of
+    empty frame under itself, and neither failure says which value was wrong.
+- *~~Category — a thumbwheel mounted through the case~~* — **BUILT
+  2026-09-18, REMOVED 2026-09-19 by request.** Category is a `<select>` in the
+  dock again, beside Name and Tags. `CategoryDrum.tsx`, the `.pixl-thumb*` /
+  `.pixl-drum*` rules and the four `--drum-*` tokens are all gone with it.
+
+  **The rule it was built on was "THE DOCK HOLDS WHAT YOU TYPE; THE BOARD HOLDS
+  WHAT YOU TURN", and that rule is WITHDRAWN.** It is a statement about the
+  SHAPE of a control, and shape is the thing that should follow from the
+  grouping rather than decide it. The line that replaces it is about WHEN you
+  reach for something:
+
+  > **The board holds what you touch WHILE DRAWING. The dock holds what you say
+  > about the drawing when it is done.**
+
+  Colour is the whole of the first — it changes between one stroke and the next,
+  which is why the hex readout stays on the board with the instrument that
+  produces it. Name, category and tags are the second, and they are read
+  together, in one place, top to bottom.
+
+  **What the old rule cost, measured:** a whole board row, and a 482px barrel
+  printing one word with the next value half-cut along the bottom edge of its
+  window. It also split metadata across two surfaces, which was flagged as its
+  one real cost when it was built and turned out to be the whole story.
+
+  **What is worth keeping from the attempt**, since neither claim was wrong on
+  its own: a thumbwheel IS the right hardware for a closed set of named values,
+  and the gallery's Shape drum did recover whole and carry six faces at
+  `--i * 30deg` without complaint. It had no argument for being on THIS board.
+  Recovered from `3b41020^` if it is ever wanted again.
 - *Slide-to-clear*: a groove the width of the board, just under the screen;
   dragging wipes the drawing left→right progressively.
 

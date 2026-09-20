@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GridDiagram } from "@/components/GridDiagram";
 import { IconPreview } from "@/components/IconPreview";
+import { PageMasthead } from "@/components/PageMasthead";
 import { recolorCells } from "@/engine/color";
 import { SHAPE_LABELS } from "@/components/gallery/settings";
 import {
@@ -39,18 +40,14 @@ const SWATCHES = ["#111111", "#2b5bff", "#dc2626", "#16a34a"];
 
 export default function GuidePage() {
   return (
-    <div className="px-6 py-10 lg:px-8">
-      <header className="mb-14 max-w-2xl">
-        <h1 className="mb-4 text-h2">Guide</h1>
-        <p className="prose-body text-text-muted">
-          Every Pixit icon is the same shape underneath: {GRID_SIZE}×{GRID_SIZE}{" "}
-          cells, one color, drawn to survive being shrunk to {ICON_SIZES[0]}px.
-          This is what that means in practice, and it doubles as the style guide
-          once contribution opens.
-        </p>
-      </header>
+    <>
+      <PageMasthead
+        title="Guide"
+        route="/guide"
+        line={`Every icon is the same shape underneath: ${GRID_SIZE} by ${GRID_SIZE} cells, one color, drawn to survive ${ICON_SIZES[0]}px.`}
+      />
 
-      <div className="flex flex-col gap-14">
+      <main className="pixl-article pixl-rules">
         <Rule
           title="The grid"
           body={
@@ -76,6 +73,12 @@ export default function GuidePage() {
               The margin is a guide, not a fence: the composer will let you draw
               to the edge when a glyph needs it.
             </>
+          }
+          aside={
+            <GridDiagram
+              cells={DEMO.cells}
+              caption={`${DEMO.name}, with one cell of margin on every side`}
+            />
           }
         />
 
@@ -194,18 +197,18 @@ export default function GuidePage() {
             </ul>
           }
         />
-      </div>
 
-      <footer className="mt-16 border-t border-border pt-6">
+      <footer className="pixl-article-note">
         <p className="prose-body text-ui text-text-muted">
           {icons.length} icons follow these rules today.{" "}
-          <Link href="/" className="text-accent underline underline-offset-2">
+          <Link href="/" className="pixl-inline-link">
             Browse the set
           </Link>
           .
         </p>
       </footer>
-    </div>
+      </main>
+    </>
   );
 }
 
@@ -213,6 +216,12 @@ export default function GuidePage() {
  * One rule: prose on the left, the thing itself on the right. The asymmetric
  * two-column layout is what keeps this from collapsing back into equal cards —
  * the demonstration carries as much weight as the sentence.
+ *
+ * THE TITLE IS AN `h2` (2026-09-18), which puts it in the pixel face. It was an
+ * `h3` under a page `h1` — a skipped level, and the one register on the page
+ * that said nothing about what product this is. §4 scopes Press Start 2P to the
+ * wordmark, h1 and h2, and a rule's name is the largest thing in its section, so
+ * it is exactly what that scope is for.
  */
 function Rule({
   title,
@@ -224,12 +233,12 @@ function Rule({
   aside?: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-6 lg:grid-cols-[minmax(0,32rem)_1fr] lg:items-start lg:gap-12">
+    <section className="pixl-rule">
       <div>
-        <h3 className="mb-2">{title}</h3>
+        <h2>{title}</h2>
         <p className="prose-body text-text-muted">{body}</p>
       </div>
-      {aside && <div className="lg:pt-1">{aside}</div>}
+      {aside && <div className="pixl-rule-aside">{aside}</div>}
     </section>
   );
 }

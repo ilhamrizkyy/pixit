@@ -81,6 +81,27 @@ export function NameField(props: FieldProps) {
   );
 }
 
+/**
+ * CATEGORY, IN THE DOCK WITH THE REST OF THE METADATA.
+ *
+ * IT LEFT FOR A DAY AND CAME BACK (2026-09-18 to 2026-09-19). The argument for
+ * moving it was that category is a closed six-member union, which is what a
+ * detented control is for, so it became a thumbwheel mounted through the
+ * board's case — under the line "the dock holds what you TYPE, the board holds
+ * what you TURN".
+ *
+ * THAT LINE WAS TIDY AND IT WAS THE WRONG CUT. What actually belongs on the
+ * board is what you reach for WHILE DRAWING: the colour, because it changes
+ * between one stroke and the next. Category is set once, when you are naming
+ * the thing you have finished — which is the dock's whole job, and is why name
+ * and tags live there. Splitting metadata across two surfaces on the strength
+ * of a control's shape cost a board row and a 482px barrel printing one word,
+ * and bought nothing you could do faster.
+ *
+ * So the shape follows the grouping rather than the grouping following the
+ * shape. A `<select>` next to two text fields is three ways of saying "this is
+ * what the icon is called and what it is", read top to bottom in one place.
+ */
 export function CategoryField(props: FieldProps) {
   const store = useComposerStore();
   const category = useComposer((s) => s.category);

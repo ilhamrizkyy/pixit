@@ -124,7 +124,9 @@ const SURFACES = [
      text, and these entries are what hold the pairings that carry reading. */
   { name: "hero link", ink: ".pixl-hero-links a", ground: ".pixl-hero" },
   { name: "hero tagline", ink: ".pixl-hero-line", ground: ".pixl-hero" },
-  { name: "hero tag", ink: ".pixl-hero-tag", ground: ".pixl-hero" },
+  /* `hero tag` was here and went with the eyebrow on 2026-09-18. Its pairing
+     — the pixel face in `--neon-cyan` on the glass — is still measured, on the
+     masthead's live rail link, at the bottom of this file. */
   { name: "hero secondary key", ink: ".pixl-hero-key:not(.is-primary)", ground: ".pixl-hero" },
   { name: "hero name", ink: ".pixl-hero-mark", ground: ".pixl-hero" },
   // An inverse block: the neon filled and the label knocked out of it. The
@@ -353,8 +355,55 @@ for (const theme of ["light", "dark"] as const) {
  * nearly invisible to a person who already knows what the glyph says.
  */
 const TOY_SURFACES = [
-  { name: "tool button", sel: ".toy-button:not([aria-pressed='true'])" },
-  { name: "latched tool button", sel: ".toy-button[aria-pressed='true']" },
+  /* The instrument's pushbutton caps. They were `.toy-button`, round domed caps
+     on a light chassis; they are square caps seated in routed wells now, and
+     the ink rule that matters is unchanged — a CONSTANT light face takes a
+     CONSTANT dark ink. §2 records the bug this catches: `--frame-3` painted on
+     a light dome went pale silver on white for a week and read correctly only
+     in dark. */
+  { name: "tool button", sel: ".scope-switch-cap:not([aria-pressed='true'])" },
+  {
+    name: "latched tool button",
+    sel: ".scope-switch-cap[aria-pressed='true']",
+    press: "Mirror",
+  },
+  /* EVERY SILKSCREEN LEGEND — HUE / SAT / LUM, MIRROR, FLIP H, COLOR.
+     Separate ground, because printing has no background of its own, and the
+     ground here is a GRADIENT, which is the exact case axe reads as transparent
+     and skips.
+
+     THE GROUND IS THE CASE NOW, NOT A PANEL. The rails carried a tone of their
+     own until the panels were stripped to pure layout (2026-09-19), so every
+     legend lands on the shell itself — and pointing this at `.scope-panel`
+     after that measured nothing at all, which is how the entry was found.
+     Getting it wrong is the defect §2 records for `--toy-ink` and the tool
+     caps both: silkscreen solved against a surface it does not sit on. */
+  {
+    name: "control legend",
+    sel: ".scope-legend",
+    ground: ".scope-frame",
+  },
+  /* THE HISTORY PILLS, Undo and Redo. The one place on this instrument a
+     legend is printed ON a control rather than silkscreened under it — a pill
+     four times as wide as it is tall can hold a word where a key cannot — so
+     the pairing is the pill's own face rather than the panel.
+
+     They were SHOULDER mouldings on the top corners for a day. A front
+     elevation can only show those by cropping a part behind the shell's corner
+     sweep, and after four builds it never stopped looking like a mistake,
+     because the thing being drawn genuinely is not visible from the front. */
+  { name: "history pill", sel: ".scope-pill" },
+  /* THE EYEDROPPER, IN BOTH OF ITS STATES (2026-09-19). Quiet by default — a
+     dark glyph on a flush key routed into the panel — and the accent when
+     armed. Two entries, because they are two different pairings and the armed
+     one is the state that matters: an eyedropper waiting for your next tap and
+     not saying so is a mode you have forgotten you are in. */
+  { name: "eyedropper", sel: ".scope-pick:not([aria-pressed='true'])" },
+  {
+    name: "armed eyedropper",
+    sel: ".scope-pick[aria-pressed='true']",
+    press: "Pick color (eyedropper)",
+  },
 ] as const;
 
 for (const theme of ["light", "dark"] as const) {
@@ -363,6 +412,7 @@ for (const theme of ["light", "dark"] as const) {
   }) => {
     await page.goto("/create");
     await expect(page.getByRole("application", { name: /Drawing grid/ })).toBeVisible();
+
     await page.evaluate(
       (t) => document.documentElement.setAttribute("data-theme", t),
       theme,
@@ -377,8 +427,32 @@ for (const theme of ["light", "dark"] as const) {
         ]),
     );
 
-    for (const { name, sel } of TOY_SURFACES) {
-      const surface = await readSurface(page, sel, sel);
+    for (const entry of TOY_SURFACES) {
+      const { name, sel } = entry;
+
+      /* ENGAGED IN THE LOOP, NOT IN THE SETUP. Two entries measure a control
+         that is held down, and both used to be armed before the sweep started
+         — which worked while the latching control was one of several caps and
+         broke the moment the eyedropper became the only key of its kind: with
+         it armed up front, `.scope-pick:not([aria-pressed='true'])` matched
+         nothing and the resting pairing went unmeasured.
+
+         Pressing here instead means every entry names the state it measures,
+         and the resting entries are simply listed before the engaged ones.
+         Nothing here disarms: `armEyedropper` sets rather than toggles, and
+         Mirror stays latched, which is fine because each only has to still be
+         engaged when its own entry is read. */
+      if ("press" in entry) {
+        await page.getByRole("button", { name: entry.press }).click();
+        // The cap crosses to its latched value on the house 150ms clock, and a
+        // computed style read mid-transition is a colour in neither state.
+        await page.waitForTimeout(250);
+      }
+
+      // Printing takes its ground from the part it is printed ON; a control
+      // with a cap of its own is both.
+      const groundSel = "ground" in entry ? entry.ground : sel;
+      const surface = await readSurface(page, sel, groundSel);
       expect(surface, `${name}: "${sel}" is not on the page`).not.toBeNull();
       const { color, image, fill } = surface!;
       const inkRgba = colorsIn(color)[0];
@@ -397,3 +471,64 @@ for (const theme of ["light", "dark"] as const) {
     }
   });
 }
+
+/**
+ * THE MASTHEAD, on the three article routes (2026-09-18).
+ *
+ * It is the hero's glass moved above Guide, Resources and Contribute, so every
+ * ink on it is a neon or a near-white on a near-black ground — the exact case
+ * this suite exists for, and the exact case the `/` run above cannot reach,
+ * since the masthead is not on `/`.
+ *
+ * ONE ROUTE IS ENOUGH AND IT IS SAID PLAINLY: the component is shared, the
+ * palette is scoped to `.pixl-masthead`, and only the title's text differs
+ * between the three. What is NOT shared is the live route's mark, so the rail's
+ * two states are both measured here.
+ *
+ * NO THEME LOOP EITHER. The marquee paints its own CRT in both themes and never
+ * inverts, which is the rule the hero already follows — so a second pass would
+ * measure the same two colours twice.
+ */
+const MASTHEAD_SURFACES = [
+  { name: "masthead wordmark", ink: ".pixl-masthead-mark", ground: ".pixl-masthead" },
+  { name: "masthead title", ink: ".pixl-masthead-title", ground: ".pixl-masthead" },
+  { name: "masthead strapline", ink: ".pixl-masthead-line", ground: ".pixl-masthead" },
+  {
+    name: "masthead rail link",
+    ink: ".pixl-masthead-links a:not([data-live])",
+    ground: ".pixl-masthead",
+  },
+  {
+    name: "masthead live link",
+    ink: ".pixl-masthead-links a[data-live]",
+    ground: ".pixl-masthead",
+  },
+] as const;
+
+test("every ink on the masthead clears AA on the glass", async ({ page }) => {
+  await page.goto("/guide");
+
+  for (const { name, ink: inkSel, ground: groundSel } of MASTHEAD_SURFACES) {
+    const surface = await readSurface(page, inkSel, groundSel);
+    expect(surface, `${name}: "${inkSel}" or "${groundSel}" is not on the page`)
+      .not.toBeNull();
+    const { color, image, fill } = surface!;
+
+    const inkRgba = colorsIn(color)[0];
+    expect(inkRgba, `${name}: unreadable colour "${color}"`).toBeDefined();
+    const ink: [number, number, number] = [inkRgba[0], inkRgba[1], inkRgba[2]];
+    const grounds = opaqueGrounds([...colorsIn(image), ...colorsIn(fill)]);
+    expect(
+      grounds.length,
+      `${name}: no background colour in "${image}" / "${fill}"`,
+    ).toBeGreaterThan(0);
+
+    for (const ground of grounds) {
+      const value = contrast(ink, ground);
+      expect(
+        value,
+        `${name}: ${color} on rgb(${ground.map(Math.round)}) is ${value.toFixed(2)}:1`,
+      ).toBeGreaterThanOrEqual(AA);
+    }
+  }
+});

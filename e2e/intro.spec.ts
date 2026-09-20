@@ -32,6 +32,18 @@ test("a person sees the boot on every load, including a refresh", async ({ page 
   });
   await page.goto("/");
   expect(await intro(page)).toBe("play");
+
+  /* WAIT FOR HYDRATION BEFORE PRESSING A KEY, or this test races the thing it
+     is measuring. The attribute is set by a pre-paint script, but the listener
+     that CLEARS it is installed by an effect — so a key pressed in the window
+     between them lands on nothing and the boot runs to its full length, which
+     reads here as "Escape did not skip". It failed roughly one run in four
+     under parallel load and passed every time in isolation, which is the
+     signature of exactly that gap rather than of a real defect.
+     The sprites are dealt on hydration, so six of them is the cheapest honest
+     proof that React is live. */
+  await expect(page.locator(".pixl-hero-sprite")).toHaveCount(6);
+
   await page.keyboard.press("Escape");
   expect(await intro(page)).toBeNull();
 

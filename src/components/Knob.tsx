@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import {
   useCallback,
   useRef,
@@ -8,11 +7,6 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { useWebGL } from "@/lib/useWebGL";
-
-/* Kept out of the initial bundle: three.js is large, and the route that shows
-   the most knobs — the gallery — deliberately never asks for the mesh. */
-const KnobMesh = dynamic(() => import("@/composer/KnobMesh"), { ssr: false });
 
 /**
  * A physical knob (DESIGN.md §6, INTERACTION.md §4).
@@ -33,17 +27,24 @@ const KnobMesh = dynamic(() => import("@/composer/KnobMesh"), { ssr: false });
  * so the knob stays truthful when the value moves from somewhere else — a hex
  * field, the eyedropper, a theme change.
  *
- * Only the dial turns. The coloured ring and the housing shadow stay put; that
- * is what reads as a dial seated in a body rather than a spinning sticker. The
- * ring is a true annulus with clear air between it and the dial, so it reads as
- * a scale the knob turns against rather than a painted edge of the knob.
+ * THE HOUSING DOES NOT TURN, whatever the face does with the value. That is
+ * what reads as a dial seated in a body rather than a spinning sticker, and it
+ * is why the printed scale is a sibling on the panel rather than a ring on the
+ * part: a scale you turn along with the knob reports nothing.
  *
- * The dial itself is drawn in WebGL where it is available and in CSS where it
- * is not. THE CONTROL IS THE SAME EITHER WAY: this element carries the role,
- * the value, the keys and the pointer handling, and the 3D canvas is an inert
- * layer underneath it. Losing WebGL costs appearance and nothing else — which
- * is also what makes `mesh={false}` a legitimate choice rather than a
- * degradation.
+ * THE WEBGL DIAL IS GONE (2026-09-19), with the `mesh` prop and `KnobMesh`.
+ * It was a lathed surface of revolution, and the composer's knobs are knurled
+ * instrument controls now — a lathe cannot cut knurling, so the mesh could not
+ * describe the object the toy is built from any more. The gallery never asked
+ * for it (three.js is ~600KB on the public route), so with the composer moved
+ * across it had no consumer at all.
+ *
+ * WHAT THAT BUYS, beyond the deletion: DESIGN.md §6 spends several hundred
+ * words on the two builds having to describe ONE object, and lists three
+ * separate times they silently drifted — gloss against matte, a seam the mesh
+ * did not have, and the two drawing the dial at different sizes. There is one
+ * build now, so there is nothing left to keep in step. The `face` prop below is
+ * how a surface varies the look without forking the gesture.
  */
 
 type KnobProps = {
@@ -53,20 +54,25 @@ type KnobProps = {
   max: number;
   /** Hue wraps through 360; lightness and saturation stop at their ends. */
   wrap: boolean;
-  /** CSS background for the static ring that previews what this knob controls. */
-  ring: string;
   valueText: string;
   onChange: (value: number) => void;
   /** Size and placement. The knob's own class carries the housing. */
   className?: string;
   /**
-   * Draw the dial in R3F. OFF on the gallery: three.js is ~600KB and the
-   * gallery is the public route almost all traffic lands on. DESIGN.md §6
-   * already requires the two builds to describe ONE object, so the CSS dial is
-   * the same knob rather than a fallback — and the proportions are shared by
-   * name for exactly this reason.
+   * The knob's own body, when the caller draws one.
+   *
+   * THE GESTURE IS THE COMPONENT; THE FACE IS NOT. Everything that makes this a
+   * knob — relative turning, the wrap/clamp, the roles, the keys, the pointer
+   * capture — is here and is the single copy of it (the gallery and the
+   * composer have drifted on exactly this before). What a dial LOOKS like is
+   * the surface's business: the composer's are knurled instrument controls with
+   * printed scale rings, and nothing about that belongs in a shared gesture.
+   *
+   * REQUIRED, since 2026-09-19. There was a default dial here and it lost its
+   * last consumer when the composer's knobs became knurled: a default nobody
+   * renders is dead code that reads as a supported option.
    */
-  mesh?: boolean;
+  face: ReactNode;
   /** The composer's callout. Nothing else has one. */
   annotation?: ReactNode;
 };
@@ -79,16 +85,14 @@ export function Knob({
   value,
   max,
   wrap,
-  ring,
   valueText,
   onChange,
   className = "size-16 sm:size-20",
-  mesh = true,
+  face,
   annotation = null,
 }: KnobProps) {
   // Handler-only state. Kept in refs because a re-render per pointer sample to
   // remember an angle would be a re-render that changes nothing on screen.
-  const webgl = useWebGL();
   const [grabbed, setGrabbed] = useState(false);
   const center = useRef({ x: 0, y: 0 });
   const lastAngle = useRef(0);
@@ -174,41 +178,9 @@ export function Knob({
       onPointerUp={release}
       onPointerCancel={release}
       onKeyDown={onKeyDown}
-      className={`toy-knob cursor-grab touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--toy-ink)] active:cursor-grabbing ${className}`}
+      className={`cursor-grab touch-none select-none active:cursor-grabbing ${className}`}
     >
-      {/* The ring is its own element, not the housing's background: it is masked
-          into an annulus, and a mask on the housing would clip the seating
-          shadow with it. */}
-      <span aria-hidden="true" className="toy-knob-ring" style={{ background: ring }} />
-
-      {/* The canvas carries THE SAME INSET as `.toy-knob-dial`, and it has to:
-          the camera is framed so the rim fills the canvas, which makes the
-          canvas box the dial's size. They were 6% and 10% for a while, one of
-          the three ways the two builds had silently drifted. */}
-      {mesh && webgl ? (
-        <span aria-hidden="true" className="absolute inset-[11%]">
-          <KnobMesh angle={(value / max) * Math.PI * 2} />
-        </span>
-      ) : (
-        /* THE DIAL DOES NOT TURN — only the pip does. The rotation used to sit
-           on the dial itself, which carried the dome's baked lighting round
-           with it: the crown highlight swung to the side and then underneath,
-           so the light appeared to orbit the room. The mesh build never had
-           this, being a real surface of revolution, which is exactly why the
-           two had to be brought into line rather than left to differ. */
-        <>
-          <div className="toy-knob-dial" aria-hidden="true">
-            <span className="toy-knob-cap" />
-          </div>
-          <div
-            aria-hidden="true"
-            className="toy-knob-spin"
-            style={{ transform: `rotate(${(value / max) * 360}deg)` }}
-          >
-            <span className="toy-knob-mark" />
-          </div>
-        </>
-      )}
+      {face}
 
       {annotation}
     </div>

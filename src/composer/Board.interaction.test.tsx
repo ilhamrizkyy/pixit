@@ -67,9 +67,11 @@ describe("the compact tool strip", () => {
     // won. Two copies of eight buttons would be two "Undo"s in the a11y tree.
     for (const name of [
       "Mirror",
-      "Grid guide",
       // Renamed 2026-09-04: the caption is `Pick`, and an accessible name of
       // `Eyedropper` shared no word with it (WCAG 2.5.3 Label in Name).
+      // It is in the COLOUR DECK since 2026-09-19, which is rendered at every
+      // width — so "exactly one" is the assertion that catches it being put
+      // back in the tool list as well.
       "Pick color (eyedropper)",
       "Undo",
       "Redo",
@@ -82,7 +84,7 @@ describe("the compact tool strip", () => {
     render(<Composer />);
     // ToolColumn and ToolStrip both consume useTools(), so a tool added in one
     // place cannot go missing from the other.
-    const labels = ["Mirror", "Grid guide", "Pick color (eyedropper)", "Undo",
+    const labels = ["Mirror", "Pick color (eyedropper)", "Undo",
                     "Flip horizontally", "Flip vertically", "Rotate 90° clockwise", "Redo"];
     for (const name of labels) {
       expect(screen.getByRole("button", { name })).toBeTruthy();
@@ -157,11 +159,13 @@ describe("the safe area warns on approach", () => {
     expect(safeArea()?.getAttribute("stroke")).toBe("var(--color-warning)");
   });
 
-  it("does not hide behind the grid toggle", async () => {
-    const user = userEvent.setup();
+  it("cannot be switched off, because the mesh no longer can be", () => {
     render(<Composer />);
-    await user.click(screen.getByRole("button", { name: "Grid guide" }));
-    // A warning you can switch off without meaning to is not a warning.
+    // The Grid toggle was deleted on 2026-09-19 — a control for hiding the
+    // mesh is a control for making an 11x11 editor harder to use. This used to
+    // assert the warning survived that toggle; now it asserts the toggle is
+    // gone, which is the same guarantee with nothing left to switch.
+    expect(screen.queryByRole("button", { name: "Grid guide" })).toBeNull();
     expect(safeArea()).toBeTruthy();
   });
 
@@ -172,23 +176,43 @@ describe("the safe area warns on approach", () => {
   });
 });
 
-describe("the help toggle annotates the toy", () => {
-  it("names every control, and names nothing until asked", async () => {
+describe("the instrument legends itself, and help mode says the rest", () => {
+  it("prints every control's legend on the case, asked or not", () => {
+    render(<Composer />);
+
+    /* THE PANEL IS SILKSCREENED PERMANENTLY since the scope reskin. Help mode
+       used to be the only way to see a control's name; the instrument prints
+       them now, which is what a front panel is. */
+    for (const legend of ["Mirror", "Undo", "Flip H", "Flip V", "Rotate", "Redo"]) {
+      expect(screen.getAllByText(legend).length).toBeGreaterThan(0);
+    }
+    for (const axis of ["Hue", "Sat", "Lum"]) {
+      expect(screen.getAllByText(axis).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("adds the FULL name when asked, which the silkscreen cannot fit", async () => {
     const user = userEvent.setup();
     render(<Composer />);
     const help = screen.getByRole("button", { name: "Show control names on the toy" });
 
     expect(help.getAttribute("aria-pressed")).toBe("false");
-    expect(screen.queryByText("Flip H")).toBeNull();
+    // The long forms are what help mode is for: `FLIP H` is silkscreened, and
+    // `Flip horizontally` is the thing that does not fit under a well.
+    expect(screen.queryByText("Flip horizontally")).toBeNull();
 
     await user.click(help);
     expect(help.getAttribute("aria-pressed")).toBe("true");
-    for (const caption of ["Mirror", "Grid", "Pick", "Undo", "Flip H", "Flip V", "Rotate", "Redo"]) {
-      expect(screen.getByText(caption)).toBeTruthy();
-    }
-    // The knobs get named too — they are the controls that explain themselves least.
-    expect(screen.getAllByText("Hue").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Lightness").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Flip horizontally").length).toBeGreaterThan(0);
+
+    /* THE EYEDROPPER IS NOT ANNOTATED, and that is the deliberate half of
+       moving it to the colour deck (2026-09-19). Help mode expands what the
+       CASE abbreviates, and the pick abbreviates nothing — it prints no legend
+       at all, on purpose, because the request was for it to be quiet. Its name
+       reaches the pointer through `title` and the screen reader through
+       `aria-label`; a callout in the deck would have to point sideways across
+       the chip and the readout it sits beside. */
+    expect(screen.queryByText("Pick color (eyedropper)")).toBeNull();
   });
 
   it("adds no accessible names, because every control already had one", async () => {
@@ -208,13 +232,16 @@ describe("annotations are callouts, not labels on the toy", () => {
     render(<Composer />);
     await user.click(screen.getByRole("button", { name: "Show control names on the toy" }));
 
-    // Left column and left knob point left; right column and right knob right.
-    const leftward = [...document.querySelectorAll("span.right-full")].map((n) => n.textContent);
+    // The left panel points left and the right panel points right, which is
+    // simply where the air is: the rail has the case on one side and the
+    // screen on the other.
     const rightward = [...document.querySelectorAll("span.left-full")].map((n) => n.textContent);
 
-    expect(leftward).toEqual(expect.arrayContaining(["Mirror", "Grid", "Pick", "Undo", "Hue"]));
+    // EVERY TOOL IS ON ONE RAIL NOW (2026-09-19), so every callout points the
+    // same way. Undo and Redo are shoulders on the head row and carry none:
+    // their name is carved into the cap, which is the whole form.
     expect(rightward).toEqual(
-      expect.arrayContaining(["Flip H", "Flip V", "Rotate", "Redo", "Lightness"]),
+      expect.arrayContaining(["Flip horizontally", "Flip vertically", "Rotate 90° clockwise"]),
     );
   });
 });
@@ -242,7 +269,7 @@ describe("the caret behaves like a text cursor", () => {
     await user.keyboard("{ArrowRight}");
     expect(caret()?.getAttribute("class")).not.toContain("is-idle");
 
-    await user.click(screen.getByRole("button", { name: "Grid guide" }));
+    await user.click(screen.getByRole("button", { name: "Mirror" }));
     expect(caret()?.getAttribute("class")).toContain("is-idle");
   });
 

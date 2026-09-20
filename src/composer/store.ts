@@ -115,12 +115,12 @@ export type ComposerData = {
   hsl: Hsl;
   /** Mirror drawing aid. Live assistance only — never stored on the icon. */
   mirror: boolean;
-  gridGuide: boolean;
   /**
    * Show every control's name on the toy itself.
    *
-   * A view preference like `gridGuide`, not editor state — `toIconDraft` takes
-   * only name/category/tags/cells, so it can never reach a saved icon.
+   * A VIEW PREFERENCE, not editor state — `toIconDraft` takes only
+   * name/category/tags/cells, so it can never reach a saved icon. It used to
+   * say "like `gridGuide`"; the grid is no longer a preference at all.
    */
   annotations: boolean;
   eyedropperArmed: boolean;
@@ -146,7 +146,6 @@ export type ComposerActions = {
   pickColorAt: (index: number) => void;
   armEyedropper: () => void;
   toggleMirror: () => void;
-  toggleGridGuide: () => void;
   toggleAnnotations: () => void;
 
   flipH: () => void;
@@ -200,9 +199,6 @@ function initialData(): ComposerData {
     // hex, so the knobs open exactly where the constant says.
     hsl: DEFAULT_HSL,
     mirror: false,
-    // On by default: the gridlines are how you count cells while drawing, and
-    // a pixel editor that opens without them hides its own unit.
-    gridGuide: true,
     // Off by default: the toy should be legible without a legend, and the
     // legend is there for the moment it is not.
     annotations: false,
@@ -328,7 +324,6 @@ export function createComposerStore(): ComposerStore {
 
       armEyedropper: () => set({ eyedropperArmed: true }),
       toggleMirror: () => set({ mirror: !get().mirror }),
-      toggleGridGuide: () => set({ gridGuide: !get().gridGuide }),
       toggleAnnotations: () => set({ annotations: !get().annotations }),
 
       flipH: () => applyTransform(flipHorizontal),

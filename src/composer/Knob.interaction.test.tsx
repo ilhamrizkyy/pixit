@@ -35,13 +35,22 @@ describe("the knobs are real controls, not decoration", () => {
     expect(now("Hue")).toBe(30);
   });
 
-  it("wraps hue through the full circle but CLAMPS lightness at its ends", async () => {
+  it("STOPS all three knobs at their ends, hue included", async () => {
     const user = userEvent.setup();
     render(<Composer />);
 
+    /* HUE USED TO WRAP, and stopped on 2026-09-19 by request: a dial with a
+       printed scale and a pointer cannot spin forever, and this one has `0` and
+       `360` silkscreened either side of it. The circle is still closed by the
+       COLOUR — both ends are the same red — which is how a physical hue control
+       resolves it. */
     knob("Hue").focus();
     await user.keyboard("{ArrowLeft}");
-    expect(now("Hue")).toBe(359); // wrapped, not stuck at zero
+    expect(now("Hue")).toBe(0); // held at the stop, not wrapped round to 359
+    await user.keyboard("{End}");
+    expect(now("Hue")).toBe(360);
+    await user.keyboard("{ArrowRight}");
+    expect(now("Hue")).toBe(360);
 
     knob("Lightness").focus();
     await user.keyboard("{Home}");

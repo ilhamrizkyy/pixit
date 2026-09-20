@@ -4,7 +4,6 @@ import { useDialog } from "@/lib/useDialog";
 import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
 import { useComposer, useComposerStore } from "./ComposerProvider";
 import { CategoryField, TagsField } from "./DockFields";
-import { HexField } from "./HexField";
 import type { Dock } from "./useDock";
 
 /**
@@ -80,7 +79,6 @@ export function DockSheet({
         <div className="flex flex-col gap-4 overflow-y-auto px-5 py-5">
           <CategoryField stacked tall />
           <TagsField stacked tall text={dock.tagText} onText={dock.setTagText} />
-          <HexField stacked />
 
           {/* A view toggle, not an action — so it does NOT close the sheet. Its
               own pressed state is the feedback; dismissing a sheet out from

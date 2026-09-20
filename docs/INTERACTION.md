@@ -60,27 +60,64 @@
 
 ## 4. Composer — color (full HSL picker)
 
-- **Left knob = Hue** (full 360°, wraps). **Right knob = Lightness** (black →
-  color → white). Knobs physically turn on drag; only the dial rotates. Each
-  knob's ring previews what it controls.
-- **Saturation slider** in the color panel (0 = neutral gray → full color).
-- **Hex field**: type any 6-digit hex; the knobs + slider snap to the nearest
-  match and the exact hex becomes the paint color.
+- **Three knobs on one pad — H, S and L** (2026-09-19). Hue runs the full 360°
+  and wraps; saturation and lightness stop at their ends. Knobs physically turn
+  on drag and only the dial rotates; ↑/→ step up, ↓/← down, Home/End reach the
+  ends. Each ring previews its own axis, built from the current colour, so it
+  never shows one you cannot reach.
+  - **It was two knobs and a milled saturation groove between them** for one
+    day. Three of the same object is the truer reading — H, S and L are three
+    axes of one thing — and on a single pad a slider between two dials is the
+    one control that did not get to be hardware. @docs/DESIGN.md §6 has the
+    full chain.
+  - **Saturation's ring is drawn at a fixed 50% lightness**, unlike the other
+    two. At the live lightness it would be a black ring on black and a white one
+    on white, and the board starts on #000000 — so the knob would ship with a
+    dead scale. A ring previews its AXIS.
+- **Hex field**: the **segment readout on the pad**, above the knobs, with the
+  colour on its own screen beside it. Type any 6-digit hex and the knobs snap to
+  the nearest match while the exact hex becomes the paint colour. It was a plain
+  text field in the dock until 2026-09-18; the instrument went back on the
+  board, so the value went with it.
+  - **The swatch reports, it does not open anything.** The gallery's carried a
+    hidden `<input type="color">`; on this board that is the same objection the
+    category control once answered — an operating-system menu over the toy, on
+    a surface where every other control is a moulded part. The difference is
+    that the swatch has a better answer available (the knobs beside it already
+    set the colour), where category's only alternative was a barrel on a board
+    it had no reason to be on.
+- **Category is NOT on the board.** It was a thumbwheel mounted through the
+  case for one day (2026-09-18 to 2026-09-19) and is a `<select>` in the dock
+  again. See §5 for the line that decided it.
 - **No preset swatches** (removed 2026-08-18). A row of fixed colours under
-  the screen is a second, competing colour control next to two knobs, a
-  saturation slider and a hex field — true black and true white are one knob
-  turn away.
+  the screen is a second, competing colour control next to three knobs and a
+  hex readout — true black and true white are one knob turn away.
 - **Rule**: changing the color affects only the **next** cells drawn; existing
   cells keep their color.
 
 ## 5. Composer — metadata, import, save (bottom dock)
 
-- **Name / Category / Tags** fields and a live current-color chip. (No
-  pixel/cell counter — removed.)
+- **Name and Tags** fields and a live current-color chip. (No pixel/cell
+  counter — removed.)
+  - **Category left the dock on 2026-09-18 and came back on 2026-09-19.** The
+    line the first move drew — *the dock holds what you TYPE, the board holds
+    what you TURN* — is **withdrawn**: it sorts controls by their SHAPE, and
+    shape should follow the grouping rather than decide it. What replaces it:
+
+    > **The board holds what you touch WHILE DRAWING. The dock holds what you
+    > say about the drawing when it is done.**
+
+    Colour is the whole of the first, which is why the hex readout stayed on the
+    board with the instrument that produces it — it changes between one stroke
+    and the next. Name, category and tags are the second, and they are read
+    together, in one place.
 - **Below `lg` the dock is one row and a sheet.** The bar keeps the colour
   swatch, Name and Save; a chevron beside them opens a **Details** sheet
-  holding Category, Tags, the hex field, the help toggle, and Import / Export.
-  Nothing appears in both places.
+  holding Category, Tags, the help toggle, and Import / Export. Nothing appears
+  in both places.
+  - **The hex is in neither half**, and that is deliberate rather than an
+    omission: it is on the board, at the head of the colour pad, so on a phone
+    it is on screen the whole time instead of one tap away behind the door.
   - The sheet edits **live**, with no draft and no Apply — unlike the gallery's
     filter sheet, which defers because it covers the grid it is changing. These
     fields change metadata, which is not on screen either way.
@@ -129,6 +166,24 @@
   inline error rather than auto-suffixed — an id is immutable once published,
   so a name the owner did not choose would be permanent. Save then writes an `IconDef` into the set and confirms with a toast.
 
+## 5b. The reading pages — Guide, Resources, Contribute
+
+- **Each opens on a masthead (2026-09-18):** a band of the hero's own CRT
+  glass carrying the wordmark, the four destinations, the page's name and one
+  line saying what it is for. It replaced the nav bar; see @docs/DESIGN.md §1.
+  - **It does not boot and it does not flicker.** One thing moves: the block
+    cursor after the title. The hero's sequence belongs to the front door.
+  - Below it the page is **paper**, which is what `/` already does under its
+    own hero.
+- **Resources is a directory of rows**, two columns on a wide window. A row
+  that goes somewhere prints the set's own `arrow-right` at its far end, or
+  `external-link` when it leaves the site, and fills on hover; a row that does
+  not is printing, with its status set beside the label rather than in a pill.
+  Nothing links to something that does not exist yet.
+- **Guide and Contribute read the same way**: the argument on the left, the
+  thing itself on the right. The Guide's safe-area rule shows a real icon
+  sitting inside the region with its one cell of margin.
+
 ## 6. Gallery interactions
 
 - **The homepage boots (2026-09-15).** On every load of `/`, the hero comes up
@@ -152,10 +207,16 @@
   one screen, longer for more), and moves keyboard focus to the icon panel when
   it lands. Any wheel, touch or key during the flight hands the scroll back.
   Under reduced motion it jumps.
-- **The page does not scroll.** The board is sized to the window, so the whole
-  device is visible at once and the **icon grid is the only scrolling thing on
-  the page** — the picture moves inside the glass rather than the device sliding
-  up the page. The screen's header (search, chips) stays put while it does.
+- **THE PAGE SCROLLS, as a page does** (corrected 2026-09-18; it said the
+  opposite from 2026-08-28 to today). The board was sized to the window and the
+  icon grid was the only scrolling thing on it. There is no board: `/` is a
+  hero, a gallery and a footer stacked down a document.
+  - **The controls stay with the icons**, because the bar is **sticky** — which
+    is the one thing the old layout genuinely could not do, since a layout
+    locked to the viewport has nothing to stick to.
+  - The category chips are on their own row **below** the bar, on the icons they
+    filter, so at phone width they scroll sideways without taking the controls
+    with them.
 - **Search**: matches name + tags, and says so in its own placeholder rather
   than only in its accessible name. **No counts, anywhere.** This entry read
   "category counts reflect the active search" until 2026-09-04 and no count of
@@ -199,139 +260,56 @@
     belongs on the body. (The rack that took the caps over went too — Shape is
     three tactile caps in the Display pad now.)
 
-- **Shape**: Square / Inset / Round, as a **thumbwheel switch mounted through
-  the case**, under the Colour pad and spanning the column's full width. A
-  barrel with the three values printed on it: you read the live one through a
-  window at one end and turn it by the knurled grip at the other. Shape belongs
-  on the body because it is the same kind of control as Colour: it changes how
-  icons are DRAWN, not which ones are shown. It is in **no pad of its own** — a
-  pad says *these belong together*, and one control has nothing to be grouped
-  with.
-  - **Square is printed in the middle** — Inset, Square, Round down the barrel —
-    so the wheel can be turned either way from rest and both neighbours are half
-    in the window before you touch it. That is the drum's order, not the
-    engine's; the arrows follow it, so ArrowDown reaches the value printed below
-    the live one.
-  - **The barrel is the case's own plastic**, so it turns charcoal with the
-    board in dark mode and the printing on it turns light.
-  - **Selection is what the window is showing**, and nothing else says it. The
-    live value is the one turned to the FRONT: square on, centred across the
-    opening, with its neighbours clipped and curving out of it either side.
-    There is no index mark — it was on the paper, then on the case, then gone,
-    because a mark beside the value is a second thing saying the first thing.
-  - **The paper is sunk in the case, under glass.** Each opening is a real cut
-    with walls, and the cover's reflection has a hard edge — which is the only
-    thing that says there is glass over it rather than a wash on it.
-  - **Drag up to go forward.** The values are on the surface, so pushing it up
-    brings the one below into the window. The value steps in three detents and
-    the barrel follows your finger while you drag, settling onto the detent when
-    you let go. It does not wrap: a drum with three detents has two ends and you
-    can feel them.
-  - **Only what the window is showing can be clicked** — the rest are round the
-    back of the drum. You reach a far value by turning to it, or with the
-    keyboard.
-  - **A drag on the printed word turns the drum and drags nothing.** This is
-    the one drag surface on the board with text under the pointer, so the
-    gesture is claimed outright: nothing selects, the browser cannot pan on it
-    or carry it away, and the click that arrives at the end of a drag does not
-    re-choose whatever face the finger came to rest on.
-  - **A radiogroup, not a tablist.** These reveal no panel; they redraw the one
-    the chips already govern. One Tab stop for the group, then **all four
-    arrows** move within it as the APG asks of radios, **wrapping** at both ends
-    — which the drag does not — with Home/End for the ends.
-  - **It replaced three transport keys** on 2026-08-30, by way of a mode list
-    beside a separate wheel. The keys carried a glyph rather than a word and
-    latched by resting in the shallow click a press makes, which is a fine
-    object and a mute one: a row of caps says nothing about which is on until
-    you have compared the depth of their faces.
-  - Below `lg` it is in the **filter sheet** with Colour and Size, and the
-    sheet button's dot reports it.
-
-- **Display**:
-  - **Color** — **three knobs**, H / S / L, the same control the composer
-    turns, with a free-text hex field (3 or 6 digits; the swatch beside it
-    opens the OS picker) under them. Either sets the colour **every** icon in
-    the gallery renders in. Defaults to #000000 in light and #ffffff in dark,
-    and follows the theme; ✕ returns to that default. Icons are **never** shown
-    multi-color. It lives **on the body**, with Size: it changes how every icon
-    is drawn, which is the body's job. Search stays on the screen because it
-    changes which icons are there.
-    - Each knob turns **relatively** — grabbing it anywhere and turning moves
-      the value by how far you turned — and a full turn covers the whole range.
-      Arrows step by 1, Shift+arrows by 10, Home/End go to the ends. Only the
-      dial turns; the ring is a scale it turns against.
-    - The hex sits on a **segment panel above the knobs**, and is still an
-      ordinary text field: click anywhere on it and type. It **prints in
-      capitals** — the value keeps whatever was typed, and the readout
-      uppercases it. (It carried a faint `888888` ghost behind the value for
-      one pass, the way a real LCD shows its unlit segments; on a full-glyph
-      face that draws two letterforms on top of each other and reads as flicker
-      rather than depth.)
-    - **A typed hex snaps the knobs** to the nearest match while the exact hex
-      becomes the colour, which is the composer's rule (§4).
-    - **The knobs keep hue and saturation through a black or a white.** The
-      default is #000000 and every hue of black is the same hex, so turning Hue
-      first changes nothing on screen — and then raising Lightness gives you the
-      hue you set, rather than grey. The position is state, not a reading of
-      the hex.
-  - On narrow screens the body's controls — Colour, Size and Shape — move into a
-    **bottom sheet**, opened from a button inline with the search field. Search,
-    and the category chips stay on the page. The button's dot
-    reports whether anything the sheet itself holds is off its default —
-    Colour, Size and Shape — but never the category, which is on screen at all
-    times.
-  - **Size** is a **vertical tuning rail** standing in the chassis on the
-    board's **right edge**, past the screen, running its full height. It is one
-    wide channel with the **whole scale printed on its floor** — the numbers and
-    the graduations both — and the marker riding in it, against the screen, so
-    everything about the control is in one place beside the icons it governs.
-    **16–120 in 8s**, default 24; drag the marker along the groove, click
-    anywhere on it to jump, or use the keyboard — ↑/→ step up, ↓/← down,
-    Home/End to the ends, and the top of the rail is the maximum.
-    - **While you drag it, the marker is under your finger.** The value still
-      steps in 8s — the detents are the point — but the pointer itself is not
-      animated toward them; it goes where you go, and drops into the nearest
-      detent when you let go. Moves it makes on its own — a key, a click —
-      travel on a clock that scales with the distance. Under
-      `prefers-reduced-motion` it simply arrives.
-    - **Grabbing it deepens its seating; it does not grow.** Same rule as the
-      knobs.
-    - **The marker is a MAGNIFIER lying on the scale**, and nothing else — one
-      part, no pointer arm. Its lens is an empty window: the groove's floor and
-      the number printed on it show through, and the number under the glass is
-      enlarged. Nothing is drawn twice — mid-travel between two stops the window
-      shows the bare floor that is actually there. So the printed numbers are
-      all alike, no colour and no weight: the glass is the emphasis.
-    - **The graduations FLANK the numbers**, one mark in from each wall of the
-      channel with the number in the break between them. A major pair at every
-      stop, a shorter minor pair at each halfway point. The minors are printed
-      subdivisions, not reachable values — the control steps in 8s.
-    - **The grid stops at 48 and the rail keeps going.** The icon seat is a
+- **The display controls are a row in the sticky bar**: **Shape, Size, Colour**,
+  with search between Shape and Size. They change how every icon is DRAWN, which
+  is a different question from search and category, which change WHICH icons are
+  there. Below `lg` all three move into a **filter sheet** opened from a button
+  inline with the search field; search and the chips stay on the page.
+  - **Shape** — Square / Inset / Round, as a **dropdown**. It shows all three at
+    once and reaches any of them in one press. Each row carries the name and a
+    line saying what it does; there is no glyph beside them (@docs/DESIGN.md §6
+    has the cost of that). It is a **menu**, so arrows move the focus and
+    Enter chooses — the value does not change as you move through it, which is
+    what every earlier build got wrong. Escape and an outside press close it.
+  - **Size** — a **fourteen-block meter**, 16 to 120 in 8s, default 24, with the
+    exact value printed at its head. Drag it, click anywhere on it, or use the
+    keyboard: ↑/→ step up, ↓/← down, Home/End to the ends. A block is on or off,
+    so nothing animates between two stops.
+    - **The grid stops at 48 and the meter keeps going.** The icon seat is a
       fixed 64px, so 48 is the largest art it can draw; every stop above it sets
-      the size of the **exported file** instead — a 120 gives you a 120px SVG
-      and a 120px PNG. The region is announced rather than drawn: 48 carried a
-      full-width graduation for one pass, and one mark unlike all the others
-      reads as damage before it reads as information.
-    - **The numbers are printing, not buttons.** They were click targets while
-      there were five of them; fourteen would put fourteen redundant tab stops
-      on the public route in front of a slider that already reaches every one of
-      their values. Clicking still jumps — the input covers the whole rail, so
-      the numbers are click targets without being controls.
-    - Below `lg` the same control lies down in the filter sheet, printing every
-      other number — fourteen collide on a 390px bar — with the exact value read
-      out beside the section's label. **The phone keeps the numbers under the
-      groove and a slim pointer in it**: a magnifier has to fit between the two
-      numbers either side of the one it reads, and on a 390px bar they are
-      closer together than the glass is wide.
-  - **Shape** — **Square** / **Inset** / **Round**, applied to **every** icon at
-    once. Inset insets each cell so the grid shows between
-    neighbours; Round does the same and draws a circle instead of a square.
-    Display only, like Color: stored cells stay square, and the mode is never
-    part of an `IconDef`. The engine keeps calling these `solid` / `gap` /
-    `dots`; the caps are what a person reads.
-  - **No Padding or Transform.** Both were removed on 2026-08-28 with the board
-    rebuild — neither had a surface whose job it shared. The engine keeps both
-    operations and the composer still uses them; see @docs/BACKLOG.md §D.
+      the size of the **exported file** instead. The region is announced
+      (`aria-valuetext`), never drawn.
+  - **Colour** — the **hex readout is the control**: a segment panel printing
+    the live value, which opens the picker behind it. Inside are a saturation
+    and lightness **field**, a **hue strip**, the hex as an ordinary text field,
+    and a swatch that opens the OS picker. It sets the colour **every** icon in
+    the gallery renders in, defaults to #000000 in light and #ffffff in dark,
+    follows the theme, and ✕ returns to that default. Icons are **never** shown
+    multi-color.
+    - **It is the only control in the bar that opens**, because a 264px square
+      field cannot stand in a 44px row. Size and Shape both fit at full size and
+      neither opens. On the phone sheet the instrument is **inline** — a tall
+      narrow surface has the room, and that is one fewer layer between a thumb
+      and the value.
+    - **A typed hex snaps the field and the strip** to the nearest match while
+      the exact hex becomes the colour, which is the composer's rule (§4).
+    - **The picker keeps hue and saturation through a black or a white.** The
+      default is #000000 and every hue of black is the same six characters, so
+      turning hue first changes nothing on screen — and then raising lightness
+      gives you the hue you set rather than grey. The position is state, not a
+      reading of the hex.
+    - **The readout prints in capitals** and **refreshes per character**: only
+      the digits that actually changed animate, with no stagger, throttled so an
+      animation never restarts mid-drag. It carries no unit and no unlit-segment
+      ghost; @docs/DESIGN.md §6 has why.
+  - **What these replaced, so none of it is rebuilt:** three H/S/L knobs, a
+    Shape thumbwheel with the values printed on a barrel, and a vertical Braun
+    tuning rail with a magnifier riding on a printed scale. All three were built
+    for a 264px moulded body in a chassis, and all three are gone with it. The
+    knob component survives and the **composer** still mounts it.
+  - **No Padding or Transform.** Both were removed on 2026-08-28. The engine
+    keeps both operations and they are written, tested and uncalled; see
+    @docs/BACKLOG.md §D.
   - **No Stroke or Cap/Join controls.** Pixel icons are filled cells with no
     strokes, so those Nucleo-style controls have nothing to act on.
   - **No Bg control.** Backgrounds are **always transparent**, in the preview
@@ -347,9 +325,12 @@
   defaults and closes. Dismissing (backdrop, ✕, or Escape) **discards**. On `lg` and up the
   same controls sit in the sidebar and apply **live** — only the sheet defers,
   because only the sheet covers the grid it is changing.
-- **Nav**: plain shell — it is not part of the device. Below `lg` the links
-  collapse behind a hamburger, which closes on navigation. The theme toggle
-  stays visible in the bar.
+- **Nav**: there is no nav bar, on any route (2026-09-18). Every page says its
+  own name and prints every destination in the same place — the hero on `/`,
+  the **masthead rail** on Guide, Resources and Contribute — and the footer
+  repeats them under every page. The live route is marked in the rail by full
+  ink over a two-cell rule, which is the rail's own hover held. There is no
+  hamburger: four short words wrap onto one line at 390px.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.
 - **The mini screen MATERIALISES the icon (2026-08-30).** Choosing one does not

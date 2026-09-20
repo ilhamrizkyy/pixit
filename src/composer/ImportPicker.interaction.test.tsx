@@ -29,9 +29,32 @@ function seed(id: string) {
 /** How many cells are painted on the board right now. */
 const filled = () => document.querySelectorAll("[data-cell]").length;
 
+/**
+ * Open the picker, and be sure it is the one that just opened.
+ *
+ * THE OLD DIALOG OUTLIVES ITS OWN CLOSE. Every overlay here defers its unmount
+ * by `CLOSE_MS` so the exit animation has something to play on (DESIGN.md §5b),
+ * so for that window a closing picker is still in the document. Opening a
+ * second one without waiting for the first to leave handed the caller a
+ * DETACHED dialog: the click landed on a surface already on its way out, the
+ * import never ran, and the board still showed the previous icon.
+ *
+ * That is what "expected 13 to be 34" was — not a slow import, a lost one, and
+ * the reason it only ever appeared in a full parallel run is that the close
+ * window has to still be open when the next click arrives.
+ *
+ * WAITING FOR THE DIALOG TO BE GONE IS THE FIX, NOT WAITING LONGER FOR THE
+ * VALUE. The first attempt raised every `waitFor` ceiling and this test's own
+ * budget, on the reading that a parallel run was simply short of time. It was
+ * not: with more time the same wrong board just settled and failed on the
+ * assertion instead of the clock, which is how a timing guess gets found out.
+ * Both raises were reverted once the cause was known, because a guard kept for
+ * a reason that turned out to be false is worse than no guard.
+ */
 const openPicker = async (user: ReturnType<typeof userEvent.setup>) => {
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   await user.click(screen.getByRole("button", { name: "Import icon" }));
-  return screen.getByRole("dialog", { name: "Import icon" });
+  return screen.findByRole("dialog", { name: "Import icon" });
 };
 
 describe("the import picker", () => {

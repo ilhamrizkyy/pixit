@@ -194,22 +194,31 @@ test.describe("publishing", () => {
 });
 
 test.describe("the 3D toy", () => {
-  test("renders both knobs and the screen well in WebGL", async ({ page }) => {
+  test("renders the screen well in WebGL, and only the screen well", async ({ page }) => {
     await openComposer(page);
 
-    // Two knobs plus the screen's recess. This is the check that could never
-    // run in the headless browser these were developed against, which had no
-    // WebGL at all and silently fell back to CSS every time.
-    const canvases = page.locator("canvas");
-    await expect(canvases).toHaveCount(3);
+    /* ONE CANVAS: the tube's recess. It was four — three lathed knob dials and
+       the well — until the scope reskin, and the knobs are KNURLED now. A lathe
+       cannot cut knurling, so `KnobMesh` could not describe the part any more
+       and went with it; the gallery had never asked for it, so it had no
+       consumer left at all.
 
+       ASSERTED AS AN EXACT COUNT, because the failure this guards against is a
+       second WebGL context creeping back onto a route that already ships
+       three.js for one — and a `toBeGreaterThan` would not see it. */
+    const canvases = page.locator("canvas");
+    await expect(canvases).toHaveCount(1);
+
+    // This is the only place the 3D is actually SEEN: plain headless Chrome has
+    // no WebGL and silently falls back to CSS, so a lathed recess is only ever
+    // confirmed here.
     const live = await canvases.evaluateAll((nodes) =>
       nodes.map((node) => {
         const canvas = node as HTMLCanvasElement;
         return canvas.width > 0 && canvas.height > 0;
       }),
     );
-    expect(live).toEqual([true, true, true]);
+    expect(live).toEqual([true]);
   });
 
   test("keeps the drawing grid in the DOM, not inside a canvas", async ({ page }) => {

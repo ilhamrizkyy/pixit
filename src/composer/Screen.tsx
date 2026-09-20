@@ -32,17 +32,19 @@ export function Screen() {
      screen's colour, as DESIGN.md §7 requires — a hex copied into the mesh
      would drift the first time the token moved, and it has.
 
-     `--lcd`, not `--screen`: this board's screen is the same segment panel as
-     the gallery's mini screen, not the icon grid's lit display. Read off an
-     element inside the toy rather than off the document, since the scope may
-     redefine it. */
+     `--crt-glass` since the scope reskin (2026-09-19). It was `--lcd`, the
+     sage segment panel the gallery's mini screen is also made of, and the two
+     surfaces stopped being one part the moment this became a CRT: a cathode
+     tube's face is near-black and its art GLOWS, where a segment panel is pale
+     and its art is dark. The mesh renders the well the tube sits in, so it
+     takes the glass's own colour and the walls stay in its family. */
   useEffect(() => {
     if (ref.current === null) return;
-    setScreenColor(getComputedStyle(ref.current).getPropertyValue("--lcd").trim());
+    setScreenColor(getComputedStyle(ref.current).getPropertyValue("--crt-glass").trim());
   }, []);
 
   return (
-    <div ref={ref} className="toy-screen aspect-square w-full">
+    <div ref={ref} className="scope-crt aspect-square w-full">
       {webgl && screenColor !== "" && (
         <span className="toy-well-canvas" aria-hidden="true">
           <ScreenMesh color={screenColor} />
@@ -51,6 +53,16 @@ export function Screen() {
       <div className="toy-well-floor">
         <Board />
       </div>
+
+      {/* THE GLASS, over everything and deaf to the pointer. Three things in
+          paint order: the vignette that darkens the tube toward its corners,
+          the scanlines, and one soft reflection running off the top-left —
+          which is where the key is on every other part of this object.
+
+          `pointer-events: none` in the stylesheet is load-bearing, not tidy:
+          this covers the whole drawing surface, and without it the board would
+          stop taking a single click. */}
+      <span aria-hidden="true" className="scope-crt-glass" />
     </div>
   );
 }

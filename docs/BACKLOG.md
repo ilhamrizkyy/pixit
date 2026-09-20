@@ -394,9 +394,16 @@ full of empty rooms**. The Resources page's own rule already forbids it: nothing
 links to something that does not exist yet, and a Showcase with nothing in it is
 worse than no Showcase.
 
-**And no dropdown.** Four items fit in the bar. A dropdown costs a click and
-buys nothing until five or six things sit behind it, which is where Lucide's
-earns itself. Revisit at that count, not before.
+**And no dropdown.** Four items fit wherever they are printed. A dropdown costs
+a click and buys nothing until five or six things sit behind it, which is where
+Lucide's earns itself. Revisit at that count, not before.
+
+**THERE IS NO BAR TO FIT THEM IN ANY MORE (2026-09-18).** This section was
+written when a top nav carried the four items. It does not exist on any route:
+the home page prints them in its hero, the other three in their masthead rail,
+and the footer repeats them under every page. A fifth destination — `/license`
+at item 2 above, say — lands in those three lists and nowhere else, which is
+the same one-line change it would have been in a bar.
 
 **Two of them become real with §H rather than never.** A **Code of Conduct** is
 required the moment contribution opens and is theatre before then. **Community**
@@ -430,4 +437,46 @@ Things that are true, deliberate, and easy to mistake for oversights.
 - **The reveal's timings sit OUTSIDE the §5b motion scale**, on purpose: it is a
   display animation rather than a surface opening or closing. See DESIGN.md §6.
   It is the second such exemption, after the hex readout's segment refresh.
+- **THE TWO "KNOWN FLAKES" WERE BOTH REAL BUGS IN THE TESTS (fixed
+  2026-09-19).** They had been carried for a while as "passes in isolation,
+  fails under five workers", which is the label that stops anyone looking. Both
+  turned out to be a test reading a surface that was still moving, and in each
+  case the parallel run only widened a window that was always there.
+  - `composer.spec.ts` / `touch.spec.ts` — `openComposer` measured the board
+    while `.toy-frame` was still playing its entrance, then handed those
+    coordinates to a tap that happened later. Measured: the board settled from
+    y=56.2 to y=49.3, and on a phone a cell is a few pixels, so seven pixels is
+    more than a whole row. It now waits on `getAnimations()`.
+  - `ImportPicker.interaction.test.tsx` — every overlay defers its unmount for
+    the close animation (DESIGN.md §5b), so opening the picker a second time
+    could return the FIRST dialog on its way out. The click landed on a
+    detached surface, the import never ran, and the board still showed the
+    previous icon. `openPicker` now waits for the old dialog to leave.
+  - **Worth keeping:** the first attempt at the second one raised every
+    `waitFor` ceiling and the test's own budget, reading it as slowness. With
+    more time the same wrong board simply settled and failed on the assertion
+    instead of the clock — which is how the timing guess was found out. Both
+    raises were reverted once the cause was known.
+- **The composer's board is SMALL on a 568px-tall phone, and that is accepted
+  (2026-09-19).** The toy does not scroll by rule, so everything below the
+  screen — the tool strip, the slide groove, the colour instrument and the
+  dock's clearance — comes out of the board's height. Measured at 320x568 (a
+  2016 iPhone SE) the board lands at ~123px; at 390x664 it is ~212px and at
+  412x839 ~293px.
+  - **It is not worth a fourth breakpoint.** `/create` is owner-only by
+    CLAUDE.md rule 1 and authored on a desktop, and the tier that would fix it
+    would trade the instrument away on the one device nobody authors from.
+  - **Two things WERE worth fixing, and both were**, in the same pass:
+    - `--nav-h` still reserved 73px for the nav bar deleted on 2026-09-18, so
+      every viewport lost a band to a component that is not in the tree. It is a
+      named zero now.
+    - `--toy-chrome` was calibrated with the category thumbwheel on the board
+      and not recalibrated when it left, so it reserved ~72px for a part that
+      was gone. **Together those two took the same phone from a 64px board to
+      212px**, which is the argument for measuring the budget rather than
+      carrying it forward.
+  - Three tiers of `--toy-chrome` / `--knob-size` cover phone, short desktop and
+    tall desktop, each measured as `frame height - board size + the scope's own
+    padding` and checked against fourteen viewports from 320x568 to 1440x950.
+    DESIGN.md §6 records why the two values are always declared together.
 

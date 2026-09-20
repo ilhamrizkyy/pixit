@@ -88,7 +88,7 @@ export function SlideToClear() {
            entry: each arrow press extends the same wipe, and leaving the
            control ends the gesture, exactly as lifting a finger does. */
         onBlur={() => wiping && finish()}
-        className="toy-groove w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="toy-groove w-full"
         style={{ touchAction: "none" }}
       >
       {/* The instruction rides in the groove rather than sitting under it as a
@@ -96,7 +96,7 @@ export function SlideToClear() {
           text below cost the board height it could use. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 grid place-items-center font-data text-[10px] tracking-widest text-white/65 uppercase"
+        className="scope-groove-print"
       >
         Drag to clear
       </span>

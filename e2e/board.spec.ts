@@ -394,45 +394,66 @@ test("the hero's art fills the screen beside the type, and never the text", asyn
 });
 
 /**
- * The bar itself survives on every route that has no hero — see SiteNav.tsx for
- * why that is the rule rather than "no bar anywhere". Checked on `/guide`,
- * which is where it now lives.
+ * EVERY PAGE SAYS ITS OWN NAME, AND NO PAGE CARRIES A BAR (2026-09-18).
+ *
+ * This replaced "the bar survives on every route that has no hero", which is
+ * the rule the removal retired: the home page had a hero and the other three
+ * had a hairline bar over a white document, so crossing between them crossed
+ * between two products. Each of the three opens on a masthead now.
+ *
+ * ALL THREE HALVES ARE ASSERTED TOGETHER, because each alone is a trap. "No
+ * bar" passes just as well if the links were lost; "a masthead exists" passes
+ * with a bar still above it; and both pass with a masthead that has quietly
+ * stopped being the CRT and gone back to being a white header.
  */
-test("the nav is a page, not part of the device", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/guide");
+for (const [route, title] of [
+  ["/guide", "Guide"],
+  ["/resources", "Resources"],
+  ["/contribute", "Contribute"],
+] as const) {
+  test(`${route} opens on a masthead and carries no nav bar`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(route);
 
-  const nav = await page.evaluate(() => {
-    const bar = document.querySelector("body > nav")!;
-    const link = bar.querySelector<HTMLElement>('a[aria-current="page"]')!;
-    // Resolve the shell's accent through a throwaway element, so both sides of
-    // the comparison come back in the same serialisation: reading the custom
-    // property gives the authored hex, and a computed `color` is always
-    // `rgb(...)`. Mounted on the ROOT, deliberately — anywhere inside the nav
-    // would inherit a repointed `--color-accent` and the test would compare the
-    // toy's blue with itself and pass.
-    const probe = document.createElement("span");
-    probe.style.color = "var(--color-accent)";
-    document.documentElement.append(probe);
-    const shellAccent = getComputedStyle(probe).color;
-    probe.remove();
+    // The footer's own `<nav aria-label="Site">` is excluded the way it is in
+    // the home page's test: the claim is about a BAR above the content.
+    expect(await page.locator("body > nav").count()).toBe(0);
 
-    return {
-      image: getComputedStyle(bar).backgroundImage,
-      fill: getComputedStyle(bar).backgroundColor,
-      linkInk: getComputedStyle(link).color,
-      shellAccent,
-    };
+    const masthead = page.locator("header.pixl-masthead");
+    await expect(masthead).toBeVisible();
+
+    // Its own name, at h1, and every destination in the rail.
+    const h1 = page.getByRole("heading", { level: 1 });
+    await expect(h1).toHaveText(title);
+    for (const label of ["Icons", "Guide", "Resources", "Contribute"]) {
+      await expect(masthead.getByRole("link", { name: label })).toBeVisible();
+    }
+    // And the one you are on is marked, so the rail reports a position as well
+    // as a set of destinations.
+    await expect(masthead.locator("a[aria-current='page']")).toHaveText(title);
+
+    // IT IS STILL THE CRT. The ground is the hero's near-black rather than the
+    // page's paper, and the lattice behind it is drawn at the same 24px pitch
+    // and the same 264px major as the home page's, so the two read as one
+    // screen seen twice.
+    const glass = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(".pixl-masthead")!;
+      const probe = document.createElement("span");
+      probe.style.color = "var(--color-bg)";
+      document.documentElement.append(probe);
+      const paper = getComputedStyle(probe).color;
+      probe.remove();
+      return {
+        fill: getComputedStyle(el).backgroundColor,
+        grid: getComputedStyle(el, "::before").backgroundSize,
+        paper,
+      };
+    });
+    expect(glass.fill).toBe("rgb(5, 7, 13)");
+    expect(glass.fill).not.toBe(glass.paper);
+    expect(glass.grid).toBe("264px 264px, 264px 264px, 24px 24px, 24px 24px");
   });
-
-  // It wore the chassis for one iteration — a moulded brow with a gradient, a
-  // grain and the toy's own token repointing. Plain shell now: a flat fill, no
-  // gradient and no grain, and the SHELL's accent on the active link, so a nav
-  // item is the same blue here as it is on Guide.
-  expect(nav.image).toBe("none");
-  expect(nav.fill).not.toBe("rgba(0, 0, 0, 0)");
-  expect(nav.linkInk).toBe(nav.shellAccent);
-});
+}
 
 /**
  * THE HEX READOUT PRINTS IN CAPITALS, AND ON THE LAYER THAT PAINTS.
@@ -675,40 +696,64 @@ async function paint(
  */
 
 
+/**
+ * THE TWO BOARDS NO LONGER DRAW ON THE SAME PANEL (2026-09-19), and that is the
+ * point of this test now.
+ *
+ * It used to assert the opposite: that the composer's screen and the gallery's
+ * mini screen were ONE part in two places — the same sage segment panel, within
+ * 0.06 of a level of each other. That was true and worth pinning for three
+ * weeks. The scope reskin ended it: the composer's screen is a CATHODE TUBE
+ * with a lit phosphor face, and the gallery's is a segment panel. A tube and an
+ * LCD are different parts, and the moment they were required to match, one of
+ * them would have had to stop being what it is.
+ *
+ * What is asserted instead is the thing that can still silently break: that the
+ * composer's face is LIT, in the phosphor's own blue-green, and that it did not
+ * quietly revert to the near-black tube of the first reskin pass — which is the
+ * build where black art vanished into a black screen.
+ */
 for (const theme of ["light", "dark"] as const) {
-  test(`both boards draw on the SAME panel — ${theme}`, async ({ page }) => {
+  test(`the composer's tube is a LIT phosphor face — ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    /* THE OS IS THE ONLY THEME SOURCE (2026-09-13). This forced a stored
-       `pixle-theme` until the toggle was removed and the whole storage layer
-       went with it — a preference nobody can revise is a stuck state, not a
-       preference. `emulateMedia` drives the same rule the stylesheet actually
-       reads, which is what the test meant all along. */
+    /* THE OS IS THE ONLY THEME SOURCE (2026-09-13). `emulateMedia` drives the
+       same rule the stylesheet actually reads. */
     await page.emulateMedia({ colorScheme: theme });
 
-    /* THE STORED PREFERENCE HOLDS ON `/` AGAIN (2026-09-13). It did not for a
-       day, while the page theme was derived from the icon colour and the
-       gallery overwrote whatever was stored the moment it mounted. The ground
-       is scoped to the gallery REGION now, so the page keeps the theme it was
-       given and the region follows the colour — and since the colour's own
-       default follows the theme, asking for dark still gets a dark panel here
-       without a second step. */
-    await page.goto("/");
-    await selectIcon(page);
-    const mini = await paint(page, ".pixl-mini-glass", "background");
-
     await page.goto("/create");
-    const toy = await paint(page, ".toy-screen", "background");
+    const tube = await paint(page, ".scope-crt", "background");
 
-    // ONE PART, ONE MATERIAL. The composer's screen was `--screen` — the icon
-    // grid's LIT display — so it flipped from near-white to near-black with the
-    // theme, which is a violent change for the one surface you draw on. It is
-    // the same segment panel as the gallery's mini screen now, and nothing else
-    // would notice if that quietly came apart again: two routes, two
-    // stylesheets' worth of rules, and no shared component between them.
-    expect(Math.abs(toy.level - mini.level)).toBeLessThan(0.06);
-    // Sage on both, not merely the same lightness.
-    expect(toy.rgb[1]).toBeGreaterThan(toy.rgb[0]);
-    expect(toy.rgb[1]).toBeGreaterThan(toy.rgb[2]);
+    // LIT, not a dark tube. The first reskin pass had this inverted — a glowing
+    // graticule on near-black glass, which measured ~0.01 — and dark art
+    // disappeared into it.
+    expect(tube.level).toBeGreaterThan(0.2);
+    /* GREEN LEADS, which is the one claim that survives a phosphor swap. The
+       screen is DMG olive; it was scope cyan a day earlier and
+       `--crt-phosphor-cyan` is kept beside it so switching back is one edit.
+       Asserting the exact hue would make this test fail on a supported swap,
+       so it asserts the property both phosphors share. */
+    expect(tube.rgb[1]).toBeGreaterThanOrEqual(tube.rgb[0]);
+    expect(tube.rgb[1]).toBeGreaterThanOrEqual(tube.rgb[2]);
+
+    /* AND IT DOES NOT FOLLOW THE THEME. The instrument paints its own world, as
+       the hero does — so this same assertion has to hold under both, and the
+       two runs of this test are what prove it rather than a comment saying so.
+       If the chassis is ever put back on the shell's palette, one of these two
+       fails and names which. */
+    const chassis = await paint(page, ".toy-frame", "background");
+    /* The shell is GRAPHITE (2026-09-20) and does NOT follow the theme — the
+       two runs of this test are what prove that rather than a comment saying
+       so. Put the chassis back on the shell's palette and the LIGHT run fails
+       and names itself, because the shell is near-white in light mode.
+
+       IT WAS `> 0.5`, FOR THE OFF-WHITE SHELL. The threshold flipped with the
+       finish; what it pins did not. */
+    expect(chassis.level).toBeLessThan(0.3);
+
+    /* AND THE TUBE IS THE BRIGHTEST THING ON THE BOARD, which is the whole
+       argument for a dark case on the one route whose job is drawing. It is a
+       relationship rather than a level, so it survives a retune of either. */
+    expect(tube.level).toBeGreaterThan(chassis.level);
   });
 }
 

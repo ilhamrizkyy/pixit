@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SiteNav } from "@/components/SiteNav";
 import { INTRO_INIT_SCRIPT } from "@/components/gallery/introTimeline";
 import "./globals.css";
 
@@ -24,16 +23,20 @@ const pressStart2P = Press_Start_2P({
   weight: "400",
 });
 
-// The homepage hero's terminal type, for its one sentence and its links.
-// NOT PRELOADED: every other route would pay for a face it never draws. The
-// @font-face is global, and a browser only fetches a face when something on the
-// page asks for it, so the homepage downloads it on first use. The boot does
-// not show that sentence until three seconds in, which is ample.
+// The machine's own type: the hero's sentence and links, and every masthead's
+// rail and strapline.
+//
+// PRELOADED AS OF 2026-09-18, and the reason it was not is what changed. It was
+// the home page's face alone, so preloading it charged four other routes for
+// something they never drew. The masthead put it on Guide, Resources and
+// Contribute, where it is in the RAIL — the first thing at the top of the page,
+// not a sentence three seconds into a boot — so a late-discovered face is a
+// visible swap in the navigation on every load. Four of five routes draw it
+// now; the fifth is the owner-only composer.
 const terminal = VT323({
   variable: "--font-terminal",
   subsets: ["latin"],
   weight: "400",
-  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -77,11 +80,17 @@ export default function RootLayout({
             there is swapped for a <div> on the client. Here the server HTML
             and the React tree agree. */}
         <script dangerouslySetInnerHTML={{ __html: INTRO_INIT_SCRIPT }} />
-        <SiteNav />
+        {/* NO NAV BAR, ON ANY ROUTE (2026-09-18). The home page dropped it on
+            2026-09-13 under the rule "a page with a hero does not need a bar",
+            which left Guide, Resources and Contribute carrying one — so a
+            visitor crossed from a full-screen CRT to a white document with a
+            hairline bar over it. Each of those three now opens on its own
+            masthead, which prints every destination in the same place the
+            hero's links sit, so there is nothing left for a bar to carry.
+            See PageMasthead.tsx. */}
         {children}
-        {/* EVERY PAGE, INCLUDING THE ONE WITH NO NAV BAR. It is the second
-            place each destination is printed, and on `/` it is the only one
-            below the fold — see SiteNav for why the bar is dropped there. */}
+        {/* EVERY PAGE. It is the second place each destination is printed, and
+            below the fold it is the only one. */}
         <SiteFooter />
       </body>
     </html>

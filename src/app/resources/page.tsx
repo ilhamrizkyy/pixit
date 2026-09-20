@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PageMasthead } from "@/components/PageMasthead";
+import { Row } from "@/components/Row";
 import { SIZE_STOPS } from "@/engine/constants";
 import { LICENSE_URL, REPO_URL } from "@/lib/site";
 import { icons } from "@/registry";
@@ -14,8 +15,15 @@ export const metadata: Metadata = {
  * icons, packages, design tools, learn, license.
  *
  * Status is stated on every row. Nothing here links to something that does not
- * exist yet — a "Coming soon" with no href is honest; a link to an empty
- * GitHub repo is not.
+ * exist yet — a "Planned" with no href is honest; a link to an empty GitHub
+ * repo is not.
+ *
+ * TWO COLUMNS ON A WIDE WINDOW (2026-09-18). It was one column of bordered
+ * boxes in the left half of the page, and the sections are short enough that
+ * the whole directory fits in one screen when it is allowed to use the width.
+ * The columns are `columns`, not a grid: the sections are a list of unequal
+ * lengths and CSS columns balance them without anyone choosing which goes
+ * where, which is what a grid would have hard-coded.
  */
 
 type Resource = {
@@ -129,87 +137,38 @@ const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
 
 export default function ResourcesPage() {
   return (
-    <div className="max-w-3xl px-6 py-10 lg:px-8">
-      <h1 className="mb-2 text-h2">Resources</h1>
-      <p className="prose-body mb-10 text-text-muted">
-        Ways to get the set and work with it. {icons.length} icons today, all
-        MIT licensed.
-      </p>
-
-      <div className="flex flex-col gap-10">
-        {SECTIONS.map((section) => (
-          <section key={section.title}>
-            <h3 className="mb-1">{section.title}</h3>
-            {section.blurb && (
-              <p className="prose-body mb-4 text-ui text-text-muted">
-                {section.blurb}
-              </p>
-            )}
-
-            <ul className="mt-3 flex list-none flex-col gap-2 p-0">
-              {section.items.map((item) => (
-                <li key={item.label}>
-                  <ResourceRow item={item} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ResourceRow({ item }: { item: Resource }) {
-  const body = (
     <>
-      <div className="flex flex-wrap items-baseline gap-2">
-        <span className="text-ui text-text">{item.label}</span>
-        {/* Sentence case, like every other label in the product. It was
-            lowercase against Contribute's "Not open yet" — two conventions for
-            the same kind of badge. */}
-        {item.status === "planned" && (
-          <span className="rounded-full bg-surface px-2 py-0.5 text-caption text-text-muted">
-            Planned
-          </span>
-        )}
-      </div>
-      <p className="prose-body mt-1 text-caption text-text-muted">
-        {item.detail}
-      </p>
+      <PageMasthead
+        title="Resources"
+        route="/resources"
+        line={`Ways to get the set and work with it. ${icons.length} icons today, all MIT licensed.`}
+      />
+
+      <main className="pixl-article">
+        <div className="pixl-columns">
+          {SECTIONS.map((section) => (
+            <section key={section.title} className="pixl-column-item">
+              <h2>{section.title}</h2>
+              {section.blurb && (
+                <p className="pixl-article-blurb">{section.blurb}</p>
+              )}
+
+              <ul className="pixl-rows">
+                {section.items.map((item) => (
+                  <li key={item.label}>
+                    <Row
+                      label={item.label}
+                      detail={item.detail}
+                      href={item.href}
+                      flag={item.status === "planned" ? "Planned" : undefined}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </main>
     </>
-  );
-
-  // Planned items are not links. There is nowhere to send anyone yet.
-  if (item.href === undefined) {
-    return (
-      <div className="rounded-md border border-border bg-surface-2 px-4 py-3">
-        {body}
-      </div>
-    );
-  }
-
-  const className =
-    "block rounded-md border border-border bg-surface-2 px-4 py-3 no-underline transition-colors hover:border-accent";
-
-  // next/link is for in-app routes; an external URL needs a plain anchor, and
-  // noreferrer so the destination cannot see where the click came from.
-  if (item.href.startsWith("http")) {
-    return (
-      <a
-        href={item.href}
-        target="_blank"
-        rel="noreferrer"
-        className={className}
-      >
-        {body}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={item.href} className={className}>
-      {body}
-    </Link>
   );
 }

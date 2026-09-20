@@ -155,9 +155,36 @@ export async function fetchPublishedIcons(): Promise<readonly IconDef[]> {
       `${config.url}/rest/v1/${TABLE}?select=*&status=eq.published&order=created_at.asc`,
       {
         headers: authHeaders(config.key),
-        // The gallery must not serve a stale set after a publish. Caching is a
-        // separate decision from correctness; see docs/TECH-STACK.md.
-        cache: "no-store",
+        /* BAKED AT BUILD TIME (2026-09-18). This read is what decides whether
+           `/` is a static file or a Worker invocation, and it was `no-store` —
+           so the home page, the one route almost all traffic lands on, was
+           server-rendered on every request and reached across the network to
+           Postgres before it could paint. Measured in the build's own route
+           table: `ƒ /`, where every other public route was `○`.
+
+           THE COMMENT IT REPLACED WAS RIGHT ABOUT A SITE THAT DOES NOT EXIST
+           YET. It said the gallery must not serve a stale set after a publish,
+           and there is no publish: RLS has no insert policy and the browser
+           route is deliberately unbuilt (BACKLOG §H). The only way a row
+           reaches this table is `npm run db:seed`, from the owner's own
+           machine, which is the same machine a deploy comes from. So the set
+           changes when the site is deployed, and baking it at build is not a
+           staleness trade — it is the truth about how an icon actually ships
+           today.
+
+           WHAT MAKES THIS WRONG AGAIN, precisely, so it is re-decided rather
+           than rediscovered: the day §H lands and a contributor can publish
+           from the browser, this page has to update without a deploy. The
+           answer then is `revalidatePath("/")` from the publish route, which
+           needs an incremental cache configured in `open-next.config.ts` —
+           see the note there, which is about exactly this. Changing this line
+           back without that binding would only restore the per-request fetch.
+
+           Next 16 does not cache `fetch` by default, so the opt-in is
+           explicit (node_modules/next/dist/docs/01-app/02-guides/
+           caching-without-cache-components.md). This project does not use
+           Cache Components. */
+        cache: "force-cache",
       },
     );
 
@@ -170,6 +197,16 @@ export async function fetchPublishedIcons(): Promise<readonly IconDef[]> {
     if (rejected.length > 0) {
       console.error(`Skipped ${rejected.length} malformed icon row(s): ${rejected.join(", ")}`);
     }
+    /* THE BUILD SAYS WHAT IT BAKED. Now that this read decides the contents of a
+       static page, a paused project is no longer a slow request that recovers on
+       the next one — it is a deploy that ships without the published icons and
+       stays that way until the next build. Supabase's free tier pauses after a
+       week of inactivity, so that is the expected path rather than the exotic
+       one, and the only thing standing between it and a silent wrong deploy is
+       a line in the build log. A signal you have to remember to look for is not
+       a signal, so success reports too: a missing line is as legible as an
+       error. */
+    console.log(`Pixit: baked ${icons.length} published icon(s) from Supabase.`);
     return icons;
   } catch (cause) {
     console.error("Supabase unreachable:", cause);

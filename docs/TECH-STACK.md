@@ -36,6 +36,27 @@ later — a presentation swap, not a rewrite.
   middleware, and fonts self-host at build. Five of six routes prerender and
   `/create` is `force-dynamic`, so there is no ISR — which is why
   `open-next.config.ts` declares no R2 incremental cache and no images binding.
+  - **That was four of six for a while, and `/` was the one that fell out
+    (found and fixed 2026-09-18, in the deploy pre-flight).** The gallery's
+    Supabase read carried `cache: "no-store"`, which makes the route that reads
+    it dynamic — so the home page, the route almost all traffic lands on, ran a
+    Worker and a network round trip to Postgres before it could paint. The
+    build's own route table said so plainly (`ƒ /` against `○` everywhere
+    else) and nobody had read it.
+  - **The read is `force-cache` now and the published set is baked at build.**
+    That is not a staleness trade, because there is no publish path to be stale
+    against: RLS has no insert policy and the browser route is deliberately
+    unbuilt (BACKLOG §H), so a row only reaches the table through
+    `npm run db:seed` on the owner's machine, which is the machine deploys come
+    from. The set changes when the site is deployed. Verified in the bundle:
+    `/` ships as a prerendered `index.cache` entry with the Supabase response
+    beside it in `__fetch`.
+  - **The build now reports what it baked** (`Pixit: baked N published icon(s)
+    from Supabase`). Once this read decides the contents of a static page, a
+    paused project stops being a slow request that recovers and becomes a
+    deploy that silently ships without the published icons. The free tier
+    pauses after a week, so that is the expected path; a missing line in the
+    build log is the signal.
   `esbuild` is a direct devDependency because the adapter imports it and npm
   does not hoist it out of `@opennextjs/aws`.
 
@@ -132,6 +153,11 @@ and the gallery merges the two, registry first.
   row is dropped and counted rather than allowed to blank the homepage. That is
   the opposite of the composer's import, which refuses outright — an import is
   one drawing a person just chose, and refusing it is a complete answer.
+  - **And the read happens at BUILD time, once** (2026-09-18), not per request.
+    See the Cloudflare section above for why, and for what would make it wrong
+    again. The never-throws rule is unchanged and still load-bearing: a build
+    against a paused project degrades to the seeded gallery rather than failing,
+    and says so in the log.
 - **Writes are server-only.** RLS has a select policy and no insert/update/
   delete policy at all, so no browser-reachable key can write. The service-role
   key bypasses RLS and lives in `.env.local` for `npm run db:seed`.

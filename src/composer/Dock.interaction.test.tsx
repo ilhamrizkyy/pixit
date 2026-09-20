@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CLOSE_MS } from "@/lib/useDismissible";
 import { Composer } from "./Composer";
@@ -36,9 +36,18 @@ describe("the dock below `lg`", () => {
     // Everything set once, or read exactly, is behind the door.
     expect(screen.queryByLabelText("Category")).toBeNull();
     expect(screen.queryByLabelText("Tags")).toBeNull();
-    expect(screen.queryByLabelText("Paint color")).toBeNull();
     expect(screen.queryByRole("button", { name: "Import icon" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export SVG" })).toBeNull();
+
+    /* THE HEX IS IN NEITHER HALF OF THE DOCK. It was in the sheet, behind the
+       door, on the reading that it is a value you set once — and it is not: it
+       is the one metadata-shaped thing you change WHILE drawing, which is the
+       line category came back over. It sits on the BOARD as a segment panel at
+       the head of the colour pad, reading out what the three knobs produce, so
+       on a phone it is on screen at all times rather than one tap away.
+       Asserted here rather than merely deleted, because "the sheet no longer
+       has it" and "nothing has it" are the same passing test otherwise. */
+    expect(screen.getByLabelText("Paint color, hex")).toBeTruthy();
   });
 
   it("puts the rest one tap away, and says so before it is tapped", async () => {
@@ -51,10 +60,15 @@ describe("the dock below `lg`", () => {
     await openSheet(user);
 
     expect(door.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByRole("dialog", { name: "Details" })).toBeTruthy();
-    expect(screen.getByLabelText("Category")).toBeTruthy();
+    const sheet = screen.getByRole("dialog", { name: "Details" });
+    expect(sheet).toBeTruthy();
     expect(screen.getByLabelText("Tags")).toBeTruthy();
-    expect(screen.getByLabelText("Paint color")).toBeTruthy();
+    /* SCOPED TO THE SHEET, and kept scoped even though category is back here
+       and nothing else on the route answers to the name. `within` is what makes
+       this test about the SHEET rather than about the document — the unscoped
+       form passed on the board's drum for a whole run while category was over
+       there, which is the failure mode worth keeping a guard against. */
+    expect(within(sheet).getByLabelText("Category")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Import icon" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Export SVG" })).toBeTruthy();
   });
@@ -77,7 +91,7 @@ describe("the dock below `lg`", () => {
     const ids = [...document.querySelectorAll("[id]")].map((el) => el.id);
     expect([...new Set(ids)]).toHaveLength(ids.length);
 
-    for (const label of ["Name", "Category", "Tags", "Paint color"]) {
+    for (const label of ["Name", "Category", "Tags"]) {
       expect(screen.getAllByLabelText(label)).toHaveLength(1);
     }
     expect(screen.getAllByRole("button", { name: "Save draft" })).toHaveLength(1);
@@ -166,6 +180,12 @@ describe("the dock at `lg` and up", () => {
     expect(screen.getByLabelText("Name")).toBeTruthy();
     expect(screen.getByLabelText("Category")).toBeTruthy();
     expect(screen.getByLabelText("Tags")).toBeTruthy();
+    /* THE HEX IS THE ONE FIELD THAT STAYED ON THE BOARD. It reads out the
+       colour the three knobs produce, so it belongs to that instrument rather
+       than to this row of metadata — and unlike category, it is a value you
+       change WHILE drawing. Asserted here rather than merely dropped, because
+       "the dock no longer has it" and "nothing has it" are the same passing
+       test otherwise. */
     expect(screen.getByLabelText("Paint color, hex")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Import icon" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save draft" })).toBeTruthy();

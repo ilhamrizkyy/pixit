@@ -20,7 +20,7 @@ import { FRAME, INTRO, at } from "./introTimeline";
   Press Start 2P for the name, VT323 for the sentence.
   STORY: A visitor watches the level load, reads PIXIT, hovers a sprite to see
   the 11 by 11 lattice it is drawn on, and scrolls down into the set.
-  FIRST VIEWPORT: Left column: count tag, PIXIT at 96px with a block cursor,
+  FIRST VIEWPORT: Left column: PIXIT at 96px with a block cursor,
   the sentence, two keys, two links. Right: two big icons bleeding off the
   screen and four small ones, each inspectable.
   FORM: brief-pinned (arcade intro spec, plus the owner's revisions).
@@ -139,12 +139,10 @@ function scrollToGallery(target: HTMLElement) {
   frame = window.requestAnimationFrame(step);
 }
 
-type GalleryHeroProps = {
-  /** How many icons the set actually holds, registry plus published rows. */
-  count: number;
-};
-
-export function GalleryHero({ count }: GalleryHeroProps) {
+/* NO PROPS. It took `count` for the eyebrow above the name, and the eyebrow
+   went on 2026-09-18 — so the prop went with it rather than being kept against
+   a consumer that no longer exists (§2). */
+export function GalleryHero() {
   const heroRef = useRef<HTMLElement>(null);
   /* Everything a running boot has to tear down: its timer and listeners. */
   const stopRef = useRef<(() => void) | null>(null);
@@ -264,12 +262,14 @@ export function GalleryHero({ count }: GalleryHeroProps) {
       <HeroArt />
 
       <div className="pixl-hero-body">
-        <IntroSlot
-          resolve={settle(0)}
-          className="pixl-hero-tag"
-        >
-          <p>{count} icons / MIT licensed</p>
-        </IntroSlot>
+        {/* NO EYEBROW ABOVE THE NAME (2026-09-18, by request). It read
+            "N icons / MIT licensed", and every word of that is already in the
+            sentence two lines below: the set, the grid, the licence. A kicker
+            over a heading is a banned pattern to begin with, and the only thing
+            earning the exception here was that it carried a real count rather
+            than a slogan — so replacing the count with a phrase would have kept
+            the exception and thrown away its reason. It goes instead, and the
+            name is the first thing on the screen. */}
 
         {/* THE TITLE CARD. The cursor is on screen from the very first frame,
             blinking where the name will start, and the name types out of it.
@@ -291,7 +291,7 @@ export function GalleryHero({ count }: GalleryHeroProps) {
         </IntroSlot>
 
         <IntroSlot
-          resolve={settle(1)}
+          resolve={settle(0)}
           className="pixl-hero-line"
         >
           <p>
@@ -301,7 +301,7 @@ export function GalleryHero({ count }: GalleryHeroProps) {
         </IntroSlot>
 
         <IntroSlot
-          resolve={settle(2)}
+          resolve={settle(1)}
           className="pixl-hero-keys"
         >
           <div className="pixl-hero-keyrow">
@@ -322,7 +322,7 @@ export function GalleryHero({ count }: GalleryHeroProps) {
         </IntroSlot>
 
         <IntroSlot
-          resolve={settle(3)}
+          resolve={settle(2)}
           className="pixl-hero-linkslot"
         >
           <ul className="pixl-hero-links">
