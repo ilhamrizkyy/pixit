@@ -76,12 +76,13 @@ function ComposerBody() {
             is what a handheld does — a benchtop instrument badges its top-left
             corner, and this stopped being one.
 
-            THERE IS NO WAY BACK TO THE GALLERY ON THIS CASE, and that is
-            parked rather than missed: a `/` link sat in this corner for one
-            pass and came off by request while its place is decided. The site
-            footer is also suppressed on this route (see `globals.css`), so
-            `/create` currently has no in-page exit at all. Worth knowing
-            before this ships. */}
+            THERE IS NO WAY BACK TO THE GALLERY ON THIS CASE, AND THAT IS
+            SETTLED NOW (2026-09-20). A `/` link sat in this corner for one
+            pass and came off by request; it lives on the DOCK instead, which
+            is the same rule that put the help toggle there — the case is the
+            instrument, and a door is not a part of one. The site footer stays
+            suppressed on this route (see `globals.css`), so the dock is the
+            route's only in-page exit. See `Dock.tsx`. */}
         <div className="scope-head">
           <span aria-hidden="true" className="scope-plate-name">
             Pixit

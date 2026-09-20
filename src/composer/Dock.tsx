@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { ToastTone } from "@/components/Toast";
 import { useMediaQuery } from "@/lib/useMediaQuery";
@@ -91,6 +92,25 @@ function WideDock({ dock, onImport }: { dock: DockApi; onImport: () => void }) {
   return (
     <Bar className="w-auto max-w-[calc(100vw-1.5rem)] px-3 py-2">
       <div className="flex items-center gap-2">
+        {/* THE WAY OUT, and the only navigation on this whole route.
+            `/create` had no in-page exit at all: the site footer is suppressed
+            here (globals.css) and nothing on the case links anywhere, so the
+            only way back to the gallery was the browser's own back button.
+
+            IT IS ON THE DOCK, NOT ON THE CASE, which is the same rule that put
+            the help toggle here: the case is the instrument, and a door is not
+            a part of one. It sits at the FAR LEFT, behind a divider, for two
+            reasons — back belongs on the left, and it is then the full width of
+            the row away from Publish, so "leave" and "put this in front of
+            everyone" are never a trackpad slip apart. */}
+        <Link
+          href="/"
+          className={ACTION}
+          title="Leave the composer and browse the set"
+        >
+          Back to gallery
+        </Link>
+        <Divider />
         <NameField className="w-36 shrink-0" />
         <CategoryField className="w-28 shrink-0" />
         <TagsField className="w-40 shrink-0" text={dock.tagText} onText={dock.setTagText} />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDialog } from "@/lib/useDialog";
 import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
 import { useComposer, useComposerStore } from "./ComposerProvider";
@@ -133,6 +134,26 @@ export function DockSheet({
               Export SVG
             </button>
           </div>
+
+          {/* THE WAY OUT — its own row, not a third button beside Import and
+              Export. Two reasons: at 390px three of these come out about 108px
+              wide and "Back to gallery" does not fit in that, and leaving is
+              not an action on the drawing, so it should not sit in the row of
+              things that are.
+
+              IT IS HERE AND NOT ON THE PHONE BAR, because the bar is what you
+              touch WHILE drawing and this is the one control you touch when you
+              have stopped. Nothing appears on both surfaces (INTERACTION.md §5).
+
+              No confirmation: the draft autosaves to IndexedDB on a debounce,
+              so leaving costs nothing. */}
+          <Link
+            href="/"
+            className={`${SHEET_ACTION} block text-center`}
+            title="Leave the composer and browse the set"
+          >
+            Back to gallery
+          </Link>
         </div>
       </div>
     </div>

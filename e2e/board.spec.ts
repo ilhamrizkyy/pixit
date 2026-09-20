@@ -758,6 +758,123 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 /**
+ * THE HEX READOUT PRINTS SEVEN CHARACTERS, AND THE WINDOW MUST NOT SQUEEZE THEM.
+ *
+ * Reported by eye on 2026-09-20: the last character jammed under the swatch.
+ * The cause was `min-width: 0` on the window plus flex-item digits, so when the
+ * swatch was widened after the digits were enlarged, the glyphs SHRANK instead
+ * of overflowing — the layout never admitted it had run out of room.
+ *
+ * IT RUNS WITH THE WEBFONT BLOCKED, AND THAT IS THE WHOLE POINT. Seven glyphs
+ * at 16px:
+ *
+ *   `Press Start 2P`          — 112.0px   (the real face, 1.0em advance)
+ *   `Press Start 2P Fallback` — 143.7px   (next/font's substitute, 1.283em)
+ *
+ * The substitute is about 28% WIDER than the face it stands in for, which is
+ * unusually poor matching and makes the readout's worst case the font that
+ * renders BEFORE the real one arrives, not the one the site ships. Everything
+ * here is therefore sized for the substitute, and the swap is invisible.
+ *
+ * THE BUG THAT PRODUCED THIS TEST WAS NOT A CSS BUG. The dev server had failed
+ * to reach fonts.googleapis.com when it compiled, so `next/font` fell back for
+ * all four faces and the owner had been looking at the substitute for an entire
+ * session. Restarting it with a reachable network is what fixed the reported
+ * symptom; the sizing below is what stops the substitute mattering next time.
+ *
+ * MUTATION-CHECKED, and the honest result is that only one of the two guards
+ * is pinned here. Widening `.scope-swatch-window` back to 2.5rem fails this at
+ * the 16px tiers and correctly leaves 412 and 320 green, since those override
+ * to 11px and 9px. Removing `min-width: min-content` does NOT fail it, because
+ * `flex: 1` already hands the window more than the glyphs need — that floor is
+ * defence against a future squeeze rather than the thing under test. Keep it,
+ * and do not imagine this test is what holds it.
+ */
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 1024, height: 768 },
+  { width: 412, height: 839 },
+  { width: 320, height: 568 },
+]) {
+  test(`the hex readout is not clipped (${viewport.width}px)`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    /* The fallback, deliberately — see above. Abort rather than delay, so the
+       measurement cannot race the swap. */
+    await page.route(/\.(woff2?|ttf|otf)(\?.*)?$/i, (route) => route.abort());
+    await page.goto("/create");
+    await expect(page.getByRole("application", { name: /Drawing grid/ })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    /* Prove the substitute is what rendered, or every number below describes
+       the wrong face and the test quietly stops testing anything. */
+    const rendered = await page.evaluate(() => {
+      const glyphs = [...document.querySelectorAll(".scope-readout-digit")];
+      const width = glyphs.reduce((a, g) => a + g.getBoundingClientRect().width, 0);
+      const size = parseFloat(
+        getComputedStyle(document.querySelector(".scope-readout-digits")!).fontSize,
+      );
+      return { advance: width / glyphs.length / size, count: glyphs.length };
+    });
+    expect(rendered.count).toBe(7);
+    expect(rendered.advance).toBeGreaterThan(1.1);
+
+    const metrics = await page.evaluate(() => {
+      const pick = (selector: string) => {
+        const node = document.querySelector(selector);
+        if (node === null) throw new Error(`missing ${selector}`);
+        return node as HTMLElement;
+      };
+      const win = pick(".scope-readout-window");
+      const digits = pick(".scope-readout-digits");
+      const input = pick(".scope-readout-input");
+      const swatch = pick(".scope-swatch-window");
+      const housing = pick(".scope-readout-housing");
+      const column = pick(".scope-color-column");
+      const winStyle = getComputedStyle(win);
+      const inputStyle = getComputedStyle(input);
+      return {
+        /* THE OTHER HALF, and it is the half the fix created. With the window
+           refusing to go under its own content, an oversized digit no longer
+           clips — the row overflows the module instead, and every "does it
+           fit" measurement inside the window still reads as fine.
+           `fits <= available` is satisfied by the very mechanism that broke it,
+           so the assertion has to be made at the EDGE OF THE HOUSING, against
+           its padding box. Verified by mutation: at 16px this reads 450 against
+           446 while the window itself reports 144 into 144. */
+        housingRight: housing.getBoundingClientRect().right,
+        housingPadRight: parseFloat(getComputedStyle(housing).paddingRight),
+        swatchRight: swatch.getBoundingClientRect().right,
+        columnRight: column.getBoundingClientRect().right,
+        available:
+          win.clientWidth -
+          parseFloat(winStyle.paddingLeft) -
+          parseFloat(winStyle.paddingRight),
+        needed: digits.scrollWidth,
+        digitsRight: digits.getBoundingClientRect().right,
+        swatchLeft: swatch.getBoundingClientRect().left,
+        /* The caret lives in the input and the glyphs are an overlay, so the
+           two have to agree on every metric or the caret sits where the
+           characters are not. */
+        digitsFont: getComputedStyle(digits).fontSize,
+        inputFont: inputStyle.fontSize,
+        digitsPad: winStyle.paddingLeft,
+        inputPad: inputStyle.paddingLeft,
+      };
+    });
+
+    // Half a pixel of tolerance: these are fractional layout values, not ints.
+    expect(metrics.needed).toBeLessThanOrEqual(metrics.available + 0.5);
+    expect(metrics.digitsRight).toBeLessThanOrEqual(metrics.swatchLeft + 0.5);
+    expect(metrics.housingRight).toBeLessThanOrEqual(metrics.columnRight + 0.5);
+    expect(metrics.swatchRight).toBeLessThanOrEqual(
+      metrics.housingRight - metrics.housingPadRight + 0.5,
+    );
+    expect(metrics.inputFont).toBe(metrics.digitsFont);
+    expect(metrics.inputPad).toBe(metrics.digitsPad);
+  });
+}
+
+/**
  * THE SHELF FLOATS AT THE FOOT OF THE SCREEN (2026-09-15). It sat in flow under
  * the grid, and once the set grew to 108 icons that was 1,500px below the icon
  * you had just clicked, so selection opened a shelf nobody could see.
